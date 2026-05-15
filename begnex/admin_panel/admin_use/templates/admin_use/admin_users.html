@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Begnex Admin — Users</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #F5F5F5;
+            display: flex;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* ─── SIDEBAR ─── */
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: #FAFAFA;
+            border-right: 1px solid #E5E7EB;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: fixed;
+            left: 0; top: 0;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+        .logo-icon {
+            width: 32px; height: 32px; background: black; color: white;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; font-weight: 700; font-size: 14px;
+        }
+        .logo h2 { font-size: 22px; font-weight: 700; }
+        .logo p { font-size: 10px; color: #777; letter-spacing: 2px; }
+
+        .menu { display: flex; flex-direction: column; gap: 4px; }
+        .menu a {
+            height: 46px; display: flex; align-items: center; gap: 12px;
+            padding: 0 14px; border-radius: 8px; font-size: 14px; color: #555; transition: .2s;
+        }
+        .menu a:hover, .menu .active {
+            background: white; color: black; font-weight: 600;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .sidebar-bottom { border-top: 1px solid #E5E7EB; padding-top: 18px; }
+        .admin-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .admin-avatar {
+            width: 42px; height: 42px; background: #111; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 16px; font-weight: 700; flex-shrink: 0;
+        }
+        .admin-profile h4 { font-size: 14px; font-weight: 600; }
+        .admin-profile p { font-size: 11px; color: #777; }
+
+        .logout-btn {
+            width: 100%; height: 42px; background: #FEF2F2;
+            border: 1px solid #FECACA; border-radius: 8px; color: #DC2626;
+            font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+            cursor: pointer; transition: .2s; display: flex; align-items: center;
+            justify-content: center; gap: 8px;
+        }
+        .logout-btn:hover { background: #FEE2E2; }
+
+        /* ─── MAIN ─── */
+
+        .main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; }
+
+        .topbar {
+            height: 72px; background: white; border-bottom: 1px solid #E5E7EB;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 32px;
+        }
+        .topbar h1 { font-size: 22px; font-weight: 700; }
+        .topbar p { font-size: 12px; color: #777; margin-top: 2px; }
+
+        .content { padding: 28px; }
+
+        /* ─── TOOLBAR ─── */
+
+        .toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+        }
+
+        .search-form {
+            display: flex; align-items: center; gap: 0;
+            background: white; border: 1px solid #E5E7EB;
+            border-radius: 8px; overflow: hidden; flex: 1; max-width: 420px;
+        }
+
+        .search-form input {
+            flex: 1; height: 44px; border: none; outline: none; padding: 0 16px;
+            font-size: 14px; font-family: 'Inter', sans-serif; background: transparent;
+        }
+
+        .search-form input::placeholder { color: #B0B0B0; }
+
+        .search-btn {
+            height: 44px; padding: 0 18px; background: black; color: white;
+            border: none; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+            cursor: pointer; transition: .2s;
+        }
+        .search-btn:hover { opacity: .88; }
+
+        .clear-btn {
+            height: 44px; padding: 0 14px; background: #F3F4F6; color: #555;
+            border: none; border-left: 1px solid #E5E7EB; font-size: 13px;
+            font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s;
+        }
+        .clear-btn:hover { background: #E5E7EB; }
+
+        .toolbar-right { display: flex; align-items: center; gap: 10px; }
+        .total-badge {
+            background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 8px;
+            padding: 8px 16px; font-size: 13px; color: #555; font-weight: 500;
+        }
+        .total-badge b { color: #111; }
+
+        /* ─── TABLE ─── */
+
+        .table-wrap {
+            background: white; border-radius: 14px; border: 1px solid #ECECEC;
+            overflow: hidden;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead { background: #F9FAFB; }
+
+        thead th {
+            text-align: left; font-size: 11px; color: #888; letter-spacing: 1.5px;
+            padding: 14px 20px; font-weight: 600; border-bottom: 1px solid #F3F4F6;
+        }
+
+        tbody tr { transition: background .15s; }
+        tbody tr:hover { background: #FAFAFA; }
+
+        tbody td {
+            padding: 16px 20px; border-bottom: 1px solid #F3F4F6;
+            font-size: 14px; color: #222;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+
+        .user-cell { display: flex; align-items: center; gap: 12px; }
+        .user-avatar {
+            width: 38px; height: 38px; border-radius: 50%; background: #111;
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px; flex-shrink: 0;
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .user-name { font-weight: 600; font-size: 14px; }
+        .user-email { font-size: 12px; color: #777; margin-top: 2px; }
+
+        .badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+        }
+        .badge-active { background: #ECFDF5; color: #059669; border: 1px solid #D1FAE5; }
+        .badge-blocked { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+
+        .action-btn {
+            height: 36px; padding: 0 16px; border-radius: 6px; border: 1px solid;
+            font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif;
+            cursor: pointer; transition: .2s;
+        }
+        .btn-block { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
+        .btn-block:hover { background: #FEE2E2; }
+        .btn-unblock { background: #ECFDF5; border-color: #D1FAE5; color: #059669; }
+        .btn-unblock:hover { background: #D1FAE5; }
+
+        /* ─── EMPTY STATE ─── */
+
+        .empty-state {
+            padding: 60px; text-align: center; color: #999;
+        }
+        .empty-state p { font-size: 15px; }
+
+        /* ─── PAGINATION ─── */
+
+        .pagination-wrap {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 24px; border-top: 1px solid #F3F4F6; background: white;
+        }
+
+        .page-info { font-size: 13px; color: #777; }
+
+        .page-links { display: flex; gap: 6px; }
+
+        .page-links a, .page-links span {
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; border: 1px solid #E5E7EB; font-size: 13px; font-weight: 500;
+            color: #555; background: white; transition: .2s;
+        }
+        .page-links a:hover { background: #F3F4F6; border-color: #D1D5DB; color: #111; }
+        .page-links .current-page {
+            background: black; color: white; border-color: black; font-weight: 700;
+        }
+        .page-links .disabled { opacity: 0.3; pointer-events: none; }
+
+        /* ─── MODAL ─── */
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            backdrop-filter: blur(4px); z-index: 9000;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity .25s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal-box {
+            background: white; border-radius: 16px; padding: 40px 44px;
+            max-width: 420px; width: 90%; text-align: center;
+            transform: scale(0.93) translateY(16px); transition: transform .28s;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
+
+        .modal-icon {
+            width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center; font-size: 26px;
+        }
+        .modal-icon.block { background: #FEF2F2; }
+        .modal-icon.unblock { background: #ECFDF5; }
+
+        .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+        .modal-desc { font-size: 13px; color: #777; line-height: 1.7; margin-bottom: 30px; }
+
+        .modal-actions { display: flex; gap: 12px; }
+
+        .modal-cancel {
+            flex: 1; height: 46px; background: #F3F4F6; border: 1px solid #E5E7EB;
+            color: #555; font-size: 13px; font-weight: 600; border-radius: 8px;
+            cursor: pointer; font-family: 'Inter', sans-serif; transition: .2s;
+        }
+        .modal-cancel:hover { background: #E5E7EB; }
+
+        .modal-confirm {
+            flex: 1; height: 46px; border: none; font-size: 13px; font-weight: 700;
+            border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; transition: .2s;
+        }
+        .modal-confirm.block { background: #DC2626; color: white; }
+        .modal-confirm.block:hover { background: #B91C1C; }
+        .modal-confirm.unblock { background: #059669; color: white; }
+        .modal-confirm.unblock:hover { background: #047857; }
+
+        /* TOAST */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            min-width: 280px; padding: 14px 18px; border-radius: 10px; font-size: 13px; font-weight: 500;
+            display: flex; align-items: center; gap: 10px; animation: slideIn .35s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+        .toast.success { background: #ECFDF5; border: 1px solid #D1FAE5; color: #065F46; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+        @media(max-width: 768px) {
+            .sidebar { display: none; }
+            .main { width: 100%; margin-left: 0; }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- ─── CONFIRM MODAL ─── -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box">
+            <div class="modal-icon" id="modalIcon">🚫</div>
+            <div class="modal-title" id="modalTitle">Block User?</div>
+            <div class="modal-desc" id="modalDesc">Are you sure you want to block this user? They won't be able to log in.</div>
+            <div class="modal-actions">
+                <button class="modal-cancel" onclick="closeModal()">CANCEL</button>
+                <button class="modal-confirm" id="modalConfirm" onclick="submitToggle()">CONFIRM</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden form for block/unblock POST -->
+    <form id="toggleForm" method="POST" style="display:none;"></form>
+
+    <!-- ─── SIDEBAR ─── -->
+    <aside class="sidebar">
+
+        <div>
+            <div class="logo">
+                <div class="logo-icon">B</div>
+                <div>
+                    <h2>Begnex</h2>
+                    <p>ADMIN PANEL</p>
+                </div>
+            </div>
+
+            <div class="menu">
+                <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
+                <a href="#">📦 Orders</a>
+                <a href="#">👜 Products</a>
+                <a href="#">🏷 Categories</a>
+                <a href="{% url 'admin_user_list' %}" class="active">👥 Users</a>
+                <a href="#">🎟 Coupons</a>
+                <a href="#">🖼 Reviews</a>
+            </div>
+        </div>
+
+        <div class="sidebar-bottom">
+            <div class="admin-profile">
+                <div class="admin-avatar">{{ request.user.first_name|slice:":1"|upper|default:"A" }}</div>
+                <div>
+                    <h4>{{ request.user.get_full_name|default:request.user.username }}</h4>
+                    <p>Administrator</p>
+                </div>
+            </div>
+            <a href="{% url 'admin_logout' %}" class="logout-btn">🚪 Sign Out</a>
+        </div>
+
+    </aside>
+
+    <!-- ─── MAIN ─── -->
+    <main class="main">
+
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div>
+                <h1>User Management</h1>
+                <p>Manage all registered customers</p>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+
+            <!-- TOAST -->
+            {% if messages %}
+            <div class="toast-container" id="toast-container">
+                {% for message in messages %}
+                <div class="toast success">✅ {{ message }}</div>
+                {% endfor %}
+            </div>
+            <script>
+                setTimeout(function() {
+                    var tc = document.getElementById('toast-container');
+                    if (tc) { tc.style.transition = 'opacity .4s'; tc.style.opacity = '0'; setTimeout(function(){ tc.style.display='none'; }, 400); }
+                }, 3000);
+            </script>
+            {% endif %}
+
+            <!-- TOOLBAR -->
+            <div class="toolbar">
+
+                <!-- SEARCH FORM -->
+                <form method="GET" action="{% url 'admin_user_list' %}" class="search-form" id="searchForm">
+                    <input
+                        type="text"
+                        name="q"
+                        id="searchInput"
+                        placeholder="Search by name, email or username…"
+                        value="{{ search_query }}"
+                        autocomplete="off">
+                    {% if search_query %}
+                    <a href="{% url 'admin_user_list' %}" class="clear-btn" title="Clear search">✕ Clear</a>
+                    {% endif %}
+                    <button type="submit" class="search-btn">Search</button>
+                </form>
+
+                <div class="toolbar-right">
+                    <div class="total-badge">
+                        <b>{{ total_users }}</b> user{{ total_users|pluralize }} found
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-wrap">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>USER</th>
+                            <th>PHONE</th>
+                            <th>JOINED</th>
+                            <th>STATUS</th>
+                            <th>ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if page_obj %}
+                            {% for user in page_obj %}
+                            <tr>
+                                <td style="color:#999; font-size:13px;">{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar">
+                                            {% if user.profile_photo %}
+                                            <img src="{{ user.profile_photo.url }}" alt="">
+                                            {% else %}
+                                            {{ user.first_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+                                            <div class="user-email">{{ user.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="color:#555;">{{ user.phone_number|default:"—" }}</td>
+                                <td style="color:#555; font-size:13px;">{{ user.date_joined|date:"d M Y" }}</td>
+                                <td>
+                                    {% if user.is_blocked %}
+                                        <span class="badge badge-blocked">Blocked</span>
+                                    {% else %}
+                                        <span class="badge badge-active">Active</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_blocked %}
+                                    <button
+                                        class="action-btn btn-unblock"
+                                        onclick="openModal('{{ user.id }}', '{{ user.get_full_name|default:user.username }}', false)">
+                                        Unblock
+                                    </button>
+                                    {% else %}
+                                    <button
+                                        class="action-btn btn-block"
+                                        onclick="openModal('{{ user.id }}', '{{ user.get_full_name|default:user.username }}', true)">
+                                        Block
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <p>No users found{% if search_query %} for "<b>{{ search_query }}</b>"{% endif %}.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+
+                <!-- PAGINATION -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <div class="pagination-wrap">
+                    <div class="page-info">
+                        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} users
+                    </div>
+                    <div class="page-links">
+
+                        <!-- Prev -->
+                        {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">‹</a>
+                        {% else %}
+                        <span class="disabled">‹</span>
+                        {% endif %}
+
+                        <!-- Pages -->
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if num == page_obj.number %}
+                            <span class="current-page">{{ num }}</span>
+                            {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                            <a href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Next -->
+                        {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">›</a>
+                        {% else %}
+                        <span class="disabled">›</span>
+                        {% endif %}
+
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        var pendingUserId = null;
+        var pendingIsBlock = true;
+
+        function openModal(userId, userName, isBlock) {
+            pendingUserId = userId;
+            pendingIsBlock = isBlock;
+
+            var icon = document.getElementById('modalIcon');
+            var title = document.getElementById('modalTitle');
+            var desc = document.getElementById('modalDesc');
+            var confirmBtn = document.getElementById('modalConfirm');
+
+            if (isBlock) {
+                icon.textContent = '🚫';
+                icon.className = 'modal-icon block';
+                title.textContent = 'Block ' + userName + '?';
+                desc.textContent = 'This user will be blocked and will not be able to log in to their account.';
+                confirmBtn.textContent = 'YES, BLOCK';
+                confirmBtn.className = 'modal-confirm block';
+            } else {
+                icon.textContent = '✅';
+                icon.className = 'modal-icon unblock';
+                title.textContent = 'Unblock ' + userName + '?';
+                desc.textContent = 'This user will be unblocked and will regain full access to their account.';
+                confirmBtn.textContent = 'YES, UNBLOCK';
+                confirmBtn.className = 'modal-confirm unblock';
+            }
+
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            pendingUserId = null;
+        }
+
+        function submitToggle() {
+            if (!pendingUserId) return;
+            var form = document.getElementById('toggleForm');
+            form.action = '/begnex-admin/users/toggle-block/' + pendingUserId + '/';
+
+            // Add CSRF token
+            var csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrfmiddlewaretoken';
+            csrf.value = getCookie('csrftoken');
+            form.appendChild(csrf);
+
+            form.submit();
+        }
+
+        // Close modal on overlay click
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+
+</body>
+</html>

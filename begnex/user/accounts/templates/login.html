@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Begnex Login</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html,
+        body{
+            width: 100%;
+            height: 100%;
+        }
+
+        body{
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+
+                .login-container{
+            width: 100%;
+            height: 100vh;
+            display: flex;
+        }
+
+        /* LEFT */
+
+        .left-section{
+            width: 48%;
+            position: relative;
+            height: 100vh;
+        }
+
+        .login-image{
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay{
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+        }
+
+        .logo{
+            position: absolute;
+            top: 34px;
+            left: 34px;
+            z-index: 10;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .left-content{
+            position: absolute;
+            bottom: 70px;
+            left: 50px;
+            z-index: 10;
+            max-width: 460px;
+        }
+
+        .blue-line{
+            width: 70px;
+            height: 4px;
+            background: #2563EB;
+            margin-bottom: 28px;
+        }
+
+        .left-content h1{
+            color: white;
+            font-size: 60px;
+            font-weight: 800;
+            line-height: 64px;
+            letter-spacing: -3px;
+        }
+
+        .left-content p{
+            color: #E5E7EB;
+            font-size: 18px;
+            line-height: 34px;
+            margin-top: 24px;
+        }
+
+        /* RIGHT */
+
+        .right-section{
+            width: 52%;
+            height: 100vh;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .form-wrapper{
+            width: 100%;
+            max-width: 430px;
+        }
+
+        /* TOP */
+
+        .top-content{
+            margin-bottom: 24px;
+        }
+
+        .top-content h2{
+            color: white;
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+        }
+
+        .top-content p{
+            color: #6B7280;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        /* INPUT */
+
+        .input-group{
+            margin-bottom: 16px;
+        }
+
+        .input-group label{
+            display: block;
+            color: #6B7280;
+            font-size: 10px;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+
+        .input-group input{
+            width: 100%;
+            height: 48px;
+            border-radius: 12px;
+            border: none;
+            background: #020B2D;
+            padding: 0 18px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .input-group input::placeholder{
+            color: #4B5563;
+        }
+
+        /* PASSWORD HEADER */
+
+        .password-header{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .password-header label{
+            color: #6B7280;
+            font-size: 11px;
+            letter-spacing: 3px;
+        }
+
+        .password-header a{
+            color: #9CA3AF;
+            font-size: 10px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .remember-me{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .remember-me label{
+        color: #9CA3AF;
+        font-size: 13px;
+    }
+
+    .remember-me input{
+        width: 16px;
+        height: 16px;
+        accent-color: #2563EB;
+    }
+
+        /* LOGIN BUTTON */
+
+        .login-btn{
+            width: 100%;
+            height: 48px;
+            border: none;
+            border-radius: 12px;
+            background: #2563EB;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: 0.2s ease;
+        }
+        .login-btn:active{
+            transform: scale(0.98);
+        }
+
+        /* DIVIDER */
+
+        .divider{
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .line{
+            flex: 1;
+            height: 1px;
+            background: #1F2937;
+        }
+
+        .divider span{
+            color: #6B7280;
+            font-size: 11px;
+            letter-spacing: 3px;
+        }
+
+        /* GOOGLE */
+
+        .google-btn{
+            width: 100%;
+            height: 48px;
+            border-radius: 12px;
+            background: #020B2D;
+            border: 1px solid #111827;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .google-btn img{
+            width: 20px;
+        }
+
+        /* SIGNUP */
+
+        .signup-row{
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+
+        .signup-row p{
+            color: #6B7280;
+            font-size: 14px;
+        }
+
+        .signup-row a{
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* FOOTER */
+
+        .footer-links{
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            color: #6B7280;
+            font-size: 10px;
+            letter-spacing: 2px;
+        }
+
+        .footer-right{
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-right a{
+            color: #6B7280;
+            text-decoration: none;
+        }
+
+        .error-message{
+            width: 100%;
+            min-height: 50px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #F87171;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        input,
+        button{
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width: 992px){
+
+            .left-section{
+                display: none;
+            }
+
+            .right-section{
+                width: 100%;
+                padding: 40px 24px;
+            }
+
+            .form-wrapper{
+                max-width: 100%;
+            }
+
+            .top-content h2{
+                font-size: 42px;
+            }
+
+            .footer-links{
+                flex-direction: column;
+                gap: 20px;
+            }
+
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <main class="login-container">
+
+        <!-- LEFT -->
+
+        <section class="left-section">
+
+            <img src="https://images.unsplash.com/photo-1581605405669-fcdf81165afa?q=80&w=1200&auto=format&fit=crop"
+                alt="bag-image"
+                class="login-image"
+                fetchpriority="high"
+                decoding="async">
+
+            <div class="overlay"></div>
+
+            <div class="logo">
+                Begnex
+            </div>
+
+            <div class="left-content">
+
+                <div class="blue-line"></div>
+
+                <h1>
+                    Redefining the Daily Carry.
+                </h1>
+
+                <p>
+                    Discover our curated collection of premium backpacks,
+                    where artisanal craft meets modern functionality for
+                    the urban professional.
+                </p>
+
+            </div>
+
+        </section>
+
+        <!-- RIGHT -->
+
+        <section class="right-section">
+
+            <div class="form-wrapper">
+
+                <div class="top-content">
+
+                    <h2>Welcome back</h2>
+
+                    <p>
+                        Access your editorial dashboard and insights.
+                    </p>
+
+                </div>
+
+                {% if messages %}
+                <div id="django-messages" style="position: fixed; top: 90px; left: 50%; transform: translateX(-50%); z-index: 2000; width: 100%; max-width: 400px;">
+                    {% for message in messages %}
+                        {% if message.tags == 'success' %}
+                        <div style="color: #10B981; font-size: 14px; text-align: center; background: rgba(16, 185, 129, 0.15); padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(16, 185, 129, 0.3); backdrop-filter: blur(10px);">
+                            {{ message }}
+                        </div>
+                        {% else %}
+                        <div style="color: #EF4444; font-size: 14px; text-align: center; background: rgba(239, 68, 68, 0.15); padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(239, 68, 68, 0.3); backdrop-filter: blur(10px);">
+                            {{ message }}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <script>
+                    setTimeout(function() {
+                        var msg = document.getElementById('django-messages');
+                        if (msg) {
+                            msg.style.transition = 'opacity 0.5s ease';
+                            msg.style.opacity = '0';
+                            setTimeout(function() { msg.style.display = 'none'; }, 500);
+                        }
+                    }, 3000);
+                </script>
+                {% endif %}
+
+                {% if error %}
+                <div id="django-messages-error" style="position: fixed; top: 90px; left: 50%; transform: translateX(-50%); z-index: 2000; width: 100%; max-width: 400px;">
+                    <div style="color: #EF4444; font-size: 14px; text-align: center; background: rgba(239, 68, 68, 0.15); padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(239, 68, 68, 0.3); backdrop-filter: blur(10px);">
+                        {{ error }}
+                    </div>
+                </div>
+                <script>
+                    setTimeout(function() {
+                        var msg = document.getElementById('django-messages-error');
+                        if (msg) {
+                            msg.style.transition = 'opacity 0.5s ease';
+                            msg.style.opacity = '0';
+                            setTimeout(function() { msg.style.display = 'none'; }, 500);
+                        }
+                    }, 3000);
+                </script>
+                {% endif %}
+
+            <form method="POST"
+      action="{% url 'login' %}"
+      autocomplete="off">
+
+                {% csrf_token %}
+
+                <div class="input-group">
+
+                    <label>EMAIL ADDRESS</label>
+
+                    <input type="email"
+                        name="email"
+                        placeholder="name@begnex.com">
+
+                </div>
+
+                <div class="password-header">
+
+                    <label>PASSWORD</label>
+
+                   <a href="{% url 'forgot_password' %}">
+                        FORGOT PASSWORD?
+                    </a>
+
+                </div>
+
+                <div class="input-group">
+
+                    <input type="password"
+                        name="password"
+                        placeholder="••••••••">
+
+                </div>
+
+                <div class="remember-me">
+
+                    <input type="checkbox" name="remember">
+
+                    <label>Remember me</label>
+
+                </div>
+
+
+
+                <button type="submit"
+                    class="login-btn">
+
+                    LOG IN
+
+                </button>
+
+                <div class="divider">
+
+                    <div class="line"></div>
+
+                    <span>OR</span>
+
+                    <div class="line"></div>
+
+                </div>
+
+                {% load socialaccount %}
+
+                <a href="{% provider_login_url 'google' %}"
+                    class="google-btn">
+
+                    <img src="https://cdn-icons-png.flaticon.com/512/300/300221.png">
+
+                    CONTINUE WITH GOOGLE
+
+                </a>
+
+            </form>
+
+                <div class="signup-row">
+
+                    <p>
+                        Don't have an account?
+                    </p>
+
+                    <a href="{% url 'signup' %}">
+                        Sign Up →
+                    </a>
+
+                </div>
+
+                <div class="footer-links">
+
+                    <span>
+                        © 2024 BEGNEX EDITORIAL
+                    </span>
+
+                    <div class="footer-right">
+
+                        <a href="#">
+                            PRIVACY
+                        </a>
+
+                        <a href="#">
+                            TERMS
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Begnex Signup</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body{
+            width: 100%;
+            height: 100%;
+        }
+
+        body{
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+
+        /* MAIN */
+
+        .signup-container{
+            width: 100%;
+            height: 100vh;
+            display: flex;
+        }
+
+        /* LEFT */
+
+        .left-section{
+            width: 50%;
+            position: relative;
+            height: 100vh;
+        }
+
+        .signup-image{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+        }
+
+        .overlay{
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+        }
+
+        .left-content{
+            position: absolute;
+            bottom: 70px;
+            left: 70px;
+            z-index: 10;
+            max-width: 620px;
+        }
+
+        .left-content h1{
+            color: white;
+            font-size: 68px;
+            font-weight: 800;
+            line-height: 72px;
+            letter-spacing: -3px;
+        }
+
+        .left-content p{
+            color: #d1d5db;
+            font-size: 18px;
+            line-height: 34px;
+            margin-top: 24px;
+        }
+
+        /* RIGHT */
+
+        .right-section{
+            width: 50%;
+            height: 100vh;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 28px 40px;
+        }
+
+        .form-wrapper{
+            width: 100%;
+            max-width: 520px;
+        }
+
+        /* TOP */
+
+        .top-content{
+            margin-bottom: 20px;
+        }
+
+        .top-content h2{
+            color: white;
+            font-size: 38px;
+            font-weight: 800;
+            line-height: 42px;
+            letter-spacing: -1.5px;
+        }
+
+        .top-content p{
+            color: #6B7280;
+            margin-top: 8px;
+            font-size: 14px;
+            line-height: 22px;
+        }
+
+        /* INPUT */
+
+        .input-group{
+            margin-bottom: 14px;
+        }
+
+        .input-group label{
+            display: block;
+            color: #6B7280;
+            font-size: 10px;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+        }
+
+        .input-group input{
+            width: 100%;
+            height: 48px;
+            background: #020817;
+            border: 1px solid #16213E;
+            border-radius: 12px;
+            padding: 0 18px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .input-group input::placeholder{
+            color: #4B5563;
+        }
+
+        .input-group input:focus{
+            border-color: #2563EB;
+        }
+
+        /* PASSWORD GRID */
+
+        .password-grid{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        /* BUTTON */
+
+        .signup-btn{
+            width: 100%;
+            height: 48px;
+            border: none;
+            border-radius: 12px;
+            background: #2563EB;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: 0.3s;
+        }
+
+        .signup-btn:hover{
+            background: #1D4ED8;
+        }
+
+        /* DIVIDER */
+
+        .divider{
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 14px 0;
+        }
+
+        .line{
+            flex: 1;
+            height: 1px;
+            background: #1F2937;
+        }
+
+        .divider span{
+            color: #6B7280;
+            font-size: 10px;
+            letter-spacing: 3px;
+        }
+
+        /* GOOGLE */
+
+        .google-btn{
+            width: 100%;
+            height: 48px;
+            border-radius: 12px;
+            border: 1px solid #16213E;
+            background: #020817;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .google-btn img{
+            width: 18px;
+        }
+
+        .google-btn:hover{
+            background: #0B1220;
+        }
+
+        /* LOGIN */
+
+        .login-text{
+            text-align: center;
+            margin-top: 14px;
+            color: #6B7280;
+            font-size: 13px;
+        }
+
+        .login-text a{
+            color: #2563EB;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width: 992px){
+
+            body{
+                overflow-y: auto;
+            }
+
+            .left-section{
+                display: none;
+            }
+
+            .right-section{
+                width: 100%;
+                padding: 40px 24px;
+            }
+
+            .form-wrapper{
+                max-width: 100%;
+            }
+
+            .top-content h2{
+                font-size: 42px;
+            }
+
+            .password-grid{
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <main class="signup-container">
+
+        <!-- LEFT -->
+
+        <section class="left-section">
+
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdGS_HGr3-wSwifL7aGZgtJKuHSh459PXJXGapekFnHbmia-F_am80gmZyjIB0diGyEem5gH0G1_t-jO5PRXZ9gdjuElqHrkjbLgXOHmMmqV-Zj-TtjFPPVJvVduMbBssPGcD0vcqj7LBEOPb0ytMnyPd-_NAFPZGbOiHLF-6PGpdRg_inpibifg_48u2-XEJoPBe_i7PhCMHCe95A--B_kg7ykXBB7lJaX6YurtT0VjvNXd6pYuGCbU9-P_AMD1MuhvOjCTa4-Sw"
+                alt="signup-image"
+                class="signup-image"
+                fetchpriority="high"
+                decoding="async">
+
+            <div class="overlay"></div>
+
+            <div class="left-content">
+
+                <h1>
+                    Elevate your carry
+                </h1>
+
+                <p>
+                    Discover premium solutions designed for the modern
+                    professional. Elegance meets functional excellence.
+                </p>
+
+            </div>
+
+        </section>
+
+        <!-- RIGHT -->
+
+        <section class="right-section">
+
+            <div class="form-wrapper">
+
+                <div class="top-content">
+
+                    <h2>Create Account</h2>
+
+                    <p>
+                        Start your journey with a curated financial
+                        experience tailored to your needs.
+                    </p>
+
+                </div>
+
+                {% if error %}
+                <div id="django-messages-error" style="position: fixed; top: 90px; left: 50%; transform: translateX(-50%); z-index: 2000; width: 100%; max-width: 400px;">
+                    <div style="color: #EF4444; font-size: 14px; text-align: center; background: rgba(239, 68, 68, 0.15); padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(239, 68, 68, 0.3); backdrop-filter: blur(10px);">
+                        {{ error }}
+                    </div>
+                </div>
+                <script>
+                    setTimeout(function() {
+                        var msg = document.getElementById('django-messages-error');
+                        if (msg) {
+                            msg.style.transition = 'opacity 0.5s ease';
+                            msg.style.opacity = '0';
+                            setTimeout(function() { msg.style.display = 'none'; }, 500);
+                        }
+                    }, 3000);
+                </script>
+                {% endif %}
+
+                <form method="POST" action="{% url 'signup' %}">
+
+                    {% csrf_token %}
+
+                    <div class="input-group">
+
+                        <label>FULL NAME</label>
+
+                        <input type="text"
+                            name="username"
+                            placeholder="Johnathan Doe" required>
+
+                    </div>
+
+                    <div class="input-group">
+
+                        <label>EMAIL ADDRESS</label>
+
+                        <input type="email"
+                            name="email"
+                            placeholder="john@example.com" required>
+
+                    </div>
+
+                    <div class="password-grid">
+
+                        <div class="input-group">
+
+                            <label>PASSWORD</label>
+
+                            <input type="password"
+                                name="password"
+                                placeholder="••••••••" required>
+
+                        </div>
+
+                        <div class="input-group">
+
+                            <label>CONFIRM</label>
+
+                            <input type="password"
+                                name="confirm_password"
+                                placeholder="••••••••" required>
+
+                        </div>
+
+                    </div>
+
+                    <button type="submit"
+                        class="signup-btn">
+
+                        CREATE ACCOUNT
+
+                    </button>
+
+                    <div class="divider">
+
+                        <div class="line"></div>
+
+                        <span>OR CONTINUE WITH</span>
+
+                        <div class="line"></div>
+
+                    </div>
+
+                    {% load socialaccount %}
+
+                    <a href="{% provider_login_url 'google' %}"
+                        class="google-btn">
+
+                        <img src="https://cdn-icons-png.flaticon.com/512/300/300221.png">
+
+                        Google
+
+                    </a>
+
+                </form>
+
+                <p class="login-text">
+
+                    Already have an account?
+
+                    <a href="{% url 'login' %}">
+                        Log in
+                    </a>
+
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

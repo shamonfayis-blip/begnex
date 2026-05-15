@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>User Directory</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body{
+            font-family: 'Inter', sans-serif;
+            background: #F5F5F5;
+            display: flex;
+        }
+
+        a{
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar{
+            width: 250px;
+            height: 100vh;
+            background: #F8F9FB;
+            border-right: 1px solid #E5E7EB;
+            padding: 24px 16px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .logo h1{
+            font-size: 34px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .logo p{
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #9CA3AF;
+        }
+
+        /* MENU */
+
+        .menu{
+            margin-top: 34px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .menu a{
+            height: 48px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0 16px;
+            border-radius: 10px;
+            font-size: 15px;
+            color: #64748B;
+            transition: .3s;
+        }
+
+        .menu a:hover,
+        .menu .active{
+            background: white;
+            color: black;
+            font-weight: 600;
+        }
+
+        /* ADD USER */
+
+        .add-user-btn{
+            width: 100%;
+            height: 50px;
+            border: none;
+            background: black;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 18px;
+        }
+
+        /* PROFILE */
+
+        .admin-profile{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-profile img{
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .admin-profile h4{
+            font-size: 13px;
+        }
+
+        .admin-profile p{
+            font-size: 10px;
+            color: #777;
+        }
+
+        /* MAIN */
+
+        .main{
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            padding: 24px 30px;
+        }
+
+        /* TOP */
+
+        .topbar{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .topbar h2{
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .top-actions{
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box input{
+            width: 320px;
+            height: 46px;
+            border: 1px solid #E5E7EB;
+            border-radius: 10px;
+            background: white;
+            padding: 0 16px;
+            outline: none;
+        }
+
+        .filter-btn{
+            height: 44px;
+            padding: 0 18px;
+            border: 1px solid #E5E7EB;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        /* TABLE */
+
+        .table-box{
+            background: white;
+            border: 1px solid #ECECEC;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        table{
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead{
+            background: #FAFAFA;
+        }
+
+        th{
+            text-align: left;
+            padding: 18px 20px;
+            font-size: 11px;
+            color: #888;
+            letter-spacing: 1px;
+        }
+
+        td{
+            padding: 20px;
+            border-top: 1px solid #F1F1F1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* USER */
+
+        .user-info{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info img{
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info h4{
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .user-info p{
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* STATUS */
+
+        .status{
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .active-status{
+            background: #DCFCE7;
+            color: #16A34A;
+        }
+
+        .blocked-status{
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        /* ACTIONS */
+
+        .actions{
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .view{
+            color: black;
+        }
+
+        .block{
+            color: red;
+        }
+
+        .unblock{
+            color: #16A34A;
+        }
+
+        /* FOOT */
+
+        .table-footer{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 10px;
+            color: #777;
+            font-size: 13px;
+        }
+
+        .pagination{
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .page{
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .page.active{
+            background: black;
+            color: white;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width: 1100px){
+
+            .search-box input{
+                width: 220px;
+            }
+
+        }
+
+        @media(max-width: 900px){
+
+            .sidebar{
+                display: none;
+            }
+
+            .main{
+                margin-left: 0;
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div>
+
+            <div class="logo">
+
+                <h1>Begnex</h1>
+
+                <p>ADMIN PORTAL</p>
+
+            </div>
+
+            <div class="menu">
+
+                <a href="#"
+                    class="active">
+
+                    📊 Dashboard
+
+                </a>
+
+                <a href="#">📦 Orders</a>
+
+                <a href="#">👜 Products</a>
+
+                <a href="#">🏷 Categories</a>
+
+                <a href="#">👥 Users</a>
+
+                <a href="#">🏷 Coupons</a>
+
+                <a href="#">🖼 Reviews</a>
+
+            </div>
+
+        </div>
+
+        <div>
+
+            <button class="add-user-btn">
+
+                ✚ Add New User
+
+            </button>
+
+            <div class="admin-profile">
+
+                <img src="https://i.pravatar.cc/100"
+                    alt="admin">
+
+                <div>
+
+                    <h4>Admin User Profile</h4>
+
+                    <p>SYSTEM CONTROLLER</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+        <!-- TOPBAR -->
+
+        <div class="topbar">
+
+            <h2>User Directory</h2>
+
+            <div class="top-actions">
+
+                <div class="search-box">
+
+                    <input type="text"
+                        placeholder="Search users...">
+
+                </div>
+
+                <button class="filter-btn">
+
+                    ▾ Filters
+
+                </button>
+
+                🔔
+
+                ❔
+
+            </div>
+
+        </div>
+
+        <!-- TABLE -->
+
+        <div class="table-box">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>SL NO</th>
+                        <th>USER</th>
+                        <th>USER ID</th>
+                        <th>STATUS</th>
+                        <th>JOINED AT</th>
+                        <th>ACTIONS</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    <tr>
+
+                        <td>01</td>
+
+                        <td>
+
+                            <div class="user-info">
+
+                                <img src="https://i.pravatar.cc/100?img=1">
+
+                                <div>
+
+                                    <h4>Jordan Henderson</h4>
+
+                                    <p>j.hendo@begnex.com</p>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td>#BGX-9283</td>
+
+                        <td>
+
+                            <span class="status active-status">
+
+                                ACTIVE
+
+                            </span>
+
+                        </td>
+
+                        <td>Oct 12, 2023</td>
+
+                        <td>
+
+                            <div class="actions">
+
+                                <span class="view">VIEW</span>
+
+                                <span class="block">BLOCK</span>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <td>02</td>
+
+                        <td>
+
+                            <div class="user-info">
+
+                                <img src="https://i.pravatar.cc/100?img=5">
+
+                                <div>
+
+                                    <h4>Amara Miller</h4>
+
+                                    <p>amara.m@begnex.com</p>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td>#BGX-4112</td>
+
+                        <td>
+
+                            <span class="status blocked-status">
+
+                                BLOCKED
+
+                            </span>
+
+                        </td>
+
+                        <td>Nov 04, 2023</td>
+
+                        <td>
+
+                            <div class="actions">
+
+                                <span class="view">VIEW</span>
+
+                                <span class="unblock">UNBLOCK</span>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <td>03</td>
+
+                        <td>
+
+                            <div class="user-info">
+
+                                <img src="https://i.pravatar.cc/100?img=8">
+
+                                <div>
+
+                                    <h4>Linh Tran</h4>
+
+                                    <p>l.tran@begnex.com</p>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td>#BGX-5590</td>
+
+                        <td>
+
+                            <span class="status active-status">
+
+                                ACTIVE
+
+                            </span>
+
+                        </td>
+
+                        <td>Dec 01, 2023</td>
+
+                        <td>
+
+                            <div class="actions">
+
+                                <span class="view">VIEW</span>
+
+                                <span class="block">BLOCK</span>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- FOOT -->
+
+        <div class="table-footer">
+
+            <p>
+
+                Showing 5 of 1,248 users
+
+            </p>
+
+            <div class="pagination">
+
+                <div class="page">‹</div>
+
+                <div class="page active">1</div>
+
+                <div class="page">2</div>
+
+                <div class="page">3</div>
+
+                <div class="page">›</div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+
+</html>

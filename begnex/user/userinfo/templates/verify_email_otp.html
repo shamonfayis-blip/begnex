@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Verify Email — Begnex</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #05070D;
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* MAIN */
+
+        .verify-wrapper {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+        }
+
+        /* LEFT */
+
+        .verify-left {
+            width: 50%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .verify-left img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top,
+                    rgba(0, 0, 0, 0.75),
+                    rgba(0, 0, 0, 0.18));
+        }
+
+        .left-content {
+            position: absolute;
+            left: 55px;
+            bottom: 55px;
+            z-index: 5;
+            color: white;
+            max-width: 480px;
+        }
+
+        .left-content h1 {
+            font-size: 72px;
+            font-weight: 900;
+            line-height: 78px;
+            margin-bottom: 22px;
+            letter-spacing: -3px;
+        }
+
+        .left-content p {
+            color: #D1D5DB;
+            font-size: 17px;
+            line-height: 34px;
+        }
+
+        /* RIGHT */
+
+        .verify-right {
+            width: 50%;
+            height: 100vh;
+            background: #05070D;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 60px;
+            border-left: 1px solid rgba(255, 255, 255, 0.04);
+            overflow-y: auto;
+        }
+
+        .verify-box {
+            width: 100%;
+            max-width: 480px;
+            padding: 60px 0;
+        }
+
+        .back-arrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #6B7280;
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-bottom: 38px;
+            transition: .3s;
+        }
+
+        .back-arrow:hover {
+            color: white;
+        }
+
+        .verify-box h2 {
+            color: white;
+            font-size: 48px;
+            line-height: 54px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin-bottom: 14px;
+        }
+
+        .verify-box .sub {
+            color: #6B7280;
+            font-size: 12px;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .email-hint {
+            color: #C7D5FF;
+            font-size: 13px;
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+
+        /* OTP */
+
+.otp-group{
+    display: flex;
+    gap: 12px;
+    justify-content: flex-start;
+    margin-bottom: 28px;
+}
+
+        .otp-group input{
+    width: 68px;
+    height: 72px;
+    background: #0D1120;
+    border: 1px solid rgba(255,255,255,0.08);
+    outline: none;
+    color: white;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    border-radius: 8px;
+}
+
+        .otp-group input:focus {
+            border-color: #4F78FF;
+            background: #111B30;
+            box-shadow: 0 0 0 3px rgba(79, 120, 255, 0.15);
+        }
+
+        .otp-group input.filled {
+            border-color: rgba(199, 213, 255, 0.4);
+        }
+
+        /* TOAST / ERROR */
+
+        .msg-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 24px;
+            animation: fadeIn .3s ease;
+        }
+
+        .msg-box.error {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #FCA5A5;
+        }
+
+        .msg-box.success {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6EE7B7;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* BUTTON */
+
+        .verify-btn {
+            width: 100%;
+            height: 58px;
+            border: none;
+            background: #C7D5FF;
+            color: #111827;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: .3s;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .verify-btn:hover {
+            background: #B0C2FF;
+            transform: translateY(-1px);
+        }
+
+        .verify-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* LINKS */
+
+        .extra-links {
+            margin-top: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .extra-links a {
+            color: #6B7280;
+            font-size: 11px;
+            letter-spacing: 2px;
+            transition: .3s;
+        }
+
+        .extra-links a:hover {
+            color: white;
+        }
+
+        /* TIMER */
+
+        .timer {
+            color: #4F78FF;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 28px;
+        }
+
+        /* INFO */
+
+        .info-box {
+            margin-top: 40px;
+            border-left: 2px solid rgba(199, 213, 255, 0.3);
+            padding-left: 18px;
+        }
+
+        .info-box span {
+            color: #6B7280;
+            font-size: 10px;
+            letter-spacing: 3px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            color: #9CA3AF;
+            font-size: 12px;
+            line-height: 22px;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width: 1100px) {
+
+            .verify-left {
+                display: none;
+            }
+
+            .verify-right {
+                width: 100%;
+                padding: 40px 30px;
+            }
+
+        }
+
+        @media(max-width: 560px) {
+
+            .verify-box h2 {
+                font-size: 36px;
+                line-height: 42px;
+            }
+
+            .otp-group input {
+                height: 60px;
+                font-size: 22px;
+            }
+
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <section class="verify-wrapper">
+
+        <!-- LEFT -->
+
+        <div class="verify-left">
+
+            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop"
+                alt="bag">
+
+            <div class="overlay"></div>
+
+            <div class="left-content">
+
+                <h1>
+                    VERIFY YOUR
+                    <br>
+                    EMAIL
+                </h1>
+
+                <p>
+                    A 6-digit code has been sent to your
+                    new email address. Enter it to confirm the change.
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+
+        <div class="verify-right">
+
+            <div class="verify-box">
+
+                <a href="{% url 'edit_profile' %}" class="back-arrow">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    BACK TO EDIT PROFILE
+                </a>
+
+                <h2>ENTER CODE</h2>
+
+                <p class="sub">VERIFICATION CODE SENT TO YOUR EMAIL</p>
+
+                {% if new_email %}
+                <p class="email-hint">{{ new_email }}</p>
+                {% else %}
+                <p class="email-hint">Check your inbox</p>
+                {% endif %}
+
+                {% if messages %}
+                {% for message in messages %}
+                <div class="msg-box {% if message.tags == 'success' %}success{% else %}error{% endif %}" id="msg-box">
+                    <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+                <script>
+                    setTimeout(function () {
+                        var m = document.getElementById('msg-box');
+                        if (m) { m.style.transition = 'opacity 0.4s'; m.style.opacity = '0'; setTimeout(function () { m.remove(); }, 400); }
+                    }, 3500);
+                </script>
+                {% endif %}
+
+                <div class="timer" id="countdown">CODE EXPIRES IN 1:00</div>
+
+                <form method="POST" id="otp-form">
+
+                    {% csrf_token %}
+
+                    <input type="hidden" name="otp" id="final_otp">
+
+                    <div class="otp-group">
+                        <input type="text" inputmode="numeric" maxlength="1" id="o1" autocomplete="off">
+                        <input type="text" inputmode="numeric" maxlength="1" id="o2" autocomplete="off">
+                        <input type="text" inputmode="numeric" maxlength="1" id="o3" autocomplete="off">
+                        <input type="text" inputmode="numeric" maxlength="1" id="o4" autocomplete="off">
+                        <input type="text" inputmode="numeric" maxlength="1" id="o5" autocomplete="off">
+                        <input type="text" inputmode="numeric" maxlength="1" id="o6" autocomplete="off">
+                    </div>
+
+                    <button type="submit" class="verify-btn" id="verify-btn">
+                        VERIFY EMAIL
+                    </button>
+
+                </form>
+
+                <div class="extra-links">
+
+                    <a href="#" id="resend-link">RESEND CODE</a>
+                    <a href="{% url 'profile' %}">← BACK TO PROFILE</a>
+
+                </div>
+
+                <div class="info-box">
+
+                    <span>SECURITY NOTE</span>
+
+                    <p>
+                        Email changes require verification to protect
+                        your Begnex account from unauthorized access.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <script>
+        // OTP inputs
+        const inputs = document.querySelectorAll('.otp-group input');
+        const finalOtp = document.getElementById('final_otp');
+
+        function syncOtp() {
+            let val = '';
+            inputs.forEach(i => val += i.value);
+            finalOtp.value = val;
+        }
+
+        inputs.forEach((input, idx) => {
+            input.addEventListener('input', function () {
+                // Only allow numbers
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value) {
+                    this.classList.add('filled');
+                    if (idx < inputs.length - 1) inputs[idx + 1].focus();
+                } else {
+                    this.classList.remove('filled');
+                }
+                syncOtp();
+            });
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && !this.value && idx > 0) {
+                    inputs[idx - 1].focus();
+                    inputs[idx - 1].value = '';
+                    inputs[idx - 1].classList.remove('filled');
+                    syncOtp();
+                }
+                if (e.key === 'ArrowLeft' && idx > 0) inputs[idx - 1].focus();
+                if (e.key === 'ArrowRight' && idx < inputs.length - 1) inputs[idx + 1].focus();
+            });
+        });
+
+        // Paste support
+        inputs[0].addEventListener('paste', function (e) {
+            e.preventDefault();
+            let paste = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+            paste.split('').forEach((ch, i) => {
+                if (inputs[i]) {
+                    inputs[i].value = ch;
+                    inputs[i].classList.add('filled');
+                }
+            });
+            let nextIdx = Math.min(paste.length, inputs.length - 1);
+            inputs[nextIdx].focus();
+            syncOtp();
+        });
+
+        // Countdown timer — 1 minute
+        let seconds = 60;
+        const countdownEl = document.getElementById('countdown');
+        const timer = setInterval(function () {
+            seconds--;
+            if (seconds <= 0) {
+                clearInterval(timer);
+                countdownEl.textContent = 'CODE EXPIRED — REQUEST A NEW OTP';
+                countdownEl.style.color = '#EF4444';
+                document.getElementById('verify-btn').disabled = true;
+                document.getElementById('verify-btn').style.opacity = '0.4';
+                return;
+            }
+            let m = Math.floor(seconds / 60);
+            let s = seconds % 60;
+            countdownEl.textContent = 'CODE EXPIRES IN ' + m + ':' + (s < 10 ? '0' : '') + s;
+        }, 1000);
+
+        // Resend link (placeholder — connect to backend if needed)
+        document.getElementById('resend-link').addEventListener('click', function (e) {
+            e.preventDefault();
+            this.textContent = 'SENT!';
+            this.style.color = '#6EE7B7';
+            setTimeout(() => {
+                this.textContent = 'RESEND CODE';
+                this.style.color = '';
+            }, 3000);
+        });
+
+        // Focus first input on load
+        inputs[0].focus();
+    </script>
+
+</body>
+
+</html>

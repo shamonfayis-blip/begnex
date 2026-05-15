@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>OTP Verification</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+
+    *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body{
+    width: 100%;
+    height: 100%;
+}
+
+body{
+    font-family: 'Inter', sans-serif;
+    background: #000;
+    overflow: hidden;
+}
+
+/* MAIN */
+
+.otp-container{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+}
+
+/* LEFT */
+
+.left-section{
+    width: 48%;
+    position: relative;
+    height: 100vh;
+}
+
+.left-section img{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.overlay{
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.38);
+}
+
+.logo{
+    position: absolute;
+    top: 34px;
+    left: 34px;
+    z-index: 10;
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.left-content{
+    position: absolute;
+    bottom: 60px;
+    left: 42px;
+    z-index: 10;
+    max-width: 360px;
+}
+
+.left-content h1{
+    color: white;
+    font-size: 58px;
+    font-weight: 800;
+    line-height: 62px;
+    letter-spacing: -2px;
+}
+
+.left-content p{
+    color: #E5E7EB;
+    font-size: 17px;
+    line-height: 30px;
+    margin-top: 18px;
+}
+
+/* RIGHT */
+
+.right-section{
+    width: 52%;
+    height: 100vh;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.otp-box{
+    width: 100%;
+    max-width: 430px;
+}
+
+/* TOP */
+
+.otp-box h2{
+    color: white;
+    font-size: 46px;
+    font-weight: 800;
+    line-height: 54px;
+    letter-spacing: -2px;
+}
+
+.otp-box p{
+    color: #9CA3AF;
+    font-size: 15px;
+    line-height: 28px;
+    margin-top: 10px;
+}
+
+/* OTP INPUT */
+
+.otp-inputs{
+    margin-top: 36px;
+    margin-bottom: 30px;
+}
+
+.otp-inputs{
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.otp-input{
+    width: 58px;
+    height: 66px;
+    border-radius: 14px;
+    border: 1px solid #111827;
+    background: #020B2D;
+    color: white;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    outline: none;
+}
+
+.otp-inputs input:focus{
+    border: 1px solid #2563EB;
+}
+
+/* BUTTON */
+
+.verify-btn{
+    width: 100%;
+    height: 54px;
+    border: none;
+    border-radius: 14px;
+    background: #2563EB;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* RESEND */
+
+.resend{
+    margin-top: 22px;
+    text-align: center;
+}
+
+.resend span{
+    color: #6B7280;
+    font-size: 14px;
+}
+
+.resend a{
+    color: #3B82F6;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* FOOTER */
+
+.footer{
+    display: flex;
+    justify-content: center;
+    gap: 26px;
+    margin-top: 90px;
+}
+
+.footer a{
+    color: #4B5563;
+    text-decoration: none;
+    font-size: 10px;
+    letter-spacing: 2px;
+}
+
+/* MOBILE */
+
+@media(max-width: 992px){
+
+    body{
+        overflow-y: auto;
+    }
+
+    .left-section{
+        display: none;
+    }
+
+    .right-section{
+        width: 100%;
+        min-height: 100vh;
+        padding: 30px 24px;
+    }
+
+    .otp-box{
+        max-width: 100%;
+    }
+
+    .otp-box h2{
+        font-size: 40px;
+        line-height: 48px;
+    }
+
+    .otp-inputs{
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .otp-inputs input{
+        width: 52px;
+        height: 60px;
+    }
+
+    .footer{
+        margin-top: 60px;
+        flex-wrap: wrap;
+    }
+    #timer{
+    color: #9CA3AF;
+    font-size: 14px;
+    margin-top: 14px;
+    text-align: center;
+}
+
+}
+    </style>
+
+</head>
+
+<body>
+
+    <main class="otp-container">
+
+        <!-- LEFT -->
+
+        <section class="left-section">
+
+            <img src="https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?q=80&w=1200&auto=format&fit=crop"
+                alt="bag-image"
+                fetchpriority="high"
+                decoding="async">
+
+            <div class="overlay"></div>
+
+            <div class="logo">
+                Begnex
+            </div>
+
+            <div class="left-content">
+
+                <h1>
+                    Secure Your Access.
+                </h1>
+
+                <p>
+                    Verification is the final step to your curated collection.
+                </p>
+
+            </div>
+
+        </section>
+
+        <!-- RIGHT -->
+
+        <section class="right-section">
+
+            <div class="otp-box">
+
+                <h2>
+                    Verify Your Identity
+                </h2>
+
+                <p>
+                    We've sent a 6-digit code to your email.
+                    Please enter it below to continue.
+                </p>
+
+                {% if error %}
+                <div style="color: #EF4444; margin-bottom: 15px; font-size: 14px; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{% url 'otp_page' %}">
+
+                    {% csrf_token %}
+
+                <div class="otp-inputs">
+
+                    <input type="text" name="otp1" maxlength="1" class="otp-input" required>
+                    <input type="text" name="otp2" maxlength="1" class="otp-input" required>
+                    <input type="text" name="otp3" maxlength="1" class="otp-input" required>
+                    <input type="text" name="otp4" maxlength="1" class="otp-input" required>
+                    <input type="text" name="otp5" maxlength="1" class="otp-input" required>
+                    <input type="text" name="otp6" maxlength="1" class="otp-input" required>
+
+                </div>
+                    <p id="timer">
+
+                        OTP expires in 60s
+
+                    </p>
+
+                    <button type="submit"
+                        class="verify-btn">
+
+                        Verify & Continue
+
+                    </button>
+
+                </form>
+
+                <div class="resend">
+
+                    <span>
+                        Didn’t receive a code?
+                    </span>
+
+                <a href="{% url 'resend_otp' %}">
+                    Resend
+                </a>
+
+                </div>
+
+                <div class="footer">
+
+                    <a href="#">
+                        AUTHENTICATION PROCESS
+                    </a>
+
+                    <a href="#">
+                        PRIVACY
+                    </a>
+
+                    <a href="#">
+                        HELP
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+<script>
+
+    let timeLeft = 60;
+
+    const timer = document.getElementById("timer");
+
+    const countdown = setInterval(() => {
+
+        timeLeft--;
+
+        timer.innerHTML = `OTP expires in ${timeLeft}s`;
+
+        if(timeLeft <= 0){
+
+            clearInterval(countdown);
+
+            timer.innerHTML = "OTP Expired";
+
+        }
+
+    }, 1000);
+
+</script>
+
+
+<script>
+
+    const inputs = document.querySelectorAll('.otp-input');
+
+    inputs.forEach((input, index) => {
+
+        input.addEventListener('input', () => {
+
+            if(input.value.length === 1 && index < inputs.length - 1){
+
+                inputs[index + 1].focus();
+
+            }
+
+        });
+
+    });
+
+</script>
+
+</body>
+
+</html>

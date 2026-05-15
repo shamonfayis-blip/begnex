@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Profile</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #05070D;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* NAVBAR */
+
+        .navbar {
+            width: 100%;
+            height: 72px;
+            background: #05070D;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 36px;
+        }
+
+        .nav-links a {
+            color: #A1A1AA;
+            font-size: 11px;
+            letter-spacing: 2px;
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .nav-icons a {
+            color: white;
+        }
+
+        /* MAIN */
+
+        .edit-wrapper {
+            width: 100%;
+            min-height: calc(100vh - 72px);
+            display: flex;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            width: 260px;
+            background: #0A0D14;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 26px;
+        }
+
+        .sidebar-top {
+            padding: 0 28px;
+            margin-bottom: 30px;
+        }
+
+        .sidebar-top h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-top p {
+            color: #6B7280;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-links {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-links a {
+            height: 54px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0 28px;
+            color: #9CA3AF;
+            font-size: 12px;
+            border-left: 3px solid transparent;
+            transition: .3s;
+        }
+
+        .sidebar-links a.active,
+        .sidebar-links a:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-color: #4F78FF;
+        }
+
+        /* CONTENT */
+
+        .edit-content {
+            flex: 1;
+            padding: 60px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 60px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .top-left h1 {
+            font-size: 58px;
+            font-weight: 900;
+            letter-spacing: -2px;
+        }
+
+        .top-left p {
+            margin-top: 12px;
+            color: #6B7280;
+        }
+
+        .top-buttons {
+            display: flex;
+            gap: 14px;
+        }
+
+        .cancel-btn,
+        .save-btn {
+            width: 140px;
+            height: 52px;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+        }
+
+        .cancel-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .save-btn {
+            background: #C7D5FF;
+            color: #111827;
+        }
+
+        /* FORM */
+
+        .edit-layout {
+            display: flex;
+            gap: 60px;
+            flex-wrap: wrap;
+        }
+
+        .profile-left {
+            width: 180px;
+        }
+
+        .profile-image {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 2px solid #4F78FF;
+            overflow: hidden;
+        }
+
+        .profile-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-note {
+            margin-top: 18px;
+            color: #6B7280;
+            font-size: 10px;
+            line-height: 18px;
+            letter-spacing: 1px;
+        }
+
+        .profile-right {
+            flex: 1;
+            max-width: 620px;
+        }
+
+        .form-group {
+            margin-bottom: 42px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #9CA3AF;
+            margin-bottom: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            height: 54px;
+            color: white;
+            font-size: 24px;
+            outline: none;
+        }
+
+        .form-group p {
+            margin-top: 10px;
+            font-size: 9px;
+            color: #6B7280;
+            letter-spacing: 1px;
+        }
+
+        /* INFO BOX */
+
+        .info-box {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid #4F78FF;
+            padding: 28px;
+            margin-top: 40px;
+        }
+
+        .info-box h3 {
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .info-box p {
+            color: #9CA3AF;
+            line-height: 26px;
+            font-size: 13px;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width: 992px) {
+
+            .edit-wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .edit-content {
+                padding: 30px 20px;
+            }
+
+            .top-left h1 {
+                font-size: 40px;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            BEGNEX
+        </div>
+
+        <div class="nav-links">
+
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="#">PRODUCTS</a>
+            <a href="#">CATEGORIES</a>
+            <a href="#">ABOUT</a>
+
+        </div>
+
+        <div class="nav-icons">
+
+            <a href="#">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </a>
+
+            <a href="#">
+                <i class="fa-regular fa-heart"></i>
+            </a>
+
+            <a href="#">
+                <i class="fa-solid fa-bag-shopping"></i>
+            </a>
+
+            <a href="{% url 'profile' %}">
+                <i class="fa-regular fa-user"></i>
+            </a>
+
+        </div>
+
+    </nav>
+
+    <!-- MAIN -->
+
+    <section class="edit-wrapper">
+
+        <!-- SIDEBAR -->
+
+        <div class="sidebar">
+
+            <div class="sidebar-top">
+
+                <h3>Account</h3>
+
+                <p>MANAGE YOUR MONOLITH</p>
+
+            </div>
+
+            <div class="sidebar-links">
+
+                <a href="{% url 'profile' %}" class="active">
+
+                    <i class="fa-regular fa-user"></i>
+
+                    PROFILE
+
+                </a>
+
+                <a href="{% url 'address_list' %}">
+                    <i class="fa-solid fa-location-dot"></i>
+                    ADDRESS
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-box"></i>
+                    MY ORDERS
+                </a>
+
+                <a href="#">
+                    <i class="fa-regular fa-heart"></i>
+                    WISHLIST
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-wallet"></i>
+                    WALLET
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- CONTENT -->
+
+        <div class="edit-content">
+
+            <form method="POST" enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+                <div class="top-bar">
+
+                    <div class="top-left">
+
+                        <h1>EDIT PROFILE</h1>
+
+                        <p>Update your account details</p>
+
+                    </div>
+
+                    <div class="top-buttons">
+
+                        <a href="{% url 'profile' %}" class="cancel-btn"
+                            style="display:flex; justify-content:center; align-items:center;">
+
+                            CANCEL
+
+                        </a>
+
+                        <button type="submit" class="save-btn">
+
+                            SAVE
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {% if messages %}
+                <div id="django-messages" style="margin-bottom: 30px;">
+                    {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                    <div
+                        style="color: #10B981; font-size: 14px; background: rgba(16, 185, 129, 0.1); padding: 14px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 10px;">
+                        {{ message }}
+                    </div>
+                    {% else %}
+                    <div
+                        style="color: #EF4444; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 14px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); margin-bottom: 10px;">
+                        {{ message }}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <script>
+                    setTimeout(function () {
+                        var msg = document.getElementById('django-messages');
+                        if (msg) {
+                            msg.style.transition = 'opacity 0.5s ease';
+                            msg.style.opacity = '0';
+                            setTimeout(function () { msg.style.display = 'none'; }, 500);
+                        }
+                    }, 3000);
+                </script>
+                {% endif %}
+
+                <div class="edit-layout">
+
+                    <div class="profile-left">
+
+                        <div class="profile-image">
+
+                            {% if request.user.profile_photo %}
+                            <img src="{{ request.user.profile_photo.url }}" id="profile-preview" alt="profile">
+                            {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=111827&color=fff"
+                                id="profile-preview" alt="profile">
+                            {% endif %}
+
+                        </div>
+
+                        <input type="file" name="profile_image" id="profile_image_input" style="display: none;"
+                            accept="image/*" onchange="previewImage(event)">
+
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 18px;">
+                            <button type="button" class="cancel-btn"
+                                style="width: 140px; height: 38px; font-size: 10px;"
+                                onclick="document.getElementById('profile_image_input').click()">
+                                CHANGE IMAGE
+                            </button>
+                            <button type="button" class="cancel-btn"
+                                style="width: 140px; height: 38px; font-size: 10px; border-color: #EF4444; color: #EF4444;"
+                                onclick="removeImage()">
+                                REMOVE IMAGE
+                            </button>
+                        </div>
+
+                        <input type="hidden" name="remove_image" id="remove_image_input" value="false">
+
+                        <div class="profile-note">
+
+                            SQUARE OR ROUND, MIN 400PX
+
+                        </div>
+
+                        <script>
+                            function previewImage(event) {
+                                var reader = new FileReader();
+                                reader.onload = function () {
+                                    var output = document.getElementById('profile-preview');
+                                    output.src = reader.result;
+                                    document.getElementById('remove_image_input').value = 'false';
+                                }
+                                reader.readAsDataURL(event.target.files[0]);
+                            }
+
+                            function removeImage() {
+                                document.getElementById('profile_image_input').value = '';
+                                document.getElementById('profile-preview').src = 'https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=111827&color=fff';
+                                document.getElementById('remove_image_input').value = 'true';
+                            }
+                        </script>
+
+                    </div>
+
+                    <div class="profile-right">
+
+                        <div class="form-group">
+
+                            <label>FULL NAME</label>
+
+                            <input type="text" name="full_name" value="{{ request.user.get_full_name }}">
+
+                            <p>
+                                YOUR UNIQUE DIGITAL SIGNATURE WITHIN THE MONOLITH.
+                            </p>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>PHONE NUMBER</label>
+
+                            <input type="text" name="phone" value="{{ request.user.phone_number|default:'' }}"
+                                placeholder="+91 XXXXX XXXXX">
+
+                            <p>
+                                STANDARD COMMUNICATION PROTOCOLS APPLY
+                            </p>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>EMAIL ADDRESS</label>
+
+                            <input type="email" name="email" value="{{ request.user.email }}">
+
+                            <p>
+                                PRIMARY DATA LINK FOR ALL TRANSACTION NOTIFICATIONS
+                            </p>
+
+                        </div>
+
+                        <div class="info-box">
+
+                            <h3>
+
+                                <i class="fa-regular fa-shield"></i>
+
+                                IDENTITY VERIFICATION
+
+                            </h3>
+
+                            <p>
+                                Your account is currently protected by hardware-level encryption.
+                                Changing your email will require verification.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</body>
+
+</html>

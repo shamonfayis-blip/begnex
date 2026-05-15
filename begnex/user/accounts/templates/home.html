@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Begnex</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <style>
+
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html,
+        body{
+            overflow-x: hidden;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar{
+            display: none;
+        }
+
+        body{
+            font-family: 'Inter', sans-serif;
+            background: #05070D;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+
+        a{
+            text-decoration: none;
+        }
+
+        /* NAVBAR */
+
+        .navbar{
+            width: 100%;
+            height: 72px;
+            background: #05070D;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo{
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .nav-links{
+            display: flex;
+            gap: 36px;
+        }
+
+        .nav-links a{
+            color: #A1A1AA;
+            font-size: 11px;
+            letter-spacing: 2px;
+            transition: .3s;
+        }
+
+        .nav-links a:hover{
+            color: white;
+        }
+
+        .nav-icons{
+            display: flex;
+            gap: 16px;
+            color: #D4D4D8;
+            font-size: 14px;
+        }
+
+        /* HERO */
+
+        .hero{
+            width: 100%;
+            min-height: 650px;
+            display: flex;
+        }
+
+        .hero-left{
+            width: 50%;
+            background: linear-gradient(to bottom,#0A111C,#05070D);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .hero-left img{
+            width: 78%;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.7));
+        }
+
+        .hero-right{
+            width: 50%;
+            background: #05070D;
+            display: flex;
+            align-items: center;
+            padding: 0 70px;
+        }
+
+        .hero-content{
+            max-width: 420px;
+        }
+
+        .hero-content h1{
+            font-size: 58px;
+            font-weight: 900;
+            line-height: 60px;
+            letter-spacing: -2px;
+        }
+
+        .hero-content p{
+            margin-top: 22px;
+            color: #8D95A5;
+            font-size: 15px;
+            line-height: 30px;
+        }
+
+        .hero-btn{
+            margin-top: 34px;
+            width: 170px;
+            height: 52px;
+            border: none;
+            background: white;
+            color: black;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: .3s;
+        }
+
+        .hero-btn:hover{
+            background: #E5E7EB;
+        }
+
+        /* SECTION */
+
+        .section{
+            width: 100%;
+            padding: 100px 60px;
+            background: #07101B;
+        }
+
+        .section-sub{
+            color: #64748B;
+            font-size: 11px;
+            letter-spacing: 3px;
+            margin-bottom: 18px;
+        }
+
+        .section-title{
+            font-size: 44px;
+            font-weight: 800;
+            margin-bottom: 60px;
+        }
+
+        /* PRODUCT GRID */
+
+        .product-grid{
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 28px;
+        }
+
+        .product-card{
+            background: #05070D;
+            overflow: hidden;
+        }
+
+        .product-image{
+            width: 100%;
+            height: 340px;
+            overflow: hidden;
+        }
+
+        .product-image img{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: .5s;
+        }
+
+        .product-card:hover img{
+            transform: scale(1.05);
+        }
+
+        .product-content{
+            padding: 28px;
+        }
+
+        .product-content h3{
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .product-content p{
+            color: #94A3B8;
+            font-size: 14px;
+            line-height: 26px;
+            margin-bottom: 24px;
+        }
+
+        .view-btn{
+            color: white;
+            font-size: 11px;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 6px;
+        }
+
+        /* PREMIUM */
+
+        .premium-section{
+            width: 100%;
+            min-height: 620px;
+            background: #05070D;
+            display: flex;
+            padding: 100px 60px;
+            gap: 60px;
+        }
+
+        .premium-left{
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .premium-left h2{
+            font-size: 52px;
+            line-height: 56px;
+            font-weight: 900;
+            letter-spacing: -2px;
+        }
+
+        .premium-left p{
+            margin-top: 24px;
+            color: #8D95A5;
+            line-height: 30px;
+            font-size: 15px;
+            max-width: 420px;
+        }
+
+        .stats{
+            display: flex;
+            gap: 60px;
+            margin-top: 46px;
+        }
+
+        .stats h3{
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .stats span{
+            color: #94A3B8;
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+
+        .premium-right{
+            width: 60%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-right img{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .floating-card{
+            position: absolute;
+            left: 30px;
+            bottom: 30px;
+            width: 230px;
+            background: #4169A8;
+            padding: 26px;
+        }
+
+        .floating-card h4{
+            font-size: 17px;
+            line-height: 28px;
+            font-weight: 500;
+        }
+
+        /* FOOTER */
+
+        .footer{
+            width: 100%;
+            padding: 36px 60px;
+            background: #05070D;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left h3{
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .footer-left p{
+            color: #94A3B8;
+            font-size: 14px;
+            max-width: 420px;
+            line-height: 26px;
+        }
+
+        .footer-links{
+            display: flex;
+            gap: 34px;
+        }
+
+        .footer-links a{
+            color: #94A3B8;
+            font-size: 11px;
+            letter-spacing: 2px;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width: 992px){
+
+            .navbar{
+                padding: 0 20px;
+            }
+
+            .nav-links{
+                display: none;
+            }
+
+            .hero{
+                flex-direction: column;
+            }
+
+            .hero-left,
+            .hero-right{
+                width: 100%;
+            }
+
+            .hero-right{
+                padding: 60px 24px;
+            }
+
+            .hero-content h1{
+                font-size: 42px;
+                line-height: 48px;
+            }
+
+            .section{
+                padding: 70px 24px;
+            }
+
+            .product-grid{
+                grid-template-columns: 1fr;
+            }
+
+            .premium-section{
+                flex-direction: column;
+                padding: 70px 24px;
+            }
+
+            .premium-left,
+            .premium-right{
+                width: 100%;
+            }
+
+            .footer{
+                flex-direction: column;
+                gap: 30px;
+                align-items: flex-start;
+                padding: 40px 24px;
+            }
+
+            .footer-links{
+                flex-wrap: wrap;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            BEGNEX
+        </div>
+
+        <div class="nav-links">
+
+            <a href="#">HOME</a>
+            <a href="#">PRODUCTS</a>
+            <a href="#">CATEGORIES</a>
+            <a href="#">ABOUT</a>
+
+        </div>
+
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<div class="nav-icons">
+
+    <a href="#">
+        <i class="fa-solid fa-magnifying-glass"></i>
+    </a>
+
+    <a href="#">
+        <i class="fa-regular fa-heart"></i>
+    </a>
+
+    <a href="#"
+        class="cart-icon">
+
+        <i class="fa-solid fa-bag-shopping"></i>
+
+    </a>
+
+    <a href="{% url 'profile' %}">
+        <i class="fa-regular fa-user"></i>
+    </a>
+
+</div>
+
+    </nav>
+
+    <!-- HERO -->
+
+    {% if messages %}
+    <div id="django-messages" style="position: absolute; top: 90px; left: 50%; transform: translateX(-50%); z-index: 2000; width: 100%; max-width: 400px;">
+        {% for message in messages %}
+            <div style="color: #10B981; font-size: 14px; text-align: center; background: rgba(16, 185, 129, 0.15); padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(16, 185, 129, 0.3); backdrop-filter: blur(10px);">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    <script>
+        setTimeout(function() {
+            var msg = document.getElementById('django-messages');
+            if (msg) {
+                msg.style.transition = 'opacity 0.5s ease';
+                msg.style.opacity = '0';
+                setTimeout(function() { msg.style.display = 'none'; }, 500);
+            }
+        }, 3000);
+    </script>
+    {% endif %}
+
+    <section class="hero">
+
+        <div class="hero-left">
+
+            <img src="https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?q=80&w=1200&auto=format&fit=crop"
+    alt="bag"
+    fetchpriority="high"
+    decoding="async">
+        </div>
+
+        <div class="hero-right">
+
+            <div class="hero-content">
+
+                <h1>
+                    CARRY STYLE EVERYWHERE
+                </h1>
+
+                <p>
+                    Architecture precision meets high-fashion utility.
+                    Our collections are designed for those who navigate
+                    the urban landscape with intent.
+                </p>
+
+                <button class="hero-btn">
+
+                    EXPLORE BAGS →
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- PRODUCTS -->
+
+    <section class="section">
+
+        <div class="section-sub">
+            OUR CURATED SELECTION
+        </div>
+
+        <h2 class="section-title">
+            Designed for Motion
+        </h2>
+
+        <div class="product-grid">
+
+            <!-- CARD -->
+
+            <div class="product-card">
+
+                <div class="product-image">
+
+                    <img src="https://images.unsplash.com/photo-1581605405669-fcdf81165afa?q=80&w=1200&auto=format&fit=crop" loading="lazy">
+                </div>
+
+                <div class="product-content">
+
+                    <h3>Backpack</h3>
+
+                    <p>
+                        Ergonomic travel companion built for daily
+                        commute and urban movement.
+                    </p>
+
+                    <a href="#"
+                        class="view-btn">
+
+                        VIEW MORE
+
+                    </a>
+
+                </div>
+
+            </div>
+
+            <!-- CARD -->
+
+            <div class="product-card">
+
+                <div class="product-image">
+
+                    <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1200&auto=format&fit=crop" loading="lazy">
+                </div>
+
+                <div class="product-content">
+
+                    <h3>Travel Bag</h3>
+
+                    <p>
+                        Premium leather expression crafted
+                        for modern travel and precision.
+                    </p>
+
+                    <a href="#"
+                        class="view-btn">
+
+                        VIEW MORE
+
+                    </a>
+
+                </div>
+
+            </div>
+
+            <!-- CARD -->
+
+            <div class="product-card">
+
+                <div class="product-image">
+
+                   <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1200&auto=format&fit=crop" loading="lazy">
+                </div>
+
+                <div class="product-content">
+
+                    <h3>Handbags</h3>
+
+                    <p>
+                        The balance of luxury and utility built
+                        next generation everyday lifestyle.
+                    </p>
+
+                    <a href="#"
+                        class="view-btn">
+
+                        VIEW MORE
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- PREMIUM -->
+
+    <section class="premium-section">
+
+        <div class="premium-left">
+
+            <h2>
+                CRAFTED WITHOUT COMPROMISE
+            </h2>
+
+            <p>
+                Every seam is intentional. We utilize the highest grade
+                full-grain leather and engineered hardware to ensure
+                your Begnex piece ages as beautifully as your journey.
+            </p>
+
+            <div class="stats">
+
+                <div>
+
+                    <h3>10+</h3>
+
+                    <span>YEARS WARRANTY</span>
+
+                </div>
+
+                <div>
+
+                    <h3>100%</h3>
+
+                    <span>GENUINE LEATHER</span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="premium-right">
+
+            <img src="https://images.unsplash.com/photo-1591561954557-26941169b49e?q=80&w=1200&auto=format&fit=crop" loading="lazy">
+            <div class="floating-card">
+
+                <h4>
+                    Museum grade craftsmanship for the everyday user.
+                </h4>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- FOOTER -->
+
+    <footer class="footer">
+
+        <div class="footer-left">
+
+            <h3>Begnex</h3>
+
+            <p>
+                Where form meets contemporary mobility.
+                All designs are crafted precisely for architectural minimalism.
+            </p>
+
+        </div>
+
+        <div class="footer-links">
+
+            <a href="#">PRIVACY POLICY</a>
+            <a href="#">TERMS OF SERVICE</a>
+            <a href="#">SHIPPING</a>
+            <a href="#">RETURNS</a>
+
+        </div>
+
+    </footer>
+<script>
+
+    history.pushState(null, null, location.href);
+
+    window.onpopstate = function () {
+
+        history.go(1);
+
+    };
+
+</script>
+</body>
+
+</html>

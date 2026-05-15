@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% if address %}Edit Address{% else %}Add Address{% endif %} - Begnex</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #05070D; color: white; overflow-x: hidden; }
+        a { text-decoration: none; }
+
+        /* NAVBAR */
+        .navbar { width: 100%; height: 72px; background: #05070D; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; position: sticky; top: 0; z-index: 1000; }
+        .logo { font-size: 15px; font-weight: 800; letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 36px; }
+        .nav-links a { color: #A1A1AA; font-size: 11px; letter-spacing: 2px; transition: .3s; }
+        .nav-links a:hover { color: white; }
+        .nav-icons { display: flex; gap: 16px; color: #D4D4D8; font-size: 14px; }
+
+        /* MAIN */
+        .profile-wrapper { width: 100%; min-height: calc(100vh - 72px); display: flex; }
+
+        /* SIDEBAR */
+        .sidebar { width: 260px; background: #0A0D14; border-right: 1px solid rgba(255, 255, 255, 0.05); padding-top: 36px; flex-shrink: 0; }
+        .sidebar-title { padding: 0 28px; margin-bottom: 34px; }
+        .sidebar-title h4 { font-size: 11px; letter-spacing: 2px; color: #6B7280; margin-bottom: 8px; }
+        .sidebar-title p { font-size: 12px; color: #9CA3AF; }
+        .sidebar-links { display: flex; flex-direction: column; }
+        .sidebar-links a { height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 28px; color: #9CA3AF; font-size: 12px; border-left: 3px solid transparent; transition: .3s; }
+        .sidebar-links a:hover, .sidebar-links .active { background: rgba(255, 255, 255, 0.05); color: white; border-color: #4F78FF; }
+
+        /* CONTENT */
+        .profile-content { flex: 1; padding: 60px; }
+        .profile-title { font-size: 40px; font-weight: 900; letter-spacing: -2px; margin-bottom: 40px; }
+        
+        .form-card { width: 100%; max-width: 800px; background: linear-gradient(to right, #111318, #171B24); border: 1px solid rgba(255, 255, 255, 0.05); padding: 50px; position: relative; overflow: hidden; border-radius: 16px; }
+        
+        .form-row { display: flex; gap: 24px; margin-bottom: 24px; }
+        .form-group { flex: 1; display: flex; flex-direction: column; }
+        
+        .form-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #9CA3AF; margin-bottom: 10px; }
+        .form-control { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px 20px; color: white; font-family: 'Inter', sans-serif; font-size: 14px; transition: .3s; }
+        .form-control:focus { outline: none; border-color: #4F78FF; background: rgba(79, 120, 255, 0.05); box-shadow: 0 0 0 4px rgba(79, 120, 255, 0.1); }
+        .form-control::placeholder { color: #52525B; }
+        
+        select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239CA3AF' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 20px center; }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; margin-top: 10px; }
+        .custom-checkbox { appearance: none; width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; background: rgba(255,255,255,0.02); cursor: pointer; position: relative; transition: .2s; }
+        .custom-checkbox:checked { background: #4F78FF; border-color: #4F78FF; }
+        .custom-checkbox:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; color: white; font-size: 12px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .checkbox-label { font-size: 14px; color: #D4D4D8; cursor: pointer; }
+
+        .btn-submit { background: white; color: #05070D; border: none; padding: 18px 40px; border-radius: 8px; font-size: 13px; font-weight: 800; letter-spacing: 2px; cursor: pointer; transition: .3s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 10px; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255,255,255,0.15); }
+        .btn-cancel { background: transparent; color: #A1A1AA; border: 1px solid rgba(255,255,255,0.1); padding: 18px 40px; border-radius: 8px; font-size: 13px; font-weight: 800; letter-spacing: 2px; cursor: pointer; transition: .3s; display: inline-flex; align-items: center; justify-content: center; width: 100%; margin-top: 16px; }
+        .btn-cancel:hover { background: rgba(255,255,255,0.05); color: white; }
+
+        @media(max-width: 992px) {
+            .profile-wrapper { flex-direction: column; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+            .profile-content { padding: 30px 20px; }
+            .profile-title { font-size: 32px; }
+            .form-row { flex-direction: column; gap: 24px; }
+            .form-card { padding: 30px; }
+            .nav-links { display: none; }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="logo">BEGNEX</div>
+        <div class="nav-links">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="#">PRODUCTS</a>
+            <a href="#">CATEGORIES</a>
+            <a href="#">ABOUT</a>
+        </div>
+        <div class="nav-icons">
+            <a href="#"><i class="fa-solid fa-magnifying-glass"></i></a>
+            <a href="#"><i class="fa-regular fa-heart"></i></a>
+            <a href="#" class="cart-icon"><i class="fa-solid fa-bag-shopping"></i></a>
+            <a href="{% url 'profile' %}"><i class="fa-regular fa-user"></i></a>
+        </div>
+    </nav>
+
+    <section class="profile-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-title">
+                <h4>MANAGEMENT</h4>
+                <p>Begnex Architectural Vault</p>
+            </div>
+            <div class="sidebar-links">
+                <a href="{% url 'profile' %}"><i class="fa-regular fa-user"></i> PROFILE</a>
+                <a href="{% url 'address_list' %}" class="active"><i class="fa-solid fa-location-dot"></i> ADDRESS</a>
+                <a href="#"><i class="fa-solid fa-box"></i> MY ORDERS</a>
+                <a href="#"><i class="fa-regular fa-heart"></i> WISHLIST</a>
+                <a href="#"><i class="fa-solid fa-wallet"></i> WALLET</a>
+            </div>
+        </div>
+
+        <div class="profile-content">
+            <h1 class="profile-title">
+                {% if address %}EDIT ADDRESS{% else %}ADD NEW ADDRESS{% endif %}
+            </h1>
+
+            <div class="form-card">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">FULL NAME</label>
+                            <input type="text" name="name" class="form-control" placeholder="John Doe" value="{{ address.name|default:'' }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">PHONE NUMBER</label>
+                            <input type="text" name="phone_number" class="form-control" placeholder="+1 234 567 8900" value="{{ address.phone_number|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label class="form-label">ADDRESS LINE 1</label>
+                        <input type="text" name="address_line_1" class="form-control" placeholder="123 Main St, Apt 4B" value="{{ address.address_line_1|default:'' }}" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label class="form-label">ADDRESS LINE 2 (OPTIONAL)</label>
+                        <input type="text" name="address_line_2" class="form-control" placeholder="Landmark, Company, etc." value="{{ address.address_line_2|default:'' }}">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">CITY</label>
+                            <input type="text" name="city" class="form-control" placeholder="New York" value="{{ address.city|default:'' }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">STATE</label>
+                            <input type="text" name="state" class="form-control" placeholder="NY" value="{{ address.state|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">PINCODE / ZIP</label>
+                            <input type="text" name="pincode" class="form-control" placeholder="10001" value="{{ address.pincode|default:'' }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">COUNTRY</label>
+                            <input type="text" name="country" class="form-control" placeholder="United States" value="{{ address.country|default:'India' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label class="form-label">ADDRESS TYPE</label>
+                        <select name="address_type" class="form-control">
+                            <option value="Home" {% if address.address_type == 'Home' %}selected{% endif %}>Home</option>
+                            <option value="Work" {% if address.address_type == 'Work' %}selected{% endif %}>Work</option>
+                            <option value="Other" {% if address.address_type == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="is_default" id="is_default" class="custom-checkbox" {% if address.is_default %}checked{% endif %}>
+                        <label for="is_default" class="checkbox-label">Set as default address</label>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        {% if address %}SAVE CHANGES{% else %}SAVE ADDRESS{% endif %}
+                    </button>
+                    <a href="{% url 'address_list' %}" class="btn-cancel">
+                        CANCEL
+                    </a>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
