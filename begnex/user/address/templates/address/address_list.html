@@ -233,8 +233,15 @@
         </div>
     </div>
 
-    <!-- Hidden form for DELETE -->
-    <form id="deleteForm" method="GET" style="display:none;"></form>
+    <!-- Hidden form for DELETE (POST + CSRF) -->
+    <form id="deleteForm" method="POST" style="display:none;">
+        {% csrf_token %}
+    </form>
+
+    <!-- Hidden form for SET DEFAULT (POST + CSRF) -->
+    <form id="defaultForm" method="POST" style="display:none;">
+        {% csrf_token %}
+    </form>
 
     <section class="profile-wrapper">
         <div class="sidebar">
@@ -304,7 +311,7 @@
                         <a href="{% url 'edit_address' address.id %}" class="btn-action">EDIT</a>
                         <button class="btn-action" onclick="openDeleteModal('{% url 'delete_address' address.id %}')">DELETE</button>
                         {% if not address.is_default %}
-                        <a href="{% url 'set_default_address' address.id %}" class="btn-action">SET DEFAULT</a>
+                        <button class="btn-action" onclick="submitSetDefault('{% url 'set_default_address' address.id %}')">SET DEFAULT</button>
                         {% endif %}
                     </div>
                 </div>
@@ -338,8 +345,16 @@
 
         function confirmDelete() {
             if (pendingDeleteUrl) {
-                window.location.href = pendingDeleteUrl;
+                var form = document.getElementById('deleteForm');
+                form.action = pendingDeleteUrl;
+                form.submit();
             }
+        }
+
+        function submitSetDefault(url) {
+            var form = document.getElementById('defaultForm');
+            form.action = url;
+            form.submit();
         }
 
         // Close modal if clicking outside box

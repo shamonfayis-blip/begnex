@@ -1,9 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
+
 from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.cache import never_cache
+
+
 from django.contrib import messages
+
 from django.core.paginator import Paginator
+
 from django.db.models import Q
 
 User = get_user_model()
@@ -67,7 +72,7 @@ def admin_user_list_view(request):
             Q(last_name__icontains=search_query)
         )
 
-    paginator = Paginator(users, 5)  # 5 users per page
+    paginator = Paginator(users, 5) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -94,3 +99,4 @@ def toggle_block_user(request, user_id):
 def admin_logout_view(request):
     logout(request)
     return redirect('admin_login')
+    

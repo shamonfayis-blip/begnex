@@ -1,20 +1,27 @@
 import random
 import time
+
 import re
 import threading
 
 from django.shortcuts import render, redirect
+
 from django.contrib.auth import authenticate, login, logout
+
 from django.contrib.auth import get_user_model
 
 from django.views.decorators.cache import never_cache, cache_control
+
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
+
 from django.contrib.auth.decorators import login_required
+
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
+
 from django.urls import reverse
 
 User = get_user_model()

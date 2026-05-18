@@ -3,12 +3,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Address
 
-@login_required
+@login_required(login_url='login')
 def address_list(request):
     addresses = Address.objects.filter(user=request.user).order_by('-is_default', '-created_at')
     return render(request, 'address/address_list.html', {'addresses': addresses})
 
-@login_required
+@login_required(login_url='login')
 def add_address(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -41,7 +41,7 @@ def add_address(request):
         
     return render(request, 'address/address_form.html')
 
-@login_required
+@login_required(login_url='login')
 def edit_address(request, id):
     address = get_object_or_404(Address, id=id, user=request.user)
     if request.method == 'POST':
@@ -62,17 +62,20 @@ def edit_address(request, id):
         
     return render(request, 'address/address_form.html', {'address': address})
 
-@login_required
+@login_required(login_url='login')
 def delete_address(request, id):
-    address = get_object_or_404(Address, id=id, user=request.user)
-    address.delete()
-    messages.success(request, 'Address deleted successfully!')
+    if request.method == 'POST':
+        address = get_object_or_404(Address, id=id, user=request.user)
+        address.delete()
+        messages.success(request, 'Address deleted successfully!')
     return redirect('address_list')
 
-@login_required
+@login_required(login_url='login')
 def set_default_address(request, id):
-    address = get_object_or_404(Address, id=id, user=request.user)
-    address.is_default = True
-    address.save()
-    messages.success(request, 'Default address updated!')
+    if request.method == 'POST':
+        address = get_object_or_404(Address, id=id, user=request.user)
+        Address.objects.filter(user=request.user, is_default=True).exclude(pk=id).update(is_default=False)
+        address.is_default = True
+        address.save()
+        messages.success(request, 'Default address updated!')
     return redirect('address_list')
