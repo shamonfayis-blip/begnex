@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class AdminUseConfig(AppConfig):
-    name = 'admin_panel.admin_use'
+    name = "admin_panel.admin_use"

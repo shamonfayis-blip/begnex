@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class AddressConfig(AppConfig):
-    name = 'user.address'
+    name = "user.address"

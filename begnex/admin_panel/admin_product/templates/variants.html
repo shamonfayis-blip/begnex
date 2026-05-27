@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variant Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #FAFAFA; display: flex; color: #111; }
+        a { text-decoration: none; color: inherit; }
+
+
+        /* ─── MAIN ─── */
+        .main { width: 100%; padding: 40px 48px; }
+
+        /* ─── TOP SECTION ─── */
+        .breadcrumbs { font-size: 13px; color: #777; margin-bottom: 16px; font-weight: 500; }
+        .breadcrumbs a { color: #111; transition: .2s; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; }
+        .page-title h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 6px; }
+        .page-title p { color: #666; font-size: 14px; }
+        
+        .add-btn { height: 46px; padding: 0 24px; background: #111; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .add-btn:hover { background: #333; transform: translateY(-1px); }
+
+        /* ─── SUMMARY CARD ─── */
+        .summary-card { background: white; border-radius: 16px; border: 1px solid #EAEAEA; padding: 24px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .summary-left { display: flex; align-items: center; gap: 20px; }
+        .summary-img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; background: #F5F5F5; border: 1px solid #EAEAEA; }
+        .summary-info .collection { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
+        .summary-info h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .badge-list { display: flex; gap: 8px; }
+        .badge-sm { padding: 4px 10px; background: #F5F5F5; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 11px; font-weight: 600; color: #555; }
+        
+        .summary-right { display: flex; gap: 32px; padding-left: 32px; border-left: 1px solid #EAEAEA; }
+        .stat-item { display: flex; flex-direction: column; gap: 4px; }
+        .stat-label { font-size: 12px; color: #777; font-weight: 500; }
+        .stat-value { font-size: 24px; font-weight: 700; color: #111; }
+        .stat-value.red { color: #DC2626; }
+
+        /* ─── TOOLBAR ─── */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; }
+        .search-box { flex: 1; max-width: 400px; position: relative; }
+        .search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #999; }
+        .search-box input { width: 100%; height: 44px; padding-left: 44px; padding-right: 16px; border: 1px solid #EAEAEA; border-radius: 10px; background: white; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; transition: .2s; }
+        .search-box input:focus { border-color: #111; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+        
+        .filters { display: flex; gap: 12px; }
+        .filter-select { height: 44px; padding: 0 16px; border: 1px solid #EAEAEA; border-radius: 10px; background: white; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; outline: none; cursor: pointer; color: #555; }
+        
+        /* ─── TABLE ─── */
+        .table-container { background: white; border-radius: 16px; border: 1px solid #EAEAEA; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #FCFCFC; border-bottom: 1px solid #EAEAEA; }
+        th { text-align: left; padding: 16px 24px; font-size: 12px; font-weight: 600; color: #666; letter-spacing: 0.5px; }
+        td { padding: 16px 24px; border-bottom: 1px solid #F5F5F5; font-size: 14px; vertical-align: middle; }
+        tbody tr { transition: .2s; }
+        tbody tr:hover { background: #FAFAFA; }
+        tbody tr:last-child td { border-bottom: none; }
+        
+        .default-radio { width: 18px; height: 18px; accent-color: #111; cursor: pointer; }
+        
+        .variant-cell { display: flex; align-items: center; gap: 14px; }
+        .v-img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #F5F5F5; border: 1px solid #EAEAEA; }
+        .v-info h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; color: #111; }
+        .v-info p { font-size: 12px; color: #777; }
+        
+        .price { font-weight: 600; }
+        .sku { font-family: monospace; font-size: 13px; color: #555; background: #F5F5F5; padding: 4px 8px; border-radius: 6px; }
+        
+        .status-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px; }
+        .status-active { background: #111; color: white; }
+        .status-inactive { background: #FEE2E2; color: #DC2626; }
+        
+        .stock-display { display: flex; flex-direction: column; align-items: flex-start; }
+        .stock-qty { font-size: 16px; font-weight: 700; color: #111; }
+        .stock-label { font-size: 11px; color: #059669; font-weight: 600; }
+        .stock-label.out { color: #DC2626; }
+        
+        .actions { display: flex; gap: 10px; }
+        .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid #EAEAEA; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #555; transition: .2s; font-size: 14px; }
+        .icon-btn:hover { background: #F5F5F5; color: #111; }
+        .icon-btn.danger:hover { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
+
+        /* ─── PAGINATION ─── */
+        .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding: 0 8px; }
+        .page-info { font-size: 13px; color: #777; font-weight: 500; }
+        .page-links { display: flex; gap: 6px; }
+        .page-links a, .page-links span { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #EAEAEA; background: white; font-size: 13px; font-weight: 600; color: #555; transition: .2s; }
+        .page-links a:hover { background: #F5F5F5; color: #111; }
+        .page-links .active { background: #111; color: white; border-color: #111; }
+
+        /* ─── DRAWERS ─── */
+        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1000; opacity: 0; pointer-events: none; transition: .3s; }
+        .drawer-overlay.active { opacity: 1; pointer-events: all; }
+        .drawer { position: absolute; right: -480px; top: 0; width: 480px; height: 100%; background: white; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -10px 0 40px rgba(0,0,0,0.1); }
+        .drawer-overlay.active .drawer { right: 0; }
+        
+        .drawer-header { padding: 24px 32px; border-bottom: 1px solid #F0F0F0; display: flex; justify-content: space-between; align-items: center; }
+        .drawer-header h2 { font-size: 20px; font-weight: 700; }
+        .drawer-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; transition: .2s; }
+        .drawer-close:hover { color: #111; }
+        
+        .drawer-body { padding: 32px; overflow-y: auto; flex: 1; }
+        .drawer-footer { padding: 24px 32px; border-top: 1px solid #F0F0F0; display: flex; gap: 12px; background: #FAFAFA; }
+        
+        .field { margin-bottom: 24px; }
+        .field label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: #555; }
+        .field input[type="text"], .field input[type="number"] { width: 100%; height: 46px; padding: 0 16px; border: 1px solid #EAEAEA; border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; transition: .2s; }
+        .field input:focus { border-color: #111; }
+        
+        .status-group { display: flex; gap: 12px; }
+        .status-btn { flex: 1; height: 44px; border: 1px solid #EAEAEA; background: white; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s; }
+        .status-btn.active { background: #111; color: white; border-color: #111; }
+        
+        .upload-box { border: 2px dashed #EAEAEA; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: .2s; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #FAFAFA; height: 100%; }
+        .upload-box:hover { border-color: #999; background: #F5F5F5; }
+        .upload-box i { font-size: 20px; color: #888; margin-bottom: 8px; }
+        .upload-box p { font-size: 11px; font-weight: 500; color: #111; }
+        .upload-box input { display: none; }
+        
+        .preview-area { display: none; align-items: center; justify-content: space-between; padding: 8px; border: 1px solid #EAEAEA; border-radius: 10px; background: white; height: 100%; }
+        .preview-area img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid #EAEAEA; }
+        .remove-img { background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; border-radius: 6px; cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: .2s; }
+        .remove-img:hover { background: #FEE2E2; }
+        
+        .save-btn { flex: 1; height: 46px; background: #111; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s; }
+        .save-btn:hover { background: #333; }
+        .cancel-btn { flex: 1; height: 46px; background: white; color: #555; border: 1px solid #EAEAEA; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s; }
+        .cancel-btn:hover { background: #F5F5F5; color: #111; }
+
+        /* ─── TOASTS ─── */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 280px; padding: 16px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 12px; animation: slideIn .3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .toast.success { background: #111; color: white; }
+        .toast.error { background: #DC2626; color: white; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body>
+
+    {% if messages %}
+    <div class="toast-container">
+        {% for message in messages %}
+            <div class="toast {% if message.tags %}{{ message.tags }}{% endif %}">
+                {% if message.tags == 'success' %}<i class="fa-solid fa-check-circle"></i>{% else %}<i class="fa-solid fa-circle-exclamation"></i>{% endif %}
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- MAIN -->
+    <main class="main">
+        
+        <div class="breadcrumbs">
+            <a href="{% url 'admin_products' %}">Products</a> <i class="fa-solid fa-chevron-right" style="font-size: 10px; margin: 0 6px;"></i> <span style="color:#111;">Variant Management</span>
+        </div>
+
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Variant Management</h1>
+                <p>Manage sizes, colors, and specific attributes for this product.</p>
+            </div>
+            <button class="add-btn" onclick="openDrawer('variantDrawer')">
+                <i class="fa-solid fa-plus"></i> Add Variant
+            </button>
+        </div>
+
+        <!-- PRODUCT SUMMARY CARD -->
+        <div class="summary-card">
+            <div class="summary-left">
+                {% with default_variant=product.variants.all|dictsortreversed:"is_default"|first %}
+
+    {% if default_variant and default_variant.images.first %}
+
+        <img
+            src="{{ default_variant.images.first.image.url }}"
+            class="summary-img"
+            alt="{{ product.name }}"
+        >
+
+    {% else %}
+
+        <div
+            class="summary-img"
+            style="display:flex;align-items:center;justify-content:center;color:#999;"
+        >
+            <i
+                class="fa-solid fa-image"
+                style="font-size:24px;"
+            ></i>
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+                <div class="summary-info">
+                    <span class="collection">{{ product.category.name }}</span>
+                    <h3>{{ product.name }}</h3>
+                    <div class="badge-list">
+                        <span class="badge-sm">ID: {{ product.product_id }}</span>
+                        {% if product.material %}<span class="badge-sm">{{ product.material }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="summary-right">
+                <div class="stat-item">
+                    <span class="stat-label">Total Variants</span>
+                    <span class="stat-value">{{ total_variants }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Active</span>
+                    <span class="stat-value" style="color: #059669;">{{ active_variants }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Out of Stock</span>
+                    <span class="stat-value {% if out_of_stock > 0 %}red{% endif %}">{{ out_of_stock }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOOLBAR -->
+        <form method="GET" class="toolbar">
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search SKU or variant name..." onchange="this.form.submit()">
+            </div>
+            <div class="filters">
+                <select name="stock" class="filter-select" onchange="this.form.submit()">
+                    <option value="">All Stock</option>
+                    <option value="in_stock" {% if stock_filter == 'in_stock' %}selected{% endif %}>In Stock</option>
+                    <option value="out_of_stock" {% if stock_filter == 'out_of_stock' %}selected{% endif %}>Out of Stock</option>
+                </select>
+                <select name="status" class="filter-select" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+                {% if search_query or stock_filter or status_filter %}
+                <a href="{% url 'admin_variants' product.id %}" class="filter-select" style="display:flex;align-items:center;justify-content:center;color:#DC2626;background:#FEF2F2;border-color:#FECACA;">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+
+        <!-- TABLE -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Default</th>
+                        <th>Variant</th>
+                        <th>SKU Code</th>
+                        <th>Price (₹)</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for variant in page_obj %}
+                    <tr>
+                        <td style="text-align: center;">
+                            <form action="{% url 'admin_variant_set_default' variant.id %}" method="POST">
+                                {% csrf_token %}
+                                <input type="radio" name="default_radio" class="default-radio" {% if variant.is_default %}checked{% endif %} onchange="this.form.submit()">
+                            </form>
+                        </td>
+                        <td>
+                            <div class="variant-cell">
+                                {% if variant.images.first %}
+                                    <img src="{{ variant.images.first.image.url }}" class="v-img" alt="Variant">
+                                {% else %}
+                                    <div class="v-img" style="display:flex;align-items:center;justify-content:center;color:#ccc;"><i class="fa-solid fa-image"></i></div>
+                                {% endif %}
+                                <div class="v-info">
+                                    <h4>{{ variant.name }}</h4>
+                                    <p>Added {{ variant.created_at|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="sku">{{ variant.sku }}</span></td>
+                        <td><span class="price">₹{{ variant.price }}</span></td>
+                        <td>
+                            <div class="stock-display">
+                                <span class="stock-qty">{{ variant.stock }}</span>
+                                {% if variant.stock > 0 %}
+                                    <span class="stock-label">In Stock</span>
+                                {% else %}
+                                    <span class="stock-label out">Out of Stock</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if variant.is_active %}
+                                <span class="status-badge status-active">Active</span>
+                            {% else %}
+                                <span class="status-badge status-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="actions" style="justify-content: flex-end;">
+                                <button class="icon-btn" onclick="openEditVariant(
+                                    {{ variant.id }}, 
+                                    '{{ variant.name|escapejs }}', 
+                                    '{{ variant.sku|escapejs }}', 
+                                    {{ variant.price }}, 
+                                    {{ variant.stock }}, 
+                                    {{ variant.is_active|yesno:'true,false' }}, 
+                                    [
+                                        {% for img in variant.images.all %}
+                                            { id: {{ img.id }}, url: '{{ img.image.url }}' }{% if not forloop.last %},{% endif %}
+                                        {% endfor %}
+                                    ]
+                                )">
+                                    <i class="fa-regular fa-pen-to-square"></i>
+                                </button>
+                                <form action="{% url 'admin_variant_delete' variant.id %}" method="POST" onsubmit="return confirm('Delete this variant?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="icon-btn danger">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #888;">
+                            <i class="fa-solid fa-layer-group" style="font-size: 32px; color: #EAEAEA; margin-bottom: 12px; display: block;"></i>
+                            No variants found. Click "Add Variant" to create one.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            <div class="page-info">
+                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} variants
+            </div>
+            <div class="page-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"><i class="fa-solid fa-chevron-left"></i></a>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="active">{{ num }}</span>
+                    {% else %}
+                        <a href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"><i class="fa-solid fa-chevron-right"></i></a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </main>
+
+    <!-- DRAWER FOR ADD/EDIT -->
+    <div class="drawer-overlay" id="variantDrawer">
+        <div class="drawer">
+            <div class="drawer-header">
+                <h2 id="drawerTitle">Add Variant</h2>
+                <button class="drawer-close" onclick="closeDrawer('variantDrawer')">✕</button>
+            </div>
+            <form id="variantForm" method="POST" action="{% url 'admin_variant_add' product.id %}" enctype="multipart/form-data" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+                {% csrf_token %}
+                <div class="drawer-body">
+                    
+<div style="display:flex; gap:16px;">
+
+    <div class="field" style="flex:1;">
+
+        <label>Color</label>
+
+        <input
+            type="text"
+            name="color"
+            id="v_color"
+            placeholder="e.g. Black"
+            required
+        >
+
+    </div>
+
+            <div class="field" style="flex:1;">
+
+                <label>Size</label>
+
+                <input
+                    type="text"
+                    name="size"
+                    id="v_size"
+                    placeholder="e.g. XL"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+                    <div class="field">
+                        <label>SKU Code</label>
+                        <input type="text" name="sku" id="v_sku" placeholder="Unique identifier" required>
+                    </div>
+
+                    <div style="display:flex; gap:16px;">
+                        <div class="field" style="flex:1;">
+                            <label>Price (₹)</label>
+                            <input type="number" name="price" id="v_price" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                        <div class="field" style="flex:1;">
+                            <label>Stock Quantity</label>
+                            <input type="number" name="stock" id="v_stock" min="0" value="0" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Status</label>
+                        <div class="status-group">
+                            <button type="button" class="status-btn active" id="btnActive" onclick="setStatus(true)">Active</button>
+                            <button type="button" class="status-btn" id="btnInactive" onclick="setStatus(false)">Inactive</button>
+                        </div>
+                        <input type="hidden" name="is_active" id="v_is_active" value="true">
+                    </div>
+
+                    <div class="field">
+                        <label>Variant Images (Minimum 3)</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; height: 90px;">
+                            <!-- Image 1 -->
+                            <div>
+                                <label class="upload-box" id="uploadBox1" for="v_image_1">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <p>Main Image</p>
+                                    <input type="file" name="image_1" id="v_image_1" accept="image/*" onchange="previewImage(this, 1)">
+                                </label>
+                                <div class="preview-area" id="existingPreviewArea1">
+                                    <img src="" id="existingImgPreview1">
+                                    <button type="button" class="remove-img" onclick="removeExisting(1)"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                                <input type="hidden" name="clear_image_1" id="v_clear_image_1" value="">
+                            </div>
+                            <!-- Image 2 -->
+                            <div>
+                                <label class="upload-box" id="uploadBox2" for="v_image_2">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <p>Image 2</p>
+                                    <input type="file" name="image_2" id="v_image_2" accept="image/*" onchange="previewImage(this, 2)">
+                                </label>
+                                <div class="preview-area" id="existingPreviewArea2">
+                                    <img src="" id="existingImgPreview2">
+                                    <button type="button" class="remove-img" onclick="removeExisting(2)"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                                <input type="hidden" name="clear_image_2" id="v_clear_image_2" value="">
+                            </div>
+                            <!-- Image 3 -->
+                            <div>
+                                <label class="upload-box" id="uploadBox3" for="v_image_3">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <p>Image 3</p>
+                                    <input type="file" name="image_3" id="v_image_3" accept="image/*" onchange="previewImage(this, 3)">
+                                </label>
+                                <div class="preview-area" id="existingPreviewArea3">
+                                    <img src="" id="existingImgPreview3">
+                                    <button type="button" class="remove-img" onclick="removeExisting(3)"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                                <input type="hidden" name="clear_image_3" id="v_clear_image_3" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="drawer-footer">
+                    <button type="button" class="cancel-btn" onclick="closeDrawer('variantDrawer')">Cancel</button>
+                    <button type="submit" class="save-btn">Save Variant</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Drawer logic
+        function openDrawer(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeDrawer(id) {
+            document.getElementById(id).classList.remove('active');
+            setTimeout(resetForm, 300);
+        }
+
+        // Status Toggle
+        function setStatus(isActive) {
+            document.getElementById('v_is_active').value = isActive ? "true" : "false";
+            if (isActive) {
+                document.getElementById('btnActive').classList.add('active');
+                document.getElementById('btnInactive').classList.remove('active');
+            } else {
+                document.getElementById('btnActive').classList.remove('active');
+                document.getElementById('btnInactive').classList.add('active');
+            }
+        }
+
+        // Image Preview
+        function previewImage(input, index) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('existingImgPreview' + index).src = e.target.result;
+                    document.getElementById('uploadBox' + index).style.display = 'none';
+                    document.getElementById('existingPreviewArea' + index).style.display = 'flex';
+                    // clear the delete flag if any
+                    document.getElementById('v_clear_image_' + index).value = "";
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        function removeExisting(index) {
+            document.getElementById('v_image_' + index).value = '';
+            
+            // If it's an existing saved image, get its ID to tell backend to delete it
+            const btn = document.querySelector('#existingPreviewArea' + index + ' .remove-img');
+            if (btn && btn.dataset.imgId) {
+                document.getElementById('v_clear_image_' + index).value = btn.dataset.imgId;
+            } else {
+                document.getElementById('v_clear_image_' + index).value = 'true';
+            }
+
+            document.getElementById('existingPreviewArea' + index).style.display = 'none';
+            document.getElementById('uploadBox' + index).style.display = 'flex';
+        }
+
+        // Reset Form
+        function resetForm() {
+            document.getElementById('drawerTitle').textContent = 'Add Variant';
+            document.getElementById('variantForm').action = "{% url 'admin_variant_add' product.id %}";
+            document.getElementById('variantForm').reset();
+            setStatus(true);
+            document.getElementById('v_color').value = '';
+            document.getElementById('v_size').value = '';
+            
+            for(let i=1; i<=3; i++) {
+                document.getElementById('v_clear_image_' + i).value = "";
+                document.getElementById('uploadBox' + i).style.display = 'flex';
+                document.getElementById('existingPreviewArea' + i).style.display = 'none';
+                document.getElementById('existingImgPreview' + i).src = '';
+                document.getElementById('v_image_' + i).value = '';
+            }
+        }
+
+        // Edit Mode
+        function openEditVariant(id, name, sku, price, stock, isActive, images) {
+            resetForm();
+            document.getElementById('drawerTitle').textContent = 'Edit Variant';
+            document.getElementById('variantForm').action = "{% url 'admin_variant_edit' 0 %}".replace('0', id);
+            
+            let parts = name.split('/');
+
+            document.getElementById('v_color').value =
+                parts[0] ? parts[0].trim() : '';
+
+            document.getElementById('v_size').value =
+                parts[1] ? parts[1].trim() : '';
+            document.getElementById('v_sku').value = sku;
+            document.getElementById('v_price').value = price;
+            document.getElementById('v_stock').value = stock;
+            setStatus(isActive);
+
+            if (images && images.length > 0) {
+                images.forEach((img, idx) => {
+                    let i = idx + 1;
+                    if(i <= 3) {
+                        document.getElementById('uploadBox' + i).style.display = 'none';
+                        document.getElementById('existingImgPreview' + i).src = img.url;
+                        document.getElementById('existingPreviewArea' + i).style.display = 'flex';
+                        document.getElementById('v_clear_image_' + i).value = ""; // Leave blank so backend doesn't delete on normal save
+                        document.querySelector('#existingPreviewArea' + i + ' .remove-img').dataset.imgId = img.id; // Store ID for removal
+                    }
+                });
+            }
+
+            openDrawer('variantDrawer');
+        }
+
+        // Auto-dismiss toasts
+        setTimeout(() => {
+            const toasts = document.querySelectorAll('.toast');
+            toasts.forEach(t => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(30px)';
+                t.style.transition = 'all 0.3s ease';
+                setTimeout(() => t.remove(), 300);
+            });
+        }, 4000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ category.name }} – Begnex</title>
+    <meta name="description" content="Browse all {{ category.name }} products on Begnex.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #05070D; color: #fff; overflow-x: hidden; }
+        a { text-decoration: none; color: inherit; }
+
+        /* ── NAVBAR ── */
+        .navbar { width: 100%; height: 72px; background: #05070D; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; padding: 0 48px; position: sticky; top: 0; z-index: 1000; }
+        .logo { font-size: 15px; font-weight: 800; letter-spacing: 2px; }
+        .nav-links { display: flex; gap: 36px; }
+        .nav-links a { color: #A1A1AA; font-size: 11px; letter-spacing: 2px; transition: .3s; }
+        .nav-links a:hover, .nav-links a.active { color: white; }
+        .nav-icons { display: flex; gap: 18px; font-size: 14px; align-items: center; }
+        .nav-icons a { color: #A1A1AA; transition: .3s; position: relative; }
+        .nav-icons a:hover { color: white; }
+        .cart-badge { position: absolute; top: -6px; right: -8px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+
+        /* ── BREADCRUMB ── */
+        .breadcrumb {
+            padding: 28px 48px 0;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 12px; color: #6B7280;
+        }
+        .breadcrumb a { color: #6B7280; transition: color .2s; }
+        .breadcrumb a:hover { color: #4F7DF3; }
+        .breadcrumb i { font-size: 9px; }
+        .breadcrumb .current { color: #9CA3AF; }
+
+        /* ── HERO ── */
+        .cat-hero {
+            padding: 48px 48px 40px;
+            display: flex; align-items: flex-end; gap: 32px;
+            position: relative;
+        }
+        .cat-hero-img {
+            width: 110px; height: 110px; border-radius: 18px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
+            background: linear-gradient(135deg, #0D1120, #111827);
+            display: flex; align-items: center; justify-content: center; color: #1E2333; font-size: 40px;
+        }
+        .cat-hero-img img { width: 100%; height: 100%; object-fit: cover; }
+        .cat-hero-text h1 { font-size: 48px; font-weight: 900; letter-spacing: -2px; margin-bottom: 8px; }
+        .cat-hero-text h1 span { color: #4F7DF3; }
+        .cat-hero-text p { color: #9CA3AF; font-size: 14px; max-width: 500px; line-height: 1.6; }
+        .cat-hero-badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(79,125,243,0.1); border: 1px solid rgba(79,125,243,0.2);
+            color: #4F7DF3; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            padding: 5px 14px; border-radius: 20px; margin-top: 14px;
+        }
+
+        /* ── PRODUCT GRID ── */
+        .page-container { max-width: 1400px; margin: 0 auto; padding: 20px 48px 100px; }
+
+        .grid-meta {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 32px; padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .grid-meta span { font-size: 13px; color: #9CA3AF; }
+        .grid-meta span b { color: #fff; }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        /* ── PRODUCT CARD ── */
+        .product-card {
+            background: rgba(10,12,19,0.8);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px; overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(79,125,243,0.3);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(79,125,243,0.08);
+        }
+        .product-image {
+            height: 260px; overflow: hidden; position: relative;
+            background: #0D1120;
+        }
+        .product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; display: block; }
+        .product-card:hover .product-image img { transform: scale(1.07); }
+        .img-placeholder {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 10px; color: #1E2333; font-size: 36px;
+        }
+        .product-content { padding: 18px; }
+        .product-name { font-size: 15px; font-weight: 700; color: #F9FAFB; margin-bottom: 10px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; }
+        .product-price { font-size: 18px; font-weight: 800; color: #4F7DF3; }
+        .no-price { font-size: 12px; color: #555; }
+        .view-btn {
+            font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            color: #4F7DF3; display: flex; align-items: center; gap: 5px; transition: gap .2s;
+        }
+        .product-card:hover .view-btn { gap: 9px; }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            grid-column: 1 / -1; text-align: center;
+            padding: 80px 20px;
+            background: rgba(10,12,19,0.7); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+        }
+        .empty-state i { font-size: 56px; color: #1E2333; margin-bottom: 20px; display: block; }
+        .empty-state h3 { font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+        .empty-state p { color: #9CA3AF; margin-bottom: 28px; }
+        .empty-state a {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg, #4F7DF3, #3d6be0);
+            color: white; padding: 13px 28px; border-radius: 10px;
+            font-size: 12px; font-weight: 700; letter-spacing: 1px; transition: .2s;
+        }
+        .empty-state a:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79,125,243,0.3); }
+
+        /* ── PAGINATION ── */
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 48px; }
+        .page-btn {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+            color: #9CA3AF; font-size: 13px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: .2s;
+        }
+        .page-btn:hover, .page-btn.active { background: #4F7DF3; border-color: #4F7DF3; color: white; }
+
+        /* ── FOOTER ── */
+        .footer { background: #0A0C13; border-top: 1px solid rgba(255,255,255,0.04); padding: 80px 48px 30px; position: relative; overflow: hidden; margin-top: 60px; }
+        .footer::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(79,125,243,0.4), transparent); }
+        .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 60px; }
+        .footer-brand h2 { font-size: 24px; font-weight: 900; letter-spacing: 4px; margin-bottom: 16px; }
+        .footer-brand p { color: #9CA3AF; font-size: 14px; line-height: 1.6; max-width: 300px; margin-bottom: 24px; }
+        .social-links { display: flex; gap: 16px; }
+        .social-links a { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: #A1A1AA; font-size: 16px; transition: all 0.3s; }
+        .social-links a:hover { background: #4F7DF3; border-color: #4F7DF3; color: #fff; transform: translateY(-3px); }
+        .footer-links-group h3 { font-size: 11px; font-weight: 700; letter-spacing: 2px; margin-bottom: 24px; }
+        .footer-links-group a { display: block; color: #9CA3AF; font-size: 13px; margin-bottom: 12px; transition: color 0.2s; }
+        .footer-links-group a:hover { color: #4F7DF3; }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .footer-bottom p { color: #666; font-size: 13px; }
+        .payment-icons { display: flex; gap: 16px; color: #555; font-size: 24px; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1200px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 900px)  { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px)  {
+            .product-grid { grid-template-columns: 1fr; }
+            .page-container { padding: 20px 20px 80px; }
+            .cat-hero { padding: 30px 20px; flex-direction: column; align-items: flex-start; }
+            .cat-hero-text h1 { font-size: 34px; }
+            .breadcrumb { padding: 20px 20px 0; }
+            .navbar { padding: 0 20px; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo"><a href="{% url 'home' %}" style="color:white;">BEGNEX</a></div>
+        <div class="nav-links">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'shop' %}">PRODUCTS</a>
+            <a href="{% url 'categories' %}" class="active">CATEGORIES</a>
+            <a href="#">ABOUT</a>
+        </div>
+        <div class="nav-icons">
+            <a href="{% url 'shop' %}"><i class="fa-solid fa-magnifying-glass"></i></a>
+            <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
+                <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
+
+            </a>
+            <a href="{% url 'cart' %}" style="position:relative;">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="cart-badge" style="{% if not cart_count %}display:none;{% endif %}">{{ cart_count }}</span>
+            </a>
+            <a href="{% url 'profile' %}"><i class="fa-regular fa-user"></i></a>
+        </div>
+    </nav>
+
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb">
+        <a href="{% url 'home' %}">Home</a>
+        <i class="fa-solid fa-chevron-right"></i>
+        <a href="{% url 'categories' %}">Categories</a>
+        <i class="fa-solid fa-chevron-right"></i>
+        <span class="current">{{ category.name }}</span>
+    </div>
+
+    <!-- CATEGORY HERO -->
+    <div class="cat-hero">
+        <div class="cat-hero-img">
+            {% if category.image %}
+                <img src="{{ category.image.url }}" alt="{{ category.name }}">
+            {% else %}
+                <i class="fa-solid fa-tag"></i>
+            {% endif %}
+        </div>
+        <div class="cat-hero-text">
+            <h1>{{ category.name|upper }}</h1>
+            {% if category.description %}
+                <p>{{ category.description }}</p>
+            {% endif %}
+            <div class="cat-hero-badge">
+                <i class="fa-solid fa-box"></i>
+                {{ page_obj.paginator.count }} Product{{ page_obj.paginator.count|pluralize }}
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page-container">
+        <div class="grid-meta">
+            <span>Showing <b>{{ page_obj.start_index }}–{{ page_obj.end_index }}</b> of <b>{{ page_obj.paginator.count }}</b> products</span>
+            <a href="{% url 'categories' %}" style="font-size:12px; color:#9CA3AF; transition:.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9CA3AF'">
+                <i class="fa-solid fa-grid-2" style="margin-right:6px;"></i> All Categories
+            </a>
+        </div>
+
+        <div class="product-grid">
+            {% if page_obj.object_list %}
+                {% for product in page_obj %}
+                <a href="{% url 'product_detail' product.id %}" class="product-card">
+                    <div class="product-image">
+                        {% with img=product.get_primary_image %}
+                        {% if img %}
+                            <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+                        {% else %}
+                            <div class="img-placeholder">
+                                <i class="fa-regular fa-image"></i>
+                            </div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="product-content">
+                        <div class="product-name">{{ product.name }}</div>
+                        <div class="product-footer">
+                            {% if product.computed_min_price %}
+                                <span class="product-price">₹{{ product.computed_min_price }}</span>
+                            {% else %}
+                                <span class="no-price">Price on selection</span>
+                            {% endif %}
+                            <span class="view-btn">VIEW <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-box-open"></i>
+                    <h3>No Products Yet</h3>
+                    <p>No products have been added to this category yet.</p>
+                    <a href="{% url 'shop' %}"><i class="fa-solid fa-bag-shopping"></i> Browse All Products</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- PAGINATION -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </a>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                <a href="?page={{ num }}" class="page-btn {% if page_obj.number == num %}active{% endif %}">{{ num }}</a>
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="page-btn">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="footer-brand">
+                <h2>BEGNEX</h2>
+                <p>Progressive by nature, built for modern utility.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                </div>
+            </div>
+            <div class="footer-links-group">
+                <h3>SHOP</h3>
+                <a href="{% url 'shop' %}">All Products</a>
+                <a href="{% url 'categories' %}">Categories</a>
+            </div>
+            <div class="footer-links-group">
+                <h3>SUPPORT</h3>
+                <a href="#">FAQ</a>
+                <a href="#">Shipping &amp; Returns</a>
+                <a href="#">Contact Us</a>
+            </div>
+            <div class="footer-links-group">
+                <h3>LEGAL</h3>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Begnex. All rights reserved.</p>
+            <div class="payment-icons">
+                <i class="fa-brands fa-cc-visa"></i>
+                <i class="fa-brands fa-cc-mastercard"></i>
+                <i class="fa-brands fa-cc-amex"></i>
+                <i class="fa-brands fa-cc-paypal"></i>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

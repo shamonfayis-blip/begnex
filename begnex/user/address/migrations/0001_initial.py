@@ -7,26 +7,47 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Address',
+            name="Address",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=150)),
-                ('phone_number', models.CharField(max_length=15)),
-                ('address_line_1', models.CharField(max_length=255)),
-                ('address_line_2', models.CharField(blank=True, max_length=255, null=True)),
-                ('city', models.CharField(max_length=100)),
-                ('state', models.CharField(max_length=100)),
-                ('pincode', models.CharField(max_length=20)),
-                ('country', models.CharField(default='India', max_length=100)),
-                ('address_type', models.CharField(choices=[('Home', 'Home'), ('Work', 'Work'), ('Other', 'Other')], default='Home', max_length=10)),
-                ('is_default', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=150)),
+                ("phone_number", models.CharField(max_length=15)),
+                ("address_line_1", models.CharField(max_length=255)),
+                (
+                    "address_line_2",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("city", models.CharField(max_length=100)),
+                ("state", models.CharField(max_length=100)),
+                ("pincode", models.CharField(max_length=20)),
+                ("country", models.CharField(default="India", max_length=100)),
+                (
+                    "address_type",
+                    models.CharField(
+                        choices=[
+                            ("Home", "Home"),
+                            ("Work", "Work"),
+                            ("Other", "Other"),
+                        ],
+                        default="Home",
+                        max_length=10,
+                    ),
+                ),
+                ("is_default", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
         ),
     ]

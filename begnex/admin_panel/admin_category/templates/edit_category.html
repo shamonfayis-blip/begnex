@@ -1,0 +1,248 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Category Modal</title>
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, sans-serif;
+        }
+
+        body{
+            background:#f5f5f5;
+        }
+
+        /* BACKDROP */
+
+        .modal-overlay{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.35);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        /* MODAL */
+
+        .modal{
+            width:420px;
+            background:white;
+            border-radius:14px;
+            padding:28px;
+        }
+
+        /* HEADER */
+
+        .modal-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:25px;
+        }
+
+        .modal-header h2{
+            font-size:30px;
+        }
+
+        .close-btn{
+            border:none;
+            background:none;
+            font-size:20px;
+            color:#777;
+            cursor:pointer;
+        }
+
+        /* FORM */
+
+        .field{
+            margin-bottom:20px;
+        }
+
+        .field label{
+            display:block;
+            font-size:13px;
+            font-weight:600;
+            margin-bottom:8px;
+            letter-spacing:.5px;
+        }
+
+        .field input{
+            width:100%;
+            padding:12px;
+            border:1px solid #ffb8b8;
+            border-radius:8px;
+            outline:none;
+            font-size:14px;
+        }
+
+        .error-text{
+            color:red;
+            font-size:12px;
+            margin-top:8px;
+        }
+
+        /* STATUS */
+
+        .status-row{
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+
+        .toggle{
+            width:48px;
+            height:24px;
+            background:black;
+            border-radius:20px;
+            position:relative;
+            cursor:pointer;
+        }
+
+        .toggle::before{
+            content:'';
+            width:18px;
+            height:18px;
+            background:white;
+            border-radius:50%;
+            position:absolute;
+            top:3px;
+            right:3px;
+        }
+
+        .status-text{
+            font-size:14px;
+            font-weight:600;
+        }
+
+        /* BUTTONS */
+
+        .form-actions{
+            display:flex;
+            gap:12px;
+            margin-top:30px;
+        }
+
+        .cancel-btn{
+            flex:1;
+            padding:13px;
+            border:none;
+            background:#eee;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:600;
+        }
+
+        .update-btn{
+            flex:1;
+            padding:13px;
+            border:none;
+            background:#0b5d38;
+            color:white;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:600;
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <!-- MODAL -->
+
+    <div class="modal-overlay">
+
+        <div class="modal">
+
+            <!-- HEADER -->
+
+            <div class="modal-header">
+
+                <h2>Edit Category</h2>
+
+                <button class="close-btn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <!-- FORM -->
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <!-- CATEGORY NAME -->
+
+                <div class="field">
+
+                    <label>CATEGORY NAME</label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        value="Backpack"
+                    >
+
+                    <p class="error-text">
+                        Category name already exists.
+                        Please choose another.
+                    </p>
+
+                </div>
+
+                <!-- STATUS -->
+
+                <div class="field">
+
+                    <label>Status</label>
+
+                    <div class="status-row">
+
+                        <div class="toggle"></div>
+
+                        <span class="status-text">
+                            Active
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <!-- BUTTONS -->
+
+                <div class="form-actions">
+
+                    <button type="button"
+                    class="cancel-btn">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                    class="update-btn">
+                        Update Category
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -22,6 +22,13 @@
         .nav-links { display: flex; gap: 36px; }
         .nav-links a { color: #A1A1AA; font-size: 11px; letter-spacing: 2px; transition: .3s; }
         .nav-links a:hover { color: white; }
+        .nav-icons a:hover { color: white; }
+        .cart-badge {
+            position: absolute; top: -6px; right: -8px;
+            background: #ef4444; color: white; font-size: 9px; font-weight: 800;
+            width: 16px; height: 16px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; pointer-events: none;
+        }
         .nav-icons { display: flex; gap: 16px; color: #D4D4D8; font-size: 14px; }
 
         /* MAIN */
@@ -82,14 +89,20 @@
         <div class="logo">BEGNEX</div>
         <div class="nav-links">
             <a href="{% url 'home' %}">HOME</a>
-            <a href="#">PRODUCTS</a>
-            <a href="#">CATEGORIES</a>
+            <a href="{% url 'shop' %}">PRODUCTS</a>
+            <a href="{% url 'categories' %}">CATEGORIES</a>
             <a href="#">ABOUT</a>
         </div>
         <div class="nav-icons">
             <a href="#"><i class="fa-solid fa-magnifying-glass"></i></a>
-            <a href="#"><i class="fa-regular fa-heart"></i></a>
-            <a href="#" class="cart-icon"><i class="fa-solid fa-bag-shopping"></i></a>
+            <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
+                <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
+
+            </a>
+            <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
+            </a>
             <a href="{% url 'profile' %}"><i class="fa-regular fa-user"></i></a>
         </div>
     </nav>
@@ -104,7 +117,10 @@
                 <a href="{% url 'profile' %}"><i class="fa-regular fa-user"></i> PROFILE</a>
                 <a href="{% url 'address_list' %}" class="active"><i class="fa-solid fa-location-dot"></i> ADDRESS</a>
                 <a href="#"><i class="fa-solid fa-box"></i> MY ORDERS</a>
-                <a href="#"><i class="fa-regular fa-heart"></i> WISHLIST</a>
+                <a href="{% url 'wishlist' %}">
+                    <i class="fa-regular fa-heart"></i>
+                    WISHLIST
+                </a>
                 <a href="#"><i class="fa-solid fa-wallet"></i> WALLET</a>
             </div>
         </div>

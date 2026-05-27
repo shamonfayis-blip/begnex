@@ -85,6 +85,19 @@
             color: white;
         }
 
+        .nav-icons a {
+            position: relative;
+            color: #D4D4D8;
+        }
+
+        .nav-icons a:hover { color: white; }
+        .cart-badge {
+            position: absolute; top: -6px; right: -8px;
+            background: #ef4444; color: white; font-size: 9px; font-weight: 800;
+            width: 16px; height: 16px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; pointer-events: none;
+        }
+
         .nav-icons{
             display: flex;
             gap: 16px;
@@ -425,8 +438,8 @@
         <div class="nav-links">
 
             <a href="#">HOME</a>
-            <a href="#">PRODUCTS</a>
-            <a href="#">CATEGORIES</a>
+            <a href="{% url 'shop' %}">PRODUCTS</a>
+            <a href="{% url 'categories' %}">CATEGORIES</a>
             <a href="#">ABOUT</a>
 
         </div>
@@ -440,15 +453,14 @@
         <i class="fa-solid fa-magnifying-glass"></i>
     </a>
 
-    <a href="#">
-        <i class="fa-regular fa-heart"></i>
+    <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
+        <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
+
     </a>
 
-    <a href="#"
-        class="cart-icon">
-
+    <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
         <i class="fa-solid fa-bag-shopping"></i>
-
+        <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
     </a>
 
     <a href="{% url 'profile' %}">
@@ -505,11 +517,11 @@
                     the urban landscape with intent.
                 </p>
 
-                <button class="hero-btn">
-
-                    EXPLORE BAGS →
-
-                </button>
+                <a href="{% url 'shop' %}" style="text-decoration:none;">
+                    <button class="hero-btn">
+                        EXPLORE BAGS →
+                    </button>
+                </a>
 
             </div>
 
@@ -531,92 +543,41 @@
 
         <div class="product-grid">
 
-            <!-- CARD -->
-
+            {% for product in latest_products %}
             <div class="product-card">
 
                 <div class="product-image">
-
-                    <img src="https://images.unsplash.com/photo-1581605405669-fcdf81165afa?q=80&w=1200&auto=format&fit=crop" loading="lazy">
+                    {% with img=product.get_primary_image %}
+                    {% if img %}
+                        <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+                    {% else %}
+                        <div style="width:100%;height:100%;background:#111;display:flex;align-items:center;justify-content:center;color:#444;">
+                            <i class="fa-solid fa-image" style="font-size:32px;"></i>
+                        </div>
+                    {% endif %}
+                    {% endwith %}
                 </div>
 
                 <div class="product-content">
 
-                    <h3>Backpack</h3>
+                    <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ product.name }}</h3>
 
-                    <p>
-                        Ergonomic travel companion built for daily
-                        commute and urban movement.
+                    <p style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {% if product.description %}{{ product.description }}{% else %}No description available.{% endif %}
                     </p>
 
-                    <a href="#"
-                        class="view-btn">
-
+                    <a href="{% url 'product_detail' product.id %}" class="view-btn">
                         VIEW MORE
-
                     </a>
 
                 </div>
 
             </div>
-
-            <!-- CARD -->
-
-            <div class="product-card">
-
-                <div class="product-image">
-
-                    <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1200&auto=format&fit=crop" loading="lazy">
-                </div>
-
-                <div class="product-content">
-
-                    <h3>Travel Bag</h3>
-
-                    <p>
-                        Premium leather expression crafted
-                        for modern travel and precision.
-                    </p>
-
-                    <a href="#"
-                        class="view-btn">
-
-                        VIEW MORE
-
-                    </a>
-
-                </div>
-
+            {% empty %}
+            <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: #555;">
+                No products available yet.
             </div>
-
-            <!-- CARD -->
-
-            <div class="product-card">
-
-                <div class="product-image">
-
-                   <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1200&auto=format&fit=crop" loading="lazy">
-                </div>
-
-                <div class="product-content">
-
-                    <h3>Handbags</h3>
-
-                    <p>
-                        The balance of luxury and utility built
-                        next generation everyday lifestyle.
-                    </p>
-
-                    <a href="#"
-                        class="view-btn">
-
-                        VIEW MORE
-
-                    </a>
-
-                </div>
-
-            </div>
+            {% endfor %}
 
         </div>
 

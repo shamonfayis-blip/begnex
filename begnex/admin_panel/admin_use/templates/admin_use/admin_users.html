@@ -307,8 +307,8 @@
             <div class="menu">
                 <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
                 <a href="#">📦 Orders</a>
-                <a href="#">👜 Products</a>
-                <a href="#">🏷 Categories</a>
+                <a href="{% url 'admin_products' %}">👜 Products</a>
+                <a href="{% url 'admin_categories' %}">🏷 Categories</a>
                 <a href="{% url 'admin_user_list' %}" class="active">👥 Users</a>
                 <a href="#">🎟 Coupons</a>
                 <a href="#">🖼 Reviews</a>
@@ -317,13 +317,16 @@
 
         <div class="sidebar-bottom">
             <div class="admin-profile">
-                <div class="admin-avatar">{{ request.user.first_name|slice:":1"|upper|default:"A" }}</div>
+                <div class="admin-avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</div>
                 <div>
-                    <h4>{{ request.user.get_full_name|default:request.user.username }}</h4>
-                    <p>Administrator</p>
+                    <h4>{{ request.user.first_name|default:request.user.username }}</h4>
+                    <p>{{ request.user.email }}</p>
                 </div>
             </div>
-            <a href="{% url 'admin_logout' %}" class="logout-btn">🚪 Sign Out</a>
+            <form action="{% url 'admin_logout' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn" style="width: 100%; border: none; cursor: pointer;">🚪 Logout</button>
+            </form>
         </div>
 
     </aside>

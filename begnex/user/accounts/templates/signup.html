@@ -333,11 +333,20 @@
 
                 </div>
 
-                {% if error %}
+                {% if errors or error %}
                 <div id="django-messages-error" style="position: fixed; top: 90px; left: 50%; transform: translateX(-50%); z-index: 2000; width: 100%; max-width: 400px;">
+                    {% if error %}
                     <div style="color: #EF4444; font-size: 14px; text-align: center; background: rgba(239, 68, 68, 0.15); padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(239, 68, 68, 0.3); backdrop-filter: blur(10px);">
                         {{ error }}
                     </div>
+                    {% endif %}
+                    {% if errors %}
+                    {% for key, value in errors.items %}
+                    <div style="color: #EF4444; font-size: 14px; text-align: center; background: rgba(239, 68, 68, 0.15); padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(239, 68, 68, 0.3); backdrop-filter: blur(10px);">
+                        {{ value }}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
                 </div>
                 <script>
                     setTimeout(function() {
@@ -361,6 +370,7 @@
 
                         <input type="text"
                             name="username"
+                            value="{{ username }}"
                             placeholder="Johnathan Doe" required>
 
                     </div>
@@ -371,6 +381,7 @@
 
                         <input type="email"
                             name="email"
+                            value="{{ email }}"
                             placeholder="john@example.com" required>
 
                     </div>

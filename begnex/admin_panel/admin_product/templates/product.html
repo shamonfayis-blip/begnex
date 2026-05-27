@@ -1,0 +1,653 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+    <title>Product Management</title>
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, sans-serif;
+        }
+
+        body{
+            background:#f5f5f5;
+            display:flex;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar{
+            width:230px;
+            height:100vh;
+            background:white;
+            border-right:1px solid #e5e5e5;
+            padding:24px 16px;
+            position:fixed;
+            left:0;
+            top:0;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+        }
+
+        .logo h2{
+            font-size:38px;
+            margin-bottom:4px;
+        }
+
+        .logo p{
+            font-size:11px;
+            color:#888;
+            letter-spacing:2px;
+        }
+
+        .menu{
+            margin-top:40px;
+        }
+
+        .menu a{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:14px 12px;
+            border-radius:10px;
+            text-decoration:none;
+            color:#555;
+            margin-bottom:8px;
+            font-size:15px;
+        }
+
+        .menu a.active{
+            background:#f1f1f1;
+            color:black;
+            font-weight:600;
+        }
+
+        .new-btn{
+            width:100%;
+            background:black;
+            color:white;
+            border:none;
+            padding:14px;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:600;
+        }
+
+        /* MAIN */
+
+        .main{
+            margin-left:230px;
+            width:calc(100% - 230px);
+        }
+
+        /* TOPBAR */
+
+        .topbar{
+            background:white;
+            padding:20px 32px;
+            border-bottom:1px solid #e5e5e5;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        .topbar h1{
+            font-size:18px;
+        }
+
+        .search-box{
+            width:280px;
+            height:40px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            display:flex;
+            align-items:center;
+            padding:0 14px;
+            background:#fafafa;
+        }
+
+        .search-box input{
+            border:none;
+            outline:none;
+            background:transparent;
+            width:100%;
+            margin-left:10px;
+        }
+
+        .top-icons{
+            display:flex;
+            align-items:center;
+            gap:16px;
+        }
+
+        .avatar{
+            width:34px;
+            height:34px;
+            border-radius:50%;
+            overflow:hidden;
+        }
+
+        .avatar img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+
+        /* CONTENT */
+
+        .content{
+            padding:28px 32px;
+        }
+
+        .toolbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:24px;
+        }
+
+        .filters{
+            display:flex;
+            gap:12px;
+        }
+
+        .filters select{
+            padding:10px 14px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            background:white;
+            outline:none;
+        }
+
+        .add-product-btn{
+            background:black;
+            color:white;
+            border:none;
+            padding:12px 18px;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:600;
+        }
+
+        /* TABLE */
+
+        .table-wrap{
+            background:white;
+            border-radius:14px;
+            overflow:hidden;
+            border:1px solid #e5e5e5;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        thead{
+            background:#fafafa;
+        }
+
+        thead th{
+            padding:16px;
+            font-size:11px;
+            letter-spacing:1px;
+            color:#888;
+            text-align:left;
+            border-bottom:1px solid #eee;
+        }
+
+        tbody td{
+            padding:18px 16px;
+            border-bottom:1px solid #f1f1f1;
+            font-size:14px;
+            color:#444;
+        }
+
+        tbody tr:last-child td{
+            border-bottom:none;
+        }
+
+        .product-info{
+            display:flex;
+            align-items:center;
+            gap:14px;
+        }
+
+        .product-image{
+            width:50px;
+            height:50px;
+            border-radius:8px;
+            overflow:hidden;
+            background:#f1f1f1;
+        }
+
+        .product-image img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+
+        .product-name{
+            font-weight:600;
+            color:black;
+            margin-bottom:4px;
+        }
+
+        .product-sku{
+            font-size:12px;
+            color:#888;
+        }
+
+        .price{
+            font-weight:700;
+            color:black;
+        }
+
+        .category-badge{
+            display:inline-block;
+            padding:5px 10px;
+            border-radius:6px;
+            background:#f1f1f1;
+            font-size:12px;
+        }
+
+        .stock-low{
+            color:red;
+            font-weight:600;
+        }
+
+        .status{
+            font-size:13px;
+            font-weight:600;
+        }
+
+        .status.active{
+            color:#059669;
+        }
+
+        .status.inactive{
+            color:#dc2626;
+        }
+
+        /* PAGINATION */
+
+        .table-footer{
+            padding:18px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        .pagination{
+            display:flex;
+            gap:8px;
+        }
+
+        .pagination button{
+            width:34px;
+            height:34px;
+            border:none;
+            border-radius:6px;
+            background:#f3f3f3;
+            cursor:pointer;
+        }
+
+        .pagination button.active{
+            background:black;
+            color:white;
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+
+    <div class="sidebar">
+
+        <div>
+
+            <div class="logo">
+                <h2>Begnex</h2>
+                <p>LUXURY CURATOR</p>
+            </div>
+
+            <div class="menu">
+
+                <a href="#">
+                    <i class="fa-solid fa-table-columns"></i>
+                    Dashboard
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    Orders
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-layer-group"></i>
+                    Categories
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-users"></i>
+                    Users
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-ticket"></i>
+                    Coupons
+                </a>
+
+                <a href="#">
+                    <i class="fa-regular fa-star"></i>
+                    Reviews
+                </a>
+
+                <a href="#" class="active">
+                    <i class="fa-solid fa-box"></i>
+                    Products
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-tag"></i>
+                    Offer
+                </a>
+
+                <a href="#">
+                    <i class="fa-regular fa-gem"></i>
+                    Brands
+                </a>
+
+            </div>
+
+        </div>
+
+        <button class="new-btn">
+            + New Collection
+        </button>
+
+    </div>
+
+    <!-- MAIN -->
+
+    <div class="main">
+
+        <!-- TOPBAR -->
+
+        <div class="topbar">
+
+            <h1>Product Management</h1>
+
+            <div class="search-box">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="text"
+                    placeholder="Search products..."
+                >
+
+            </div>
+
+            <div class="top-icons">
+
+                <i class="fa-regular fa-bell"></i>
+
+                <i class="fa-solid fa-gear"></i>
+
+                <div class="avatar">
+                    <img src="{% static 'images/user.jpg' %}">
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- CONTENT -->
+
+        <div class="content">
+
+            <!-- TOOLBAR -->
+
+            <div class="toolbar">
+
+                <div class="filters">
+
+                    <select>
+                        <option>All Categories</option>
+                    </select>
+
+                    <select>
+                        <option>All Status</option>
+                    </select>
+
+                </div>
+
+                <button class="add-product-btn">
+                    + Add Product
+                </button>
+
+            </div>
+
+            <!-- TABLE -->
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>SL NO</th>
+
+                            <th>IMAGE</th>
+
+                            <th>PRODUCT NAME & SKU</th>
+
+                            <th>PRICE</th>
+
+                            <th>CATEGORY</th>
+
+                            <th>STOCK</th>
+
+                            <th>STATUS</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+
+                            <td>01</td>
+
+                            <td>
+
+                                <div class="product-image">
+                                    <img src="{% static 'images/bag1.jpg' %}">
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <div class="product-info">
+
+                                    <div>
+
+                                        <div class="product-name">
+                                            Leather Backpack
+                                        </div>
+
+                                        <div class="product-sku">
+                                            BAG-BP-01
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td class="price">
+                                ₹2,499
+                            </td>
+
+                            <td>
+                                <span class="category-badge">
+                                    Backpack
+                                </span>
+                            </td>
+
+                            <td>120</td>
+
+                            <td>
+                                <span class="status active">
+                                    ● ACTIVE
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td>02</td>
+
+                            <td>
+                                <div class="product-image">
+                                    <img src="{% static 'images/bag2.jpg' %}">
+                                </div>
+                            </td>
+
+                            <td>
+
+                                <div class="product-name">
+                                    Travel Duffel Bag
+                                </div>
+
+                                <div class="product-sku">
+                                    BAG-TR-02
+                                </div>
+
+                            </td>
+
+                            <td class="price">
+                                ₹3,299
+                            </td>
+
+                            <td>
+                                <span class="category-badge">
+                                    Travel
+                                </span>
+                            </td>
+
+                            <td>45</td>
+
+                            <td>
+                                <span class="status active">
+                                    ● ACTIVE
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td>03</td>
+
+                            <td>
+                                <div class="product-image">
+                                    <img src="{% static 'images/bag3.jpg' %}">
+                                </div>
+                            </td>
+
+                            <td>
+
+                                <div class="product-name">
+                                    Classic Handbag
+                                </div>
+
+                                <div class="product-sku">
+                                    BAG-HB-03
+                                </div>
+
+                            </td>
+
+                            <td class="price">
+                                ₹1,899
+                            </td>
+
+                            <td>
+                                <span class="category-badge">
+                                    Handbag
+                                </span>
+                            </td>
+
+                            <td class="stock-low">
+                                0
+                            </td>
+
+                            <td>
+                                <span class="status inactive">
+                                    ● INACTIVE
+                                </span>
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+                <!-- FOOTER -->
+
+                <div class="table-footer">
+
+                    <p>
+                        Showing 5 of 24 products
+                    </p>
+
+                    <div class="pagination">
+
+                        <button>
+                            <i class="fa-solid fa-angle-left"></i>
+                        </button>
+
+                        <button class="active">1</button>
+
+                        <button>2</button>
+
+                        <button>3</button>
+
+                        <button>
+                            <i class="fa-solid fa-angle-right"></i>
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

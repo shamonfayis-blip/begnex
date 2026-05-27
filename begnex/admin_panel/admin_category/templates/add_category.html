@@ -1,0 +1,303 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Category Modal</title>
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, sans-serif;
+        }
+
+        body{
+            background:#f5f5f5;
+        }
+
+        /* BACKDROP */
+
+        .modal-overlay{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.25);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        /* MODAL */
+
+        .modal{
+            width:420px;
+            background:white;
+            border-radius:14px;
+            padding:28px;
+        }
+
+        /* HEADER */
+
+        .modal-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:25px;
+        }
+
+        .modal-header h2{
+            font-size:28px;
+        }
+
+        .close-btn{
+            border:none;
+            background:none;
+            font-size:20px;
+            cursor:pointer;
+            color:#777;
+        }
+
+        /* FORM */
+
+        .field{
+            margin-bottom:20px;
+        }
+
+        .field label{
+            display:block;
+            margin-bottom:8px;
+            font-size:14px;
+            font-weight:600;
+        }
+
+        .field input,
+        .field textarea{
+            width:100%;
+            padding:12px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            outline:none;
+            font-size:14px;
+        }
+
+        .field textarea{
+            height:110px;
+            resize:none;
+        }
+
+        /* STATUS */
+
+        .status-box{
+            display:flex;
+            gap:10px;
+        }
+
+        .status-btn{
+            padding:10px 18px;
+            border:1px solid #ddd;
+            background:#f5f5f5;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:13px;
+        }
+
+        .status-btn.active{
+            background:black;
+            color:white;
+            border-color:black;
+        }
+
+        /* IMAGE */
+
+        .upload-box{
+            border:2px dashed #ddd;
+            border-radius:10px;
+            padding:30px;
+            text-align:center;
+            background:#fafafa;
+            cursor:pointer;
+        }
+
+        .upload-box i{
+            font-size:30px;
+            color:#999;
+            margin-bottom:10px;
+        }
+
+        .upload-box p{
+            font-size:14px;
+            color:#666;
+        }
+
+        .upload-box small{
+            color:#aaa;
+        }
+
+        .upload-box input{
+            display:none;
+        }
+
+        /* BUTTONS */
+
+        .form-actions{
+            display:flex;
+            gap:12px;
+            margin-top:25px;
+        }
+
+        .save-btn{
+            flex:1;
+            background:#0f6d37;
+            color:white;
+            border:none;
+            padding:13px;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:600;
+        }
+
+        .cancel-btn{
+            flex:1;
+            background:#eee;
+            color:black;
+            border:none;
+            padding:13px;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:600;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- MODAL -->
+
+    <div class="modal-overlay">
+
+        <div class="modal">
+
+            <!-- HEADER -->
+
+            <div class="modal-header">
+
+                <h2>Add Category</h2>
+
+                <button class="close-btn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <!-- FORM -->
+
+            <form method="POST" enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+                <!-- CATEGORY NAME -->
+
+                <div class="field">
+
+                    <label>Category Name</label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        placeholder="e.g. Backpack, Travel Bags"
+                    >
+
+                </div>
+
+                <!-- STATUS -->
+
+                <div class="field">
+
+                    <label>Active Status</label>
+
+                    <div class="status-box">
+
+                        <button type="button"
+                        class="status-btn active">
+                            Active
+                        </button>
+
+                        <button type="button"
+                        class="status-btn">
+                            Inactive
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- DESCRIPTION -->
+
+                <div class="field">
+
+                    <label>
+                        Category Description
+                    </label>
+
+                    <textarea
+                        name="description"
+                        placeholder="Brief details about this collection..."
+                    ></textarea>
+
+                </div>
+
+                <!-- IMAGE -->
+
+                <div class="field">
+
+                    <label>Category Image</label>
+
+                    <label class="upload-box">
+
+                        <input
+                            type="file"
+                            name="image"
+                        >
+
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                        <p>Upload Image</p>
+
+                        <small>
+                            JPG, PNG, WEBP Supported
+                        </small>
+
+                    </label>
+
+                </div>
+
+                <!-- BUTTONS -->
+
+                <div class="form-actions">
+
+                    <button type="submit"
+                    class="save-btn">
+                        Save Category
+                    </button>
+
+                    <button type="button"
+                    class="cancel-btn">
+                        Cancel
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
