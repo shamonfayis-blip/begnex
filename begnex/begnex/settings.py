@@ -46,10 +46,13 @@ INSTALLED_APPS = [
     "user.product",
     "user.cart",
     "user.wishlist",
+    "user.checkout",
+    "user.order",
     "user.category",
     "admin_panel.admin_use",
     "admin_panel.admin_category",
     "admin_panel.admin_product",
+    "admin_panel.admin_order",
     "django.contrib.sites",
     "allauth",
     "allauth.account",
@@ -64,6 +67,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "begnex.middleware.BlockedUserMiddleware",   # must be after MessageMiddleware
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 ]
@@ -180,6 +184,8 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     }
 }
+
+SOCIALACCOUNT_ADAPTER = "user.accounts.views.CustomSocialAccountAdapter"
 
 # Media files
 

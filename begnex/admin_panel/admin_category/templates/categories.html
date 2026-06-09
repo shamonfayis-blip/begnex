@@ -8,6 +8,19 @@
     <title>Begnex Admin — Categories</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"/>
+    <style>
+        /* ─── CROP MODAL ─── */
+        #catCropModal { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.7); align-items:center; justify-content:center; }
+        #catCropModal.active { display:flex; }
+        .cat-crop-box { background:#1a1a2e; border-radius:14px; padding:24px; width:min(520px,94vw); display:flex; flex-direction:column; gap:16px; }
+        .cat-crop-box h3 { color:#fff; font-size:16px; font-weight:600; }
+        .cat-crop-img-wrap { max-height:360px; overflow:hidden; background:#000; border-radius:8px; }
+        .cat-crop-img-wrap img { display:block; max-width:100%; }
+        .cat-crop-actions { display:flex; gap:10px; justify-content:flex-end; }
+        .cat-crop-apply { background:#2563EB; color:#fff; border:none; padding:10px 22px; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; }
+        .cat-crop-cancel { background:#374151; color:#fff; border:none; padding:10px 22px; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; }
+    </style>
 
     <style>
 
@@ -448,6 +461,14 @@
         }
         .cancel-modal-btn:hover { background: #F3F4F6; border-color: #D1D5DB; color: #111; }
 
+        /* ─── FIELD ERRORS ─── */
+        .field-error { color: #DC2626; font-size: 11px; margin-top: 5px; display: none; font-weight: 500; }
+        .field-error.show { display: block; animation: cfadeIn .2s ease; }
+        @keyframes cfadeIn { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:translateY(0); } }
+        .field input.invalid, .field textarea.invalid { border-color: #DC2626 !important; background: #FFF8F8 !important; }
+        .img-type-error { color: #DC2626; font-size: 11px; margin-top: 5px; display: none; font-weight: 500; }
+        .img-type-error.show { display: block; }
+
         /* ─── DELETE CONFIRM ─── */
 
         .confirm-box {
@@ -503,14 +524,16 @@
             </div>
 
             <form method="POST" action="{% url 'admin_category_add' %}" enctype="multipart/form-data"
-                  style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+                  style="display:flex;flex-direction:column;flex:1;overflow:hidden;"
+                  onsubmit="return validateAddCategory()">
                 {% csrf_token %}
 
                 <div class="drawer-body">
 
                     <div class="field">
-                        <label>Category Name</label>
-                        <input type="text" name="name" placeholder="e.g. Backpack, Travel Bags" required>
+                        <label>Category Name *</label>
+                        <input type="text" name="name" id="addCatName" placeholder="e.g. Backpack, Travel Bags" maxlength="100">
+                        <span class="field-error" id="err_add_name"></span>
                     </div>
 
                     <div class="field">
@@ -530,16 +553,18 @@
                     <div class="field">
                         <label>Category Image</label>
                         <label class="upload-box" for="addImageInput">
-                            <input type="file" name="image" id="addImageInput" accept="image/*"
-                                   onchange="showPreview(this, 'addPreviewBox', 'addPreviewImg', 'addPreviewName')">
+                            <input type="file" id="addImageInput" accept="image/jpeg,image/jpg,image/png,image/webp"
+                                   onchange="openCatCropModal(this,'add'); clearImgErr('err_add_img')">
+                            <input type="hidden" name="image_base64" id="addImageBase64">
                             <i class="fa-solid fa-cloud-arrow-up"></i>
                             <p>Click to Upload</p>
                             <small>JPG, PNG, WEBP Supported</small>
                         </label>
+                        <span class="img-type-error" id="err_add_img"></span>
                         <div class="img-preview-box" id="addPreviewBox">
                             <img src="" id="addPreviewImg" alt="Preview">
                             <span id="addPreviewName"></span>
-                            <button type="button" class="img-preview-remove" onclick="removePreview('addImageInput', 'addPreviewBox')"><i class="fa-solid fa-xmark"></i></button>
+                            <button type="button" class="img-preview-remove" onclick="removeCatPreview('add')"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     </div>
 
@@ -564,14 +589,16 @@
             </div>
 
             <form method="POST" id="editForm" enctype="multipart/form-data"
-                  style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+                  style="display:flex;flex-direction:column;flex:1;overflow:hidden;"
+                  onsubmit="return validateEditCategory()">
                 {% csrf_token %}
 
                 <div class="drawer-body">
 
                     <div class="field">
-                        <label>Category Name</label>
-                        <input type="text" name="name" id="editName" placeholder="Category name" required>
+                        <label>Category Name *</label>
+                        <input type="text" name="name" id="editName" placeholder="Category name" maxlength="100">
+                        <span class="field-error" id="err_edit_name"></span>
                     </div>
 
                     <div class="field">
@@ -597,16 +624,18 @@
                         </div>
                         <input type="hidden" name="clear_image" id="clearImageInput" value="0">
                         <label class="upload-box" for="editImageInput">
-                            <input type="file" name="image" id="editImageInput" accept="image/*"
-                                   onchange="showPreview(this, 'editPreviewBox', 'editPreviewImg', 'editPreviewName')">
+                            <input type="file" id="editImageInput" accept="image/jpeg,image/jpg,image/png,image/webp"
+                                   onchange="openCatCropModal(this,'edit'); clearImgErr('err_edit_img')">
+                            <input type="hidden" name="image_base64" id="editImageBase64">
                             <i class="fa-solid fa-cloud-arrow-up"></i>
                             <p>Replace Image (optional)</p>
                             <small>JPG, PNG, WEBP Supported</small>
                         </label>
+                        <span class="img-type-error" id="err_edit_img"></span>
                         <div class="img-preview-box" id="editPreviewBox">
                             <img src="" id="editPreviewImg" alt="Preview">
                             <span id="editPreviewName"></span>
-                            <button type="button" class="img-preview-remove" onclick="removePreview('editImageInput', 'editPreviewBox')"><i class="fa-solid fa-xmark"></i></button>
+                            <button type="button" class="img-preview-remove" onclick="removeCatPreview('edit')"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     </div>
 
@@ -618,6 +647,20 @@
                 </div>
 
             </form>
+        </div>
+    </div>
+
+    <!-- ─── CROP MODAL ─── -->
+    <div id="catCropModal">
+        <div class="cat-crop-box">
+            <h3><i class="fa-solid fa-crop-simple" style="margin-right:8px;"></i>Crop Image (1:1)</h3>
+            <div class="cat-crop-img-wrap">
+                <img id="catCropperImg" src="">
+            </div>
+            <div class="cat-crop-actions">
+                <button type="button" class="cat-crop-cancel" onclick="closeCatCropModal()">Cancel</button>
+                <button type="button" class="cat-crop-apply" onclick="applyCatCrop()">Apply Crop</button>
+            </div>
         </div>
     </div>
 
@@ -651,7 +694,7 @@
 
             <div class="menu">
                 <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
-                <a href="#">📦 Orders</a>
+                <a href="{% url 'admin_orders' %}">📦 Orders</a>
                 <a href="{% url 'admin_products' %}">👜 Products</a>
                 <a href="{% url 'admin_categories' %}" class="active">🏷 Categories</a>
                 <a href="{% url 'admin_user_list' %}">👥 Users</a>
@@ -982,30 +1025,56 @@
             openModal('deleteModal');
         }
 
-        /* ---- File name & Image Preview ---- */
-        function showPreview(input, boxId, imgId, nameId) {
-            var box = document.getElementById(boxId);
-            var img = document.getElementById(imgId);
-            var nameDisp = document.getElementById(nameId);
-            
-            if (input.files && input.files[0]) {
-                var file = input.files[0];
-                nameDisp.textContent = file.name;
-                
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    img.src = e.target.result;
-                    box.style.display = 'flex';
-                }
-                reader.readAsDataURL(file);
-            } else {
-                box.style.display = 'none';
-            }
+        /* ---- Cropper.js integration for category images ---- */
+        let _catCropper = null;
+        let _catCropContext = 'add'; // 'add' or 'edit'
+
+        function openCatCropModal(input, context) {
+            if (!input.files || !input.files[0]) return;
+            _catCropContext = context;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = document.getElementById('catCropperImg');
+                img.src = e.target.result;
+                document.getElementById('catCropModal').classList.add('active');
+                if (_catCropper) _catCropper.destroy();
+                _catCropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, background: false });
+            };
+            reader.readAsDataURL(input.files[0]);
         }
 
-        function removePreview(inputId, boxId) {
-            document.getElementById(inputId).value = '';
-            document.getElementById(boxId).style.display = 'none';
+        function closeCatCropModal() {
+            document.getElementById('catCropModal').classList.remove('active');
+            if (_catCropper) { _catCropper.destroy(); _catCropper = null; }
+            // Reset the file input so user can re-select
+            document.getElementById(_catCropContext + 'ImageInput').value = '';
+        }
+
+        function applyCatCrop() {
+            if (!_catCropper) return;
+            var canvas = _catCropper.getCroppedCanvas({ width: 600, height: 600 });
+            var b64 = canvas.toDataURL('image/jpeg', 0.85);
+            var ctx = _catCropContext;
+
+            // Store base64
+            document.getElementById(ctx + 'ImageBase64').value = b64;
+
+            // Show preview
+            var previewImg = document.getElementById(ctx + 'PreviewImg');
+            var previewBox = document.getElementById(ctx + 'PreviewBox');
+            var previewName = document.getElementById(ctx + 'PreviewName');
+            previewImg.src = b64;
+            previewName.textContent = 'Cropped image';
+            previewBox.style.display = 'flex';
+
+            document.getElementById('catCropModal').classList.remove('active');
+            if (_catCropper) { _catCropper.destroy(); _catCropper = null; }
+        }
+
+        function removeCatPreview(ctx) {
+            document.getElementById(ctx + 'ImageInput').value = '';
+            document.getElementById(ctx + 'ImageBase64').value = '';
+            document.getElementById(ctx + 'PreviewBox').style.display = 'none';
         }
 
         /* ---- Close drawer on overlay click ---- */
@@ -1029,7 +1098,92 @@
             }
         });
 
+        /* ─── CATEGORY FORM CLIENT-SIDE VALIDATION ─── */
+        const ALLOWED_CAT_IMG = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+        function validateAddCategory() {
+            let valid = true;
+            clearCatErrors('add');
+
+            const name = document.getElementById('addCatName').value.trim();
+            if (!name) {
+                markCatErr('addCatName', 'err_add_name', 'Category name is required.'); valid = false;
+            } else if (name.length < 2) {
+                markCatErr('addCatName', 'err_add_name', 'Name must be at least 2 characters.'); valid = false;
+            } else if (name.length > 100) {
+                markCatErr('addCatName', 'err_add_name', 'Name cannot exceed 100 characters.'); valid = false;
+            } else if (!/[a-zA-Z]/.test(name)) {
+                markCatErr('addCatName', 'err_add_name', 'Name must contain at least one letter.'); valid = false;
+            }
+
+            const imgInput = document.getElementById('addImageInput');
+            if (imgInput.files && imgInput.files[0] && !ALLOWED_CAT_IMG.includes(imgInput.files[0].type)) {
+                const e = document.getElementById('err_add_img');
+                e.textContent = 'Invalid image format. Only JPG, PNG, WEBP allowed.'; e.classList.add('show'); valid = false;
+            }
+
+            return valid;
+        }
+
+        function validateEditCategory() {
+            let valid = true;
+            clearCatErrors('edit');
+
+            const name = document.getElementById('editName').value.trim();
+            if (!name) {
+                markCatErr('editName', 'err_edit_name', 'Category name is required.'); valid = false;
+            } else if (name.length < 2) {
+                markCatErr('editName', 'err_edit_name', 'Name must be at least 2 characters.'); valid = false;
+            } else if (name.length > 100) {
+                markCatErr('editName', 'err_edit_name', 'Name cannot exceed 100 characters.'); valid = false;
+            } else if (!/[a-zA-Z]/.test(name)) {
+                markCatErr('editName', 'err_edit_name', 'Name must contain at least one letter.'); valid = false;
+            }
+
+            const imgInput = document.getElementById('editImageInput');
+            if (imgInput.files && imgInput.files[0] && !ALLOWED_CAT_IMG.includes(imgInput.files[0].type)) {
+                const e = document.getElementById('err_edit_img');
+                e.textContent = 'Invalid image format. Only JPG, PNG, WEBP allowed.'; e.classList.add('show'); valid = false;
+            }
+
+            return valid;
+        }
+
+        function markCatErr(fieldId, errorId, msg) {
+            const f = document.getElementById(fieldId);
+            const e = document.getElementById(errorId);
+            if (f) f.classList.add('invalid');
+            if (e) { e.textContent = msg; e.classList.add('show'); }
+        }
+
+        function clearCatErrors(prefix) {
+            const ids = prefix === 'add'
+                ? ['addCatName', 'err_add_name', 'err_add_img']
+                : ['editName', 'err_edit_name', 'err_edit_img'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.classList.remove('show', 'invalid'); el.textContent = ''; }
+            });
+        }
+
+        function clearImgErr(errorId) {
+            const e = document.getElementById(errorId);
+            if (e) { e.classList.remove('show'); e.textContent = ''; }
+        }
+
+        // Real-time clear on name input
+        ['addCatName', 'editName'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', () => {
+                el.classList.remove('invalid');
+                const errId = id === 'addCatName' ? 'err_add_name' : 'err_edit_name';
+                const e = document.getElementById(errId);
+                if (e) { e.classList.remove('show'); e.textContent = ''; }
+            });
+        });
+
     </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 </body>
 </html>

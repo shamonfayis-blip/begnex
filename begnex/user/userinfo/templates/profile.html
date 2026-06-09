@@ -466,7 +466,6 @@
 
             <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
                 <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
-
             </a>
 
             <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
@@ -511,7 +510,7 @@
                     ADDRESS
                 </a>
 
-                <a href="#">
+                <a href="{% url 'order_list' %}">
                     <i class="fa-solid fa-box"></i>
                     MY ORDERS
                 </a>

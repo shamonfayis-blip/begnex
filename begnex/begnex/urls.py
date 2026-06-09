@@ -12,10 +12,13 @@ urlpatterns = [
     path("begnex-admin/", include("admin_panel.admin_use.urls")),
     path("admin-category/", include("admin_panel.admin_category.urls")),
     path("admin-product/", include("admin_panel.admin_product.urls")),
+    path("admin-order/", include("admin_panel.admin_order.urls")),
     path("product/", include("user.product.urls")),
     path("category/", include("user.category.urls")),
     path("cart/", include("user.cart.urls")),
     path("wishlist/", include("user.wishlist.urls")),
+    path("checkout/", include("user.checkout.urls")),
+    path("orders/", include("user.order.urls")),
 ]
 
 if settings.DEBUG:

@@ -13,7 +13,8 @@ MAX_CART_QUANTITY = 5
 
 
 def get_or_create_cart(request):
-    """Return the cart for the current user or guest session."""
+  
+
     if request.user.is_authenticated:
         cart, _ = Cart.objects.get_or_create(user=request.user)
         return cart
@@ -27,9 +28,7 @@ def get_or_create_cart(request):
 @ensure_csrf_cookie
 def cart_view(request):
     cart = get_or_create_cart(request)
-    items = cart.items.select_related(
-        "variant", "variant__product", "variant__product__category"
-    ).prefetch_related("variant__images").order_by("created_at")
+    items = cart.items.select_related("variant", "variant__product", "variant__product__category").prefetch_related("variant__images").order_by("created_at")
 
     has_out_of_stock = False
     valid_items = []
@@ -37,7 +36,7 @@ def cart_view(request):
     for item in items:
         v = item.variant
 
-        # ── Blocked: product/variant/category deactivated or soft-deleted ──
+      
         is_blocked = (
             v.is_deleted
             or not v.is_active
@@ -47,10 +46,10 @@ def cart_view(request):
             or not v.product.category.is_active
         )
 
-        # ── Out of stock: zero units left ──
+    
         is_out_of_stock = (not is_blocked) and (v.stock == 0)
 
-        # ── Low stock: stock exists but fewer than what's in cart ──
+       
         is_low_stock = (not is_blocked) and (not is_out_of_stock) and (v.stock < item.quantity)
 
         item.is_blocked = is_blocked
@@ -82,14 +81,7 @@ def cart_view(request):
 
 @require_POST
 def add_to_cart_api(request):
-    """
-    Add a variant to cart.
-    - Prevents blocked/unlisted products
-    - Out-of-stock check
-    - Increases quantity if already present
-    - Enforces MAX_CART_QUANTITY and stock ceiling
-    - Removes product from wishlist (authenticated users)
-    """
+
     try:
         data = json.loads(request.body)
         variant_id = data.get("variant_id")
@@ -101,7 +93,7 @@ def add_to_cart_api(request):
 
     variant = get_object_or_404(ProductVariant, id=variant_id)
 
-    # ── i/ii  Prevent blocked / unlisted products ──
+  
     if (
         variant.is_deleted
         or not variant.is_active
@@ -115,7 +107,7 @@ def add_to_cart_api(request):
             status=400,
         )
 
-    # ── vii  Out-of-stock check ──
+
     if variant.stock == 0:
         return JsonResponse(
             {"success": False, "message": "This product is out of stock."},
@@ -130,16 +122,17 @@ def add_to_cart_api(request):
 
     cart = get_or_create_cart(request)
 
-    # ── iii  Increase quantity if already in cart ──
+
+
     item, created = CartItem.objects.get_or_create(cart=cart, variant=variant)
     new_quantity = quantity if created else item.quantity + quantity
 
-    # ── vi  Maximum quantity limits ──
+    
     max_allowed = min(MAX_CART_QUANTITY, variant.stock)
 
     if new_quantity > max_allowed:
         if created:
-            # freshly created but already at/over limit — remove the stub row
+            
             item.delete()
         if item.quantity >= max_allowed if not created else True:
             return JsonResponse(
@@ -151,7 +144,7 @@ def add_to_cart_api(request):
     item.quantity = new_quantity
     item.save()
 
-    # ── iv  Remove from wishlist when added to cart ──
+  
     wishlist_removed = False
     wishlist_count = 0
     if request.user.is_authenticated:
@@ -172,13 +165,11 @@ def add_to_cart_api(request):
 
 @require_POST
 def update_cart_api(request):
-    """
-    Increment or decrement a cart item quantity with stock validation.
-    """
+  
     try:
         data = json.loads(request.body)
         item_id = data.get("item_id")
-        action = data.get("action")  # 'increment' | 'decrement'
+        action = data.get("action")  
     except (ValueError, TypeError, json.JSONDecodeError):
         return JsonResponse({"success": False, "message": "Invalid request data."}, status=400)
 
@@ -187,13 +178,13 @@ def update_cart_api(request):
     variant = item.variant
 
     if action == "increment":
-        # ── vii  Disable out-of-stock ──
+        
         if variant.stock == 0:
             return JsonResponse(
                 {"success": False, "message": "This item is out of stock."},
                 status=400,
             )
-        # ── v/vi  Stock + max-qty ceiling ──
+        
         max_allowed = min(MAX_CART_QUANTITY, variant.stock)
         if item.quantity >= max_allowed:
             return JsonResponse(

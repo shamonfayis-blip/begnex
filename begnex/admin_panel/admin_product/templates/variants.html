@@ -6,6 +6,7 @@
     <title>Variant Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #FAFAFA; display: flex; color: #111; }
@@ -139,6 +140,14 @@
         .toast.success { background: #111; color: white; }
         .toast.error { background: #DC2626; color: white; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* ─── FIELD ERRORS ─── */
+        .field-error { color: #DC2626; font-size: 11px; margin-top: 5px; display: none; font-weight: 500; }
+        .field-error.show { display: block; animation: vfadeIn .2s ease; }
+        @keyframes vfadeIn { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:translateY(0); } }
+        .field input.invalid { border-color: #DC2626 !important; background: #FFF8F8 !important; }
+        .img-section-error { color: #DC2626; font-size: 11px; margin-top: 6px; display: none; font-weight: 500; }
+        .img-section-error.show { display: block; }
     </style>
 </head>
 <body>
@@ -374,55 +383,39 @@
                 <h2 id="drawerTitle">Add Variant</h2>
                 <button class="drawer-close" onclick="closeDrawer('variantDrawer')">✕</button>
             </div>
-            <form id="variantForm" method="POST" action="{% url 'admin_variant_add' product.id %}" enctype="multipart/form-data" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+            <form id="variantForm" method="POST" action="{% url 'admin_variant_add' product.id %}" enctype="multipart/form-data" style="display:flex;flex-direction:column;flex:1;overflow:hidden;" onsubmit="return validateVariantForm()">
                 {% csrf_token %}
                 <div class="drawer-body">
-                    
+
 <div style="display:flex; gap:16px;">
-
     <div class="field" style="flex:1;">
-
-        <label>Color</label>
-
-        <input
-            type="text"
-            name="color"
-            id="v_color"
-            placeholder="e.g. Black"
-            required
-        >
-
+        <label>Color *</label>
+        <input type="text" name="color" id="v_color" placeholder="e.g. Black">
+        <span class="field-error" id="err_v_color"></span>
     </div>
-
-            <div class="field" style="flex:1;">
-
-                <label>Size</label>
-
-                <input
-                    type="text"
-                    name="size"
-                    id="v_size"
-                    placeholder="e.g. XL"
-                    required
-                >
-
-            </div>
-
-        </div>
+    <div class="field" style="flex:1;">
+        <label>Size *</label>
+        <input type="text" name="size" id="v_size" placeholder="e.g. XL">
+        <span class="field-error" id="err_v_size"></span>
+    </div>
+</div>
 
                     <div class="field">
-                        <label>SKU Code</label>
-                        <input type="text" name="sku" id="v_sku" placeholder="Unique identifier" required>
+                        <label>SKU Code *</label>
+                        <input type="text" name="sku" id="v_sku" placeholder="Unique SKU identifier">
+                        <span class="field-error" id="err_v_sku"></span>
                     </div>
 
                     <div style="display:flex; gap:16px;">
                         <div class="field" style="flex:1;">
-                            <label>Price (₹)</label>
-                            <input type="number" name="price" id="v_price" step="0.01" min="0" placeholder="0.00" required>
+                            <label>Price (₹) *</label>
+                            <input type="number" name="price" id="v_price" step="0.01" min="0.01" placeholder="0.00">
+                            <span class="field-error" id="err_v_price"></span>
                         </div>
                         <div class="field" style="flex:1;">
-                            <label>Stock Quantity</label>
-                            <input type="number" name="stock" id="v_stock" min="0" value="0" required>
+                            <label>Stock Quantity *</label>
+                            <input type="number" name="stock" id="v_stock" min="0" value="0">
+                            <span class="field-error" id="err_v_stock"></span>
                         </div>
                     </div>
 
@@ -436,14 +429,15 @@
                     </div>
 
                     <div class="field">
-                        <label>Variant Images (Minimum 3)</label>
+                        <label>Variant Images (Minimum 3) *</label>
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; height: 90px;">
                             <!-- Image 1 -->
                             <div>
                                 <label class="upload-box" id="uploadBox1" for="v_image_1">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
                                     <p>Main Image</p>
-                                    <input type="file" name="image_1" id="v_image_1" accept="image/*" onchange="previewImage(this, 1)">
+                                    <input type="file" id="v_image_1" accept="image/jpeg,image/jpg,image/png,image/webp" onchange="openVariantCrop(this, 1)">
+                                    <input type="hidden" name="image_1_base64" id="v_image_1_base64">
                                 </label>
                                 <div class="preview-area" id="existingPreviewArea1">
                                     <img src="" id="existingImgPreview1">
@@ -456,7 +450,8 @@
                                 <label class="upload-box" id="uploadBox2" for="v_image_2">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
                                     <p>Image 2</p>
-                                    <input type="file" name="image_2" id="v_image_2" accept="image/*" onchange="previewImage(this, 2)">
+                                    <input type="file" id="v_image_2" accept="image/jpeg,image/jpg,image/png,image/webp" onchange="openVariantCrop(this, 2)">
+                                    <input type="hidden" name="image_2_base64" id="v_image_2_base64">
                                 </label>
                                 <div class="preview-area" id="existingPreviewArea2">
                                     <img src="" id="existingImgPreview2">
@@ -469,7 +464,8 @@
                                 <label class="upload-box" id="uploadBox3" for="v_image_3">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
                                     <p>Image 3</p>
-                                    <input type="file" name="image_3" id="v_image_3" accept="image/*" onchange="previewImage(this, 3)">
+                                    <input type="file" id="v_image_3" accept="image/jpeg,image/jpg,image/png,image/webp" onchange="openVariantCrop(this, 3)">
+                                    <input type="hidden" name="image_3_base64" id="v_image_3_base64">
                                 </label>
                                 <div class="preview-area" id="existingPreviewArea3">
                                     <img src="" id="existingImgPreview3">
@@ -478,6 +474,7 @@
                                 <input type="hidden" name="clear_image_3" id="v_clear_image_3" value="">
                             </div>
                         </div>
+                        <span class="img-section-error" id="err_v_images"></span>
                     </div>
 
                 </div>
@@ -486,6 +483,20 @@
                     <button type="submit" class="save-btn">Save Variant</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ─── VARIANT CROP MODAL ─── -->
+    <div id="variantCropModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);align-items:center;justify-content:center;">
+        <div style="background:#1a1a2e;border-radius:14px;padding:24px;width:min(520px,94vw);display:flex;flex-direction:column;gap:16px;">
+            <h3 style="color:#fff;font-size:16px;font-weight:600;"><i class="fa-solid fa-crop-simple" style="margin-right:8px;"></i>Crop Image (1:1)</h3>
+            <div style="max-height:360px;overflow:hidden;background:#000;border-radius:8px;">
+                <img id="variantCropperImg" src="" style="display:block;max-width:100%;">
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button type="button" onclick="closeVariantCrop()" style="background:#374151;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;">Cancel</button>
+                <button type="button" onclick="applyVariantCrop()" style="background:#2563EB;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;">Apply Crop</button>
+            </div>
         </div>
     </div>
 
@@ -511,19 +522,48 @@
             }
         }
 
-        // Image Preview
-        function previewImage(input, index) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('existingImgPreview' + index).src = e.target.result;
-                    document.getElementById('uploadBox' + index).style.display = 'none';
-                    document.getElementById('existingPreviewArea' + index).style.display = 'flex';
-                    // clear the delete flag if any
-                    document.getElementById('v_clear_image_' + index).value = "";
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
+        // Variant Image Cropping
+        let _vCropper = null;
+        let _vCropIndex = 1;
+
+        function openVariantCrop(input, index) {
+            if (!input.files || !input.files[0]) return;
+            _vCropIndex = index;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = document.getElementById('variantCropperImg');
+                img.src = e.target.result;
+                var modal = document.getElementById('variantCropModal');
+                modal.style.display = 'flex';
+                if (_vCropper) _vCropper.destroy();
+                _vCropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, background: false });
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function closeVariantCrop() {
+            document.getElementById('variantCropModal').style.display = 'none';
+            if (_vCropper) { _vCropper.destroy(); _vCropper = null; }
+            document.getElementById('v_image_' + _vCropIndex).value = '';
+        }
+
+        function applyVariantCrop() {
+            if (!_vCropper) return;
+            var canvas = _vCropper.getCroppedCanvas({ width: 800, height: 800 });
+            var b64 = canvas.toDataURL('image/jpeg', 0.85);
+            var idx = _vCropIndex;
+
+            // Store base64 in hidden input
+            document.getElementById('v_image_' + idx + '_base64').value = b64;
+
+            // Show preview
+            document.getElementById('existingImgPreview' + idx).src = b64;
+            document.getElementById('uploadBox' + idx).style.display = 'none';
+            document.getElementById('existingPreviewArea' + idx).style.display = 'flex';
+            document.getElementById('v_clear_image_' + idx).value = '';
+
+            document.getElementById('variantCropModal').style.display = 'none';
+            if (_vCropper) { _vCropper.destroy(); _vCropper = null; }
         }
         function removeExisting(index) {
             document.getElementById('v_image_' + index).value = '';
@@ -602,6 +642,95 @@
                 setTimeout(() => t.remove(), 300);
             });
         }, 4000);
+
+        /* ─── VARIANT FORM CLIENT-SIDE VALIDATION ─── */
+        const ALLOWED_IMG_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+        function validateVariantForm() {
+            let valid = true;
+            // Clear previous errors
+            document.querySelectorAll('#variantDrawer .field-error, #variantDrawer .img-section-error').forEach(e => { e.classList.remove('show'); e.textContent = ''; });
+            document.querySelectorAll('#variantDrawer .invalid').forEach(e => e.classList.remove('invalid'));
+
+            // Color
+            const color = document.getElementById('v_color').value.trim();
+            if (!color) {
+                markVErr('v_color','err_v_color','Color is required.'); valid = false;
+            } else if (color.length < 2) {
+                markVErr('v_color','err_v_color','Color must be at least 2 characters.'); valid = false;
+            } else if (!/[a-zA-Z]/.test(color)) {
+                markVErr('v_color','err_v_color','Color must contain at least one letter.'); valid = false;
+            }
+
+            // Size
+            const size = document.getElementById('v_size').value.trim();
+            if (!size) { markVErr('v_size','err_v_size','Size is required.'); valid = false; }
+
+            // SKU
+            const sku = document.getElementById('v_sku').value.trim();
+            if (!sku) {
+                markVErr('v_sku','err_v_sku','SKU is required.'); valid = false;
+            }
+
+            // Price
+            const priceVal = parseFloat(document.getElementById('v_price').value);
+            if (isNaN(priceVal) || priceVal <= 0) {
+                markVErr('v_price','err_v_price','Price must be greater than ₹0.'); valid = false;
+            } else if (priceVal > 9999999) {
+                markVErr('v_price','err_v_price','Price value is too large.'); valid = false;
+            }
+
+            // Stock
+            const stockRaw = document.getElementById('v_stock').value;
+            const stockVal = parseInt(stockRaw, 10);
+            if (stockRaw === '' || isNaN(stockVal) || stockVal < 0) {
+                markVErr('v_stock','err_v_stock','Stock must be 0 or a positive whole number.'); valid = false;
+            } else if (stockVal > 99999) {
+                markVErr('v_stock','err_v_stock','Stock is too large (max 99,999).'); valid = false;
+            }
+
+            // Images
+            const isAddMode = document.getElementById('drawerTitle').textContent.trim() === 'Add Variant';
+            const errImgEl = document.getElementById('err_v_images');
+            let imgError = '';
+            for (let i = 1; i <= 3; i++) {
+                const inp = document.getElementById('v_image_' + i);
+                const preview = document.getElementById('existingPreviewArea' + i);
+                const hasFile = inp && inp.files && inp.files.length > 0;
+                const hasExisting = preview && preview.style.display !== 'none';
+                if (hasFile && !ALLOWED_IMG_TYPES.includes(inp.files[0].type)) {
+                    imgError = 'Image ' + i + ': Only JPG, PNG, WEBP formats are allowed.'; break;
+                }
+                if (isAddMode && !hasFile && !hasExisting) {
+                    imgError = 'All 3 images are required when adding a variant.'; break;
+                }
+            }
+            if (imgError) {
+                errImgEl.textContent = imgError; errImgEl.classList.add('show'); valid = false;
+            }
+
+            return valid;
+        }
+
+        function markVErr(fieldId, errorId, msg) {
+            const f = document.getElementById(fieldId);
+            const e = document.getElementById(errorId);
+            if (f) f.classList.add('invalid');
+            if (e) { e.textContent = msg; e.classList.add('show'); }
+        }
+
+        // Clear errors on input
+        ['v_color','v_size','v_sku','v_price','v_stock'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', () => {
+                el.classList.remove('invalid');
+                const map = {v_color:'err_v_color',v_size:'err_v_size',v_sku:'err_v_sku',v_price:'err_v_price',v_stock:'err_v_stock'};
+                const e = document.getElementById(map[id]);
+                if (e) { e.classList.remove('show'); e.textContent = ''; }
+            });
+        });
+
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 </body>
 </html>

@@ -204,7 +204,40 @@
         .product-card{
             background: #05070D;
             overflow: hidden;
+            position: relative;
         }
+
+        /* ── WISHLIST CARD BUTTON ── */
+        .wl-card-btn {
+            position: absolute; top: 12px; right: 12px; z-index: 5;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(5,7,13,0.75); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #A1A1AA; font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.25s ease;
+        }
+        .wl-card-btn:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.15); }
+        .wl-card-btn.wishlisted { color: #ef4444; border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.15); }
+        .wl-card-btn.wishlisted i { font-weight: 900; }
+
+        /* ── TOAST ── */
+        .shop-toast {
+            position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+            background: #1A1D2E; border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 14px 20px;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 13px; font-weight: 500;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+            transform: translateY(80px); opacity: 0;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none; min-width: 220px;
+        }
+        .shop-toast.show { transform: translateY(0); opacity: 1; }
+        .shop-toast.success { border-left: 3px solid #10B981; }
+        .shop-toast.success i { color: #10B981; }
+        .shop-toast.error { border-left: 3px solid #ef4444; }
+        .shop-toast.error i { color: #ef4444; }
 
         .product-image{
             width: 100%;
@@ -455,7 +488,6 @@
 
     <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
         <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
-
     </a>
 
     <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
@@ -474,24 +506,21 @@
     <!-- HERO -->
 
     {% if messages %}
-    <div id="django-messages" style="position: absolute; top: 90px; left: 50%; transform: translateX(-50%); z-index: 2000; width: 100%; max-width: 400px;">
-        {% for message in messages %}
-            <div style="color: #10B981; font-size: 14px; text-align: center; background: rgba(16, 185, 129, 0.15); padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(16, 185, 129, 0.3); backdrop-filter: blur(10px);">
-                {{ message }}
-            </div>
-        {% endfor %}
+    <div id="dj-toast-wrap" style="position:fixed;top:88px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;">
+      {% for message in messages %}
+      <div style="min-width:300px;max-width:420px;padding:14px 20px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,0.45);animation:djToastIn .4s ease;pointer-events:auto;
+        {% if message.tags == 'error' %}background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#FCA5A5;
+        {% elif message.tags == 'warning' %}background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#FDE68A;
+        {% else %}background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#6EE7B7;{% endif %}">
+        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-xmark{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %}" style="font-size:16px;flex-shrink:0;"></i>
+        {{ message }}
+      </div>
+      {% endfor %}
     </div>
-    <script>
-        setTimeout(function() {
-            var msg = document.getElementById('django-messages');
-            if (msg) {
-                msg.style.transition = 'opacity 0.5s ease';
-                msg.style.opacity = '0';
-                setTimeout(function() { msg.style.display = 'none'; }, 500);
-            }
-        }, 3000);
-    </script>
+    <style>@keyframes djToastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}</style>
+    <script>setTimeout(function(){var w=document.getElementById('dj-toast-wrap');if(w){w.style.transition='opacity .5s ease';w.style.opacity='0';setTimeout(function(){w.remove();},500);}},3500);</script>
     {% endif %}
+
 
     <section class="hero">
 
@@ -545,6 +574,16 @@
 
             {% for product in latest_products %}
             <div class="product-card">
+                <!-- Wishlist toggle -->
+                <button
+                    type="button"
+                    class="wl-card-btn {% if product.id in wishlist_ids %}wishlisted{% endif %}"
+                    id="wl-btn-{{ product.id }}"
+                    onclick="toggleWishlist(event, {{ product.id }})"
+                    title="{% if product.id in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
+                >
+                    <i class="{% if product.id in wishlist_ids %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
+                </button>
 
                 <div class="product-image">
                     {% with img=product.get_primary_image %}
@@ -638,29 +677,79 @@
 
     <!-- FOOTER -->
 
-    <footer class="footer">
-
-        <div class="footer-left">
-
-            <h3>Begnex</h3>
-
-            <p>
-                Where form meets contemporary mobility.
-                All designs are crafted precisely for architectural minimalism.
-            </p>
-
-        </div>
-
-        <div class="footer-links">
-
-            <a href="#">PRIVACY POLICY</a>
-            <a href="#">TERMS OF SERVICE</a>
-            <a href="#">SHIPPING</a>
-            <a href="#">RETURNS</a>
-
-        </div>
-
     </footer>
+
+    <!-- TOAST CONTAINER -->
+    <div class="shop-toast" id="shopToast">
+        <i id="shopToastIcon" class="fa-solid fa-circle-check"></i>
+        <span id="shopToastText">Success</span>
+    </div>
+
+    <script>
+        const CSRF = '{{ csrf_token }}';
+        const WL_TOGGLE_URL = "{% url 'toggle_wishlist_api' %}";
+        const IS_AUTH = {{ request.user.is_authenticated|yesno:'true,false' }};
+        const LOGIN_URL = "{% url 'login' %}";
+
+        function showShopToast(msg, type='success') {
+            const t = document.getElementById('shopToast');
+            const ic = document.getElementById('shopToastIcon');
+            const tx = document.getElementById('shopToastText');
+            t.className = `shop-toast ${type}`;
+            ic.className = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+            tx.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function toggleWishlist(e, productId) {
+            e.preventDefault(); e.stopPropagation();
+            if (!IS_AUTH) { window.location.href = LOGIN_URL; return; }
+            const btn = document.getElementById(`wl-btn-${productId}`);
+            const icon = btn.querySelector('i');
+            btn.style.pointerEvents = 'none';
+            try {
+                const res = await fetch(WL_TOGGLE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+                    body: JSON.stringify({ product_id: productId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const navHeart = document.querySelector('.nav-icons a[href*="wishlist"] i');
+                    if (data.action === 'added') {
+                        btn.classList.add('wishlisted');
+                        icon.className = 'fa-solid fa-heart';
+                        btn.title = 'Remove from wishlist';
+                        showShopToast('Added to wishlist ❤️');
+                        
+                        if (navHeart) {
+                            navHeart.className = 'fa-solid fa-heart';
+                            navHeart.style.color = '#ef4444';
+                        }
+                    } else {
+                        btn.classList.remove('wishlisted');
+                        icon.className = 'fa-regular fa-heart';
+                        btn.title = 'Add to wishlist';
+                        showShopToast('Removed from wishlist');
+                        
+                        if (data.wishlist_count === 0) {
+                            if (navHeart) {
+                                navHeart.className = 'fa-regular fa-heart';
+                                navHeart.removeAttribute('style');
+                            }
+                        }
+                    }
+                } else {
+                    showShopToast(data.message || 'Failed.', 'error');
+                }
+            } catch(err) {
+                showShopToast('Something went wrong.', 'error');
+            }
+            btn.style.pointerEvents = '';
+        }
+    </script>
+
 <script>
 
     history.pushState(null, null, location.href);
@@ -673,5 +762,4 @@
 
 </script>
 </body>
-
 </html>

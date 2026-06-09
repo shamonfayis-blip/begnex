@@ -357,7 +357,6 @@
 
     <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
         <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
-
     </a>
 
     <a href="{% url 'cart' %}"
@@ -807,19 +806,11 @@
                             }
                             // Update navbar heart badge
                             const navHeart = document.querySelector('.nav-icons a[href*="wishlist"] i');
-                            const wlBadge = document.querySelector('.nav-icons a[href*="wishlist"] .cart-badge');
                             
-                            if (data.wishlist_count > 0) {
-                                if (wlBadge) {
-                                    wlBadge.textContent = data.wishlist_count;
-                                }
-                            } else {
+                            if (data.wishlist_count === 0) {
                                 if (navHeart) {
                                     navHeart.className = 'fa-regular fa-heart';
                                     navHeart.removeAttribute('style');
-                                }
-                                if (wlBadge) {
-                                    wlBadge.remove();
                                 }
                             }
                         }
@@ -886,16 +877,29 @@
                         const data = await res.json();
                         
                         if(data.success) {
+                            const navHeart = document.querySelector('.nav-icons a[href*="wishlist"] i');
                             if(data.action === 'added') {
                                 this.classList.add('wishlisted');
                                 icon.className = 'fa-solid fa-heart';
                                 this.title = 'Remove from wishlist';
                                 showPdToast('Added to wishlist ❤️');
+                                
+                                if(navHeart) {
+                                    navHeart.className = 'fa-solid fa-heart';
+                                    navHeart.style.color = '#ef4444';
+                                }
                             } else {
                                 this.classList.remove('wishlisted');
                                 icon.className = 'fa-regular fa-heart';
                                 this.title = 'Add to wishlist';
                                 showPdToast('Removed from wishlist');
+                                
+                                if(data.wishlist_count === 0) {
+                                    if(navHeart) {
+                                        navHeart.className = 'fa-regular fa-heart';
+                                        navHeart.removeAttribute('style');
+                                    }
+                                }
                             }
                         } else {
                             showPdToast(data.message || 'Failed.', 'error');

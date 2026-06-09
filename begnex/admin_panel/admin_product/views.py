@@ -1,6 +1,8 @@
 import base64
 import os
+import re
 import uuid
+from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -54,6 +56,15 @@ def handle_base64_image(base64_string, product, is_primary):
         ProductImage.objects.create(
             product=product, image=data, is_primary=is_primary
         )
+
+
+def _save_base64_image(b64_string, prefix="var"):
+    """Decode a base64 data-URL and return a Django ContentFile."""
+    if not b64_string or ";base64," not in b64_string:
+        return None
+    _, imgstr = b64_string.split(";base64,", 1)
+    filename = f"{prefix}_{uuid.uuid4().hex}.jpg"
+    return ContentFile(base64.b64decode(imgstr), name=filename)
 
 
 @never_cache
@@ -160,6 +171,22 @@ def admin_product_add_view(request):
         messages.error(request, "Name and Category are required.")
         return redirect("admin_products")
 
+    if len(name) < 2:
+        messages.error(request, "Product name must be at least 2 characters.")
+        return redirect("admin_products")
+    if len(name) > 200:
+        messages.error(request, "Product name cannot exceed 200 characters.")
+        return redirect("admin_products")
+    if not any(c.isalpha() for c in name):
+        messages.error(request, "Product name must contain at least one letter.")
+        return redirect("admin_products")
+    if material and len(material) > 100:
+        messages.error(request, "Material cannot exceed 100 characters.")
+        return redirect("admin_products")
+    if description and len(description) > 2000:
+        messages.error(request, "Description cannot exceed 2000 characters.")
+        return redirect("admin_products")
+
     if Product.objects.filter(name__iexact=name, is_deleted=False).exists():
         messages.error(request, f'Product "{name}" already exists.')
         return redirect("admin_products")
@@ -203,6 +230,22 @@ def admin_product_edit_view(request, product_id):
         messages.error(request, "Name and Category are required.")
         return redirect("admin_products")
 
+    if len(name) < 2:
+        messages.error(request, "Product name must be at least 2 characters.")
+        return redirect("admin_products")
+    if len(name) > 200:
+        messages.error(request, "Product name cannot exceed 200 characters.")
+        return redirect("admin_products")
+    if not any(c.isalpha() for c in name):
+        messages.error(request, "Product name must contain at least one letter.")
+        return redirect("admin_products")
+    if material and len(material) > 100:
+        messages.error(request, "Material cannot exceed 100 characters.")
+        return redirect("admin_products")
+    if description and len(description) > 2000:
+        messages.error(request, "Description cannot exceed 2000 characters.")
+        return redirect("admin_products")
+
     if (
         Product.objects.filter(name__iexact=name, is_deleted=False)
         .exclude(id=product.id)
@@ -223,6 +266,11 @@ def admin_product_edit_view(request, product_id):
     product.description = description
     product.is_active = is_active
     product.save()
+
+    # Remove from wishlists if made inactive
+    if not product.is_active:
+        from user.wishlist.models import Wishlist
+        Wishlist.objects.filter(product=product).delete()
 
     # Handle image deletions
     delete_images = request.POST.getlist("delete_images")
@@ -269,6 +317,11 @@ def admin_product_toggle_view(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     product.is_active = not product.is_active
     product.save()
+
+    # Remove from wishlists if made inactive
+    if not product.is_active:
+        from user.wishlist.models import Wishlist
+        Wishlist.objects.filter(product=product).delete()
     status = "activated" if product.is_active else "deactivated"
     messages.success(request, f'Product "{product.name}" has been {status}.')
     return redirect("admin_products")
@@ -283,6 +336,10 @@ def admin_product_delete_view(request, product_id):
 
     product.is_deleted = True
     product.save()
+
+    # Remove from wishlists
+    from user.wishlist.models import Wishlist
+    Wishlist.objects.filter(product=product).delete()
 
     ProductVariant.objects.filter(product=product).update(is_deleted=True)
 
@@ -358,82 +415,120 @@ def admin_variant_add_view(request, product_id):
 
     product = get_object_or_404(Product, id=product_id, is_deleted=False)
 
-    color = request.POST.get("color", "").strip()
-    size = request.POST.get("size", "").strip()
+    color    = request.POST.get("color", "").strip()
+    size     = request.POST.get("size", "").strip()
+    sku      = request.POST.get("sku", "").strip()
+    price_str = request.POST.get("price", "0").strip()
+    stock_str = request.POST.get("stock", "0").strip()
+    is_active = request.POST.get("is_active", "true") == "true"
 
     name = f"{color} / {size}"
 
+    # ── Color / Size ──────────────────────────────────────────
     if not color or not size:
-
         messages.error(request, "Color and Size are required.")
-
+        return redirect("admin_variants", product_id=product.id)
+    if len(color) < 2 or not any(c.isalpha() for c in color):
+        messages.error(request, "Color must be at least 2 characters and contain at least one letter.")
         return redirect("admin_variants", product_id=product.id)
 
-    sku = request.POST.get("sku", "").strip()
-    price = request.POST.get("price", "0")
-    stock = request.POST.get("stock", "0")
-    is_active = request.POST.get("is_active", "true") == "true"
-
-    if ProductVariant.objects.filter(
-        sku__iexact=sku, is_deleted=False
-    ).exists():
-
+    # ── SKU ───────────────────────────────────────────────────
+    if not sku:
+        messages.error(request, "SKU is required.")
+        return redirect("admin_variants", product_id=product.id)
+    if ProductVariant.objects.filter(sku__iexact=sku, is_deleted=False).exists():
         messages.error(request, f'SKU "{sku}" already exists.')
-
         return redirect("admin_variants", product_id=product.id)
 
-    is_default = False
+    # ── Price ─────────────────────────────────────────────────
+    try:
+        price_val = Decimal(price_str)
+        if price_val <= 0:
+            messages.error(request, "Price must be greater than ₹0.")
+            return redirect("admin_variants", product_id=product.id)
+        if price_val > Decimal("9999999"):
+            messages.error(request, "Price value is too large.")
+            return redirect("admin_variants", product_id=product.id)
+    except InvalidOperation:
+        messages.error(request, "Invalid price value entered.")
+        return redirect("admin_variants", product_id=product.id)
 
-    if not ProductVariant.objects.filter(
-        product=product, is_deleted=False
-    ).exists():
+    # ── Stock ─────────────────────────────────────────────────
+    try:
+        stock_val = int(stock_str)
+        if stock_val < 0:
+            messages.error(request, "Stock quantity cannot be negative.")
+            return redirect("admin_variants", product_id=product.id)
+        if stock_val > 99999:
+            messages.error(request, "Stock value is too large (max 99,999).")
+            return redirect("admin_variants", product_id=product.id)
+    except (ValueError, TypeError):
+        messages.error(request, "Stock must be a whole number.")
+        return redirect("admin_variants", product_id=product.id)
 
-        is_default = True
+    # ── Images ────────────────────────────────────────────────
+    image1 = None
+    image2 = None
+    image3 = None
+
+    img1_b64 = request.POST.get("image_1_base64")
+    img2_b64 = request.POST.get("image_2_base64")
+    img3_b64 = request.POST.get("image_3_base64")
+
+    if img1_b64:
+        image1 = _save_base64_image(img1_b64, prefix=f"var_{sku}_1")
+    else:
+        image1 = request.FILES.get("image_1")
+
+    if img2_b64:
+        image2 = _save_base64_image(img2_b64, prefix=f"var_{sku}_2")
+    else:
+        image2 = request.FILES.get("image_2")
+
+    if img3_b64:
+        image3 = _save_base64_image(img3_b64, prefix=f"var_{sku}_3")
+    else:
+        image3 = request.FILES.get("image_3")
+
+    if not image1 or not image2 or not image3:
+        messages.error(request, "All 3 variant images are required.")
+        return redirect("admin_variants", product_id=product.id)
+
+    ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+    for img in [image1, image2, image3]:
+        if hasattr(img, "content_type") and img.content_type not in ALLOWED_IMAGE_TYPES:
+            messages.error(
+                request,
+                f'"{img.name}" is not a valid image. Only JPG, PNG, and WEBP are allowed.',
+            )
+            return redirect("admin_variants", product_id=product.id)
+
+    # ── Create Variant ────────────────────────────────────────
+    is_default = not ProductVariant.objects.filter(product=product, is_deleted=False).exists()
 
     variant = ProductVariant.objects.create(
         product=product,
         name=name,
         sku=sku,
-        price=price,
-        stock=stock,
+        price=price_val,
+        stock=stock_val,
         is_active=is_active,
         is_default=is_default,
     )
 
-   
+    variant_image_1 = VariantImage.objects.create(variant=variant, image=image1, is_primary=True)
+    if hasattr(image1, "content_type"):
+        resize_image(variant_image_1.image.path)
 
-    image1 = request.FILES.get("image_1")
-    image2 = request.FILES.get("image_2")
-    image3 = request.FILES.get("image_3")
+    variant_image_2 = VariantImage.objects.create(variant=variant, image=image2, is_primary=False)
+    if hasattr(image2, "content_type"):
+        resize_image(variant_image_2.image.path)
 
-    if not image1 or not image2 or not image3:
-
-        variant.delete()
-
-        messages.error(request, "Minimum 3 images are required.")
-
-        return redirect("admin_variants", product_id=product.id)
-
-    variant_image_1 = VariantImage.objects.create(
-        variant=variant, image=image1, is_primary=True
-    )
-
-    resize_image(variant_image_1.image.path)
-
-    variant_image_2 = VariantImage.objects.create(
-        variant=variant, image=image2, is_primary=False
-    )
-
-    resize_image(variant_image_2.image.path)
-
-    variant_image_3 = VariantImage.objects.create(
-        variant=variant, image=image3, is_primary=False
-    )
-
-    resize_image(variant_image_3.image.path)
+    variant_image_3 = VariantImage.objects.create(variant=variant, image=image3, is_primary=False)
+    if hasattr(image3, "content_type"):
+        resize_image(variant_image_3.image.path)
 
     messages.success(request, f'Variant "{name}" added successfully.')
-
     return redirect("admin_variants", product_id=product.id)
 
 
@@ -442,95 +537,121 @@ def admin_variant_add_view(request, product_id):
 @require_POST
 def admin_variant_edit_view(request, variant_id):
 
-    variant = get_object_or_404(
-        ProductVariant, id=variant_id, is_deleted=False
-    )
-
+    variant = get_object_or_404(ProductVariant, id=variant_id, is_deleted=False)
     product_id = variant.product.id
 
-    color = request.POST.get("color", "").strip()
-    size = request.POST.get("size", "").strip()
+    color    = request.POST.get("color", "").strip()
+    size     = request.POST.get("size", "").strip()
+    sku      = request.POST.get("sku", "").strip()
+    price_str = request.POST.get("price", "0").strip()
+    stock_str = request.POST.get("stock", "0").strip()
+    is_active = request.POST.get("is_active", "true") == "true"
 
     name = f"{color} / {size}"
 
+    # ── Color / Size ──────────────────────────────────────────
     if not color or not size:
-
         messages.error(request, "Color and Size are required.")
-
+        return redirect("admin_variants", product_id=product_id)
+    if len(color) < 2 or not any(c.isalpha() for c in color):
+        messages.error(request, "Color must be at least 2 characters and contain at least one letter.")
         return redirect("admin_variants", product_id=product_id)
 
-    sku = request.POST.get("sku", "").strip()
-    price = request.POST.get("price", "0")
-    stock = request.POST.get("stock", "0")
-    is_active = request.POST.get("is_active", "true") == "true"
-
+    # ── SKU ───────────────────────────────────────────────────
+    if not sku:
+        messages.error(request, "SKU is required.")
+        return redirect("admin_variants", product_id=product_id)
     if (
         ProductVariant.objects.filter(sku__iexact=sku, is_deleted=False)
         .exclude(id=variant.id)
         .exists()
     ):
-
         messages.error(request, f'SKU "{sku}" already exists.')
-
         return redirect("admin_variants", product_id=product_id)
 
+    # ── Price ─────────────────────────────────────────────────
+    try:
+        price_val = Decimal(price_str)
+        if price_val <= 0:
+            messages.error(request, "Price must be greater than ₹0.")
+            return redirect("admin_variants", product_id=product_id)
+        if price_val > Decimal("9999999"):
+            messages.error(request, "Price value is too large.")
+            return redirect("admin_variants", product_id=product_id)
+    except InvalidOperation:
+        messages.error(request, "Invalid price value entered.")
+        return redirect("admin_variants", product_id=product_id)
+
+    # ── Stock ─────────────────────────────────────────────────
+    try:
+        stock_val = int(stock_str)
+        if stock_val < 0:
+            messages.error(request, "Stock quantity cannot be negative.")
+            return redirect("admin_variants", product_id=product_id)
+        if stock_val > 99999:
+            messages.error(request, "Stock value is too large (max 99,999).")
+            return redirect("admin_variants", product_id=product_id)
+    except (ValueError, TypeError):
+        messages.error(request, "Stock must be a whole number.")
+        return redirect("admin_variants", product_id=product_id)
+
+    # ── Image type validation for new uploads ─────────────────
+    ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+    for i in range(1, 4):
+        img = request.FILES.get(f"image_{i}")
+        if img and img.content_type not in ALLOWED_IMAGE_TYPES:
+            messages.error(
+                request,
+                f'"{img.name}" is not a valid image. Only JPG, PNG, and WEBP are allowed.',
+            )
+            return redirect("admin_variants", product_id=product_id)
+
+    # ── Update Variant ────────────────────────────────────────
     variant.name = name
     variant.sku = sku
-    variant.price = price
-    variant.stock = stock
+    variant.price = price_val
+    variant.stock = stock_val
     variant.is_active = is_active
     variant.save()
 
     # DELETE SELECTED IMAGES
-
     for i in range(1, 4):
-
         clear_value = request.POST.get(f"clear_image_{i}")
-
         if clear_value and clear_value.isdigit():
-
             try:
-
                 img = VariantImage.objects.get(id=clear_value, variant=variant)
-
                 if os.path.isfile(img.image.path):
                     os.remove(img.image.path)
-
                 img.delete()
-
             except VariantImage.DoesNotExist:
                 pass
 
-    # ADD NEW IMAGES
+    # ADD NEW IMAGES (either base64 or normal files)
+    for i in range(1, 4):
+        b64_data = request.POST.get(f"image_{i}_base64")
+        if b64_data:
+            image = _save_base64_image(b64_data, prefix=f"var_{variant.sku}_{i}")
+            if image:
+                has_primary = variant.images.filter(is_primary=True).exists()
+                VariantImage.objects.create(
+                    variant=variant, image=image, is_primary=not has_primary
+                )
+        else:
+            image = request.FILES.get(f"image_{i}")
+            if image:
+                has_primary = variant.images.filter(is_primary=True).exists()
+                variant_image = VariantImage.objects.create(
+                    variant=variant, image=image, is_primary=not has_primary
+                )
+                resize_image(variant_image.image.path)
 
-    image1 = request.FILES.get("image_1")
-    image2 = request.FILES.get("image_2")
-    image3 = request.FILES.get("image_3")
-
-    new_images = [image1, image2, image3]
-
-    for image in new_images:
-
-        if image:
-
-            has_primary = variant.images.filter(is_primary=True).exists()
-
-            variant_image = VariantImage.objects.create(
-                variant=variant, image=image, is_primary=not has_primary
-            )
-
-            resize_image(variant_image.image.path)
     # ENSURE ONE PRIMARY IMAGE
-
     first_image = variant.images.first()
-
     if first_image and not variant.images.filter(is_primary=True).exists():
-
         first_image.is_primary = True
         first_image.save()
 
     messages.success(request, f'Variant "{name}" updated successfully.')
-
     return redirect("admin_variants", product_id=product_id)
 
 
@@ -589,3 +710,4 @@ def admin_variant_set_default_view(request, variant_id):
 
     messages.success(request, f'Variant "{variant.name}" set as default.')
     return redirect("admin_variants", product_id=product_id)
+

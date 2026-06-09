@@ -161,7 +161,6 @@
             <a href="{% url 'shop' %}"><i class="fa-solid fa-magnifying-glass"></i></a>
             <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
                 <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
-
             </a>
             <a href="{% url 'cart' %}" class="active" style="position:relative;">
                 <i class="fa-solid fa-bag-shopping"></i>
@@ -309,7 +308,7 @@
                     Remove unavailable items to continue.
                 </p>
             {% else %}
-                <button type="button" class="checkout-btn" id="checkoutBtn">
+                <button type="button" class="checkout-btn" id="checkoutBtn" onclick="window.location.href='{% url 'checkout_page' %}'">
                     PROCEED TO CHECKOUT <i class="fa-solid fa-arrow-right"></i>
                 </button>
             {% endif %}
@@ -520,5 +519,20 @@
         }
     </script>
 
+{% if messages %}
+<div id="dj-toast-wrap" style="position:fixed;top:88px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;">
+  {% for message in messages %}
+  <div style="min-width:300px;max-width:420px;padding:14px 20px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,0.45);animation:djToastIn .4s ease;pointer-events:auto;
+    {% if message.tags == 'error' %}background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#FCA5A5;
+    {% elif message.tags == 'warning' %}background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#FDE68A;
+    {% else %}background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#6EE7B7;{% endif %}">
+    <i class="fa-solid {% if message.tags == 'error' %}fa-circle-xmark{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %}" style="font-size:16px;flex-shrink:0;"></i>
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+<style>@keyframes djToastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}</style>
+<script>setTimeout(function(){var w=document.getElementById('dj-toast-wrap');if(w){w.style.transition='opacity .5s ease';w.style.opacity='0';setTimeout(function(){w.remove();},500);}},3500);</script>
+{% endif %}
 </body>
 </html>

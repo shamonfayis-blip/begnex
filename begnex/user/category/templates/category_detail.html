@@ -139,6 +139,38 @@
         }
         .page-btn:hover, .page-btn.active { background: #4F7DF3; border-color: #4F7DF3; color: white; }
 
+        /* ── WISHLIST CARD BUTTON ── */
+        .wl-card-btn {
+            position: absolute; top: 12px; right: 12px; z-index: 5;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(5,7,13,0.75); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #A1A1AA; font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.25s ease;
+        }
+        .wl-card-btn:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.15); }
+        .wl-card-btn.wishlisted { color: #ef4444; border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.15); }
+        .wl-card-btn.wishlisted i { font-weight: 900; }
+
+        /* ── TOAST ── */
+        .shop-toast {
+            position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+            background: #1A1D2E; border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 14px 20px;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 13px; font-weight: 500;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+            transform: translateY(80px); opacity: 0;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none; min-width: 220px;
+        }
+        .shop-toast.show { transform: translateY(0); opacity: 1; }
+        .shop-toast.success { border-left: 3px solid #10B981; }
+        .shop-toast.success i { color: #10B981; }
+        .shop-toast.error { border-left: 3px solid #ef4444; }
+        .shop-toast.error i { color: #ef4444; }
+
         /* ── FOOTER ── */
         .footer { background: #0A0C13; border-top: 1px solid rgba(255,255,255,0.04); padding: 80px 48px 30px; position: relative; overflow: hidden; margin-top: 60px; }
         .footer::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(79,125,243,0.4), transparent); }
@@ -184,7 +216,6 @@
             <a href="{% url 'shop' %}"><i class="fa-solid fa-magnifying-glass"></i></a>
             <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
                 <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
-
             </a>
             <a href="{% url 'cart' %}" style="position:relative;">
                 <i class="fa-solid fa-bag-shopping"></i>
@@ -237,6 +268,16 @@
             {% if page_obj.object_list %}
                 {% for product in page_obj %}
                 <a href="{% url 'product_detail' product.id %}" class="product-card">
+                    <!-- Wishlist toggle -->
+                    <button
+                        type="button"
+                        class="wl-card-btn {% if product.id in wishlist_ids %}wishlisted{% endif %}"
+                        id="wl-btn-{{ product.id }}"
+                        onclick="toggleWishlist(event, {{ product.id }})"
+                        title="{% if product.id in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
+                    >
+                        <i class="{% if product.id in wishlist_ids %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
+                    </button>
                     <div class="product-image">
                         {% with img=product.get_primary_image %}
                         {% if img %}
@@ -330,6 +371,77 @@
             </div>
         </div>
     </footer>
+
+    <!-- TOAST CONTAINER -->
+    <div class="shop-toast" id="shopToast">
+        <i id="shopToastIcon" class="fa-solid fa-circle-check"></i>
+        <span id="shopToastText">Success</span>
+    </div>
+
+    <script>
+        const CSRF = '{{ csrf_token }}';
+        const WL_TOGGLE_URL = "{% url 'toggle_wishlist_api' %}";
+        const IS_AUTH = {{ request.user.is_authenticated|yesno:'true,false' }};
+        const LOGIN_URL = "{% url 'login' %}";
+
+        function showShopToast(msg, type='success') {
+            const t = document.getElementById('shopToast');
+            const ic = document.getElementById('shopToastIcon');
+            const tx = document.getElementById('shopToastText');
+            t.className = `shop-toast ${type}`;
+            ic.className = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+            tx.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function toggleWishlist(e, productId) {
+            e.preventDefault(); e.stopPropagation();
+            if (!IS_AUTH) { window.location.href = LOGIN_URL; return; }
+            const btn = document.getElementById(`wl-btn-${productId}`);
+            const icon = btn.querySelector('i');
+            btn.style.pointerEvents = 'none';
+            try {
+                const res = await fetch(WL_TOGGLE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+                    body: JSON.stringify({ product_id: productId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const navHeart = document.querySelector('.nav-icons a[href*="wishlist"] i');
+                    if (data.action === 'added') {
+                        btn.classList.add('wishlisted');
+                        icon.className = 'fa-solid fa-heart';
+                        btn.title = 'Remove from wishlist';
+                        showShopToast('Added to wishlist ❤️');
+                        
+                        if (navHeart) {
+                            navHeart.className = 'fa-solid fa-heart';
+                            navHeart.style.color = '#ef4444';
+                        }
+                    } else {
+                        btn.classList.remove('wishlisted');
+                        icon.className = 'fa-regular fa-heart';
+                        btn.title = 'Add to wishlist';
+                        showShopToast('Removed from wishlist');
+                        
+                        if (data.wishlist_count === 0) {
+                            if (navHeart) {
+                                navHeart.className = 'fa-regular fa-heart';
+                                navHeart.removeAttribute('style');
+                            }
+                        }
+                    }
+                } else {
+                    showShopToast(data.message || 'Failed.', 'error');
+                }
+            } catch(err) {
+                showShopToast('Something went wrong.', 'error');
+            }
+            btn.style.pointerEvents = '';
+        }
+    </script>
 
 </body>
 </html>

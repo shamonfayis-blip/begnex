@@ -1,0 +1,341 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Begnex Admin — Order #{{ order.order_id }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #F5F5F5; display: flex; }
+        a { text-decoration: none; color: inherit; }
+
+        /* SIDEBAR */
+        .sidebar { width: 260px; height: 100vh; background: #FAFAFA; border-right: 1px solid #E5E7EB; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; position: fixed; left: 0; top: 0; }
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+        .logo-icon { width: 32px; height: 32px; background: black; color: white; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 700; font-size: 14px; }
+        .logo h2 { font-size: 22px; font-weight: 700; }
+        .logo p { font-size: 10px; color: #777; letter-spacing: 2px; }
+        .menu { display: flex; flex-direction: column; gap: 4px; }
+        .menu a { height: 46px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-radius: 8px; font-size: 14px; color: #555; transition: .2s; }
+        .menu a:hover, .menu .active { background: white; color: black; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .sidebar-bottom { border-top: 1px solid #E5E7EB; padding-top: 18px; }
+        .admin-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .admin-avatar { width: 42px; height: 42px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+        .admin-profile h4 { font-size: 14px; font-weight: 600; }
+        .admin-profile p { font-size: 11px; color: #777; }
+        .logout-btn { width: 100%; height: 42px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; color: #DC2626; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logout-btn:hover { background: #FEE2E2; }
+
+        /* MAIN */
+        .main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; }
+        .topbar { height: 72px; background: white; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; }
+        .topbar-left { display: flex; align-items: center; gap: 14px; }
+        .back-link { width: 34px; height: 34px; border-radius: 7px; border: 1px solid #E5E7EB; background: white; display: flex; align-items: center; justify-content: center; color: #555; transition: .2s; }
+        .back-link:hover { background: #F3F4F6; color: #111; }
+        .topbar h1 { font-size: 20px; font-weight: 700; }
+        .topbar p { font-size: 12px; color: #777; margin-top: 2px; }
+
+        /* LAYOUT */
+        .content { padding: 32px 40px; display: grid; grid-template-columns: 1fr 310px; gap: 20px; align-items: start; max-width: 1200px; margin: 0 auto; }
+
+        /* CARD */
+        .card { background: white; border-radius: 14px; border: 1px solid #ECECEC; overflow: hidden; margin-bottom: 20px; }
+        .card:last-child { margin-bottom: 0; }
+        .card-header { padding: 16px 24px; border-bottom: 1px solid #F3F4F6; display: flex; justify-content: space-between; align-items: center; }
+        .card-header h3 { font-size: 13px; font-weight: 700; color: #111; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card-header span { font-size: 12px; color: #888; }
+        .card-body { padding: 24px; }
+
+        /* ITEMS TABLE */
+        .items-table { width: 100%; border-collapse: collapse; }
+        .items-table th { text-align: left; font-size: 11px; color: #888; letter-spacing: 1px; padding-bottom: 12px; font-weight: 600; border-bottom: 1px solid #F3F4F6; }
+        .items-table td { padding: 14px 0; border-bottom: 1px solid #F3F4F6; font-size: 13px; color: #333; vertical-align: middle; }
+        .items-table tr:last-child td { border-bottom: none; }
+        .item-name    { font-weight: 600; color: #111; }
+        .item-variant { font-size: 12px; color: #888; margin-top: 2px; }
+
+        /* PRICE SUMMARY */
+        .price-row { display: flex; justify-content: space-between; padding: 10px 0; font-size: 13px; color: #555; border-bottom: 1px solid #F9FAFB; }
+        .price-row:last-child { border-bottom: none; border-top: 1px solid #E5E7EB; margin-top: 4px; padding-top: 14px; font-size: 15px; font-weight: 800; color: #111; }
+        .price-row span:last-child { font-weight: 600; color: #111; }
+
+        /* INFO ROWS */
+        .info-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #F9FAFB; font-size: 13px; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { width: 130px; flex-shrink: 0; color: #888; font-weight: 500; }
+        .info-value { color: #111; font-weight: 600; font-size: 13px; word-break: break-all; }
+
+        /* BADGES */
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-pending          { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+        .badge-shipped          { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+        .badge-out_for_delivery { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+        .badge-delivered        { background: #ECFDF5; color: #065F46; border: 1px solid #D1FAE5; }
+        .badge-cancelled        { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+        .badge-paid   { background: #ECFDF5; color: #059669; border: 1px solid #D1FAE5; }
+        .badge-unpaid { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+
+        /* STATUS FORM */
+        .status-form { display: flex; gap: 10px; }
+        .status-select { flex: 1; padding: 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; color: #111; background: white; }
+        .status-select:focus { border-color: #111; }
+        .update-btn { height: 42px; padding: 0 18px; background: #111; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; }
+        .update-btn:hover { background: #333; }
+
+        /* TIMELINE */
+        .timeline { display: flex; flex-direction: column; gap: 0; }
+        .tl-item { display: flex; gap: 14px; position: relative; padding-bottom: 16px; }
+        .tl-item:last-child { padding-bottom: 0; }
+        .tl-dot { width: 10px; height: 10px; border-radius: 50%; background: #E5E7EB; flex-shrink: 0; margin-top: 4px; position: relative; z-index: 1; }
+        .tl-dot.done { background: #111; }
+        .tl-item:not(:last-child)::before { content: ''; position: absolute; left: 4px; top: 14px; bottom: 0; width: 2px; background: #F3F4F6; }
+        .tl-label { font-size: 13px; font-weight: 600; color: #999; }
+        .tl-label.done { color: #111; }
+
+        /* TOAST */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 280px; padding: 14px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; animation: slideIn .35s ease; box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+        .toast.success { background: #ECFDF5; border: 1px solid #D1FAE5; color: #065F46; }
+        .toast.error   { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+        @keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <div class="logo-icon">Bx</div>
+                <div><h2>Begnex</h2><p>ADMIN PANEL</p></div>
+            </div>
+            <div class="menu">
+                <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
+                <a href="{% url 'admin_orders' %}" class="active">📦 Orders</a>
+                <a href="{% url 'admin_products' %}">👜 Products</a>
+                <a href="{% url 'admin_categories' %}">🏷 Categories</a>
+                <a href="{% url 'admin_user_list' %}">👥 Users</a>
+                <a href="#">🎟 Coupons</a>
+            </div>
+        </div>
+        <div class="sidebar-bottom">
+            <div class="admin-profile">
+                <div class="admin-avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</div>
+                <div>
+                    <h4>{{ request.user.first_name|default:request.user.username }}</h4>
+                    <p>{{ request.user.email }}</p>
+                </div>
+            </div>
+            <form action="{% url 'admin_logout' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <a href="{% url 'admin_orders' %}" class="back-link" title="Back">
+                    <i class="fa-solid fa-arrow-left" style="font-size:13px;"></i>
+                </a>
+                <div>
+                    <h1>Order #{{ order.order_id }}</h1>
+                    <p>Placed {{ order.created_at|date:"d M Y, h:i A" }}</p>
+                </div>
+            </div>
+            <span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span>
+        </div>
+
+        <div class="content">
+
+            <!-- LEFT COLUMN -->
+            <div>
+
+                <!-- ORDER ITEMS -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Order Items</h3>
+                        <span>{{ order.get_item_count }} item{{ order.get_item_count|pluralize }}</span>
+                    </div>
+                    <div class="card-body">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>PRODUCT</th>
+                                    <th>SKU</th>
+                                    <th style="text-align:center;">QTY</th>
+                                    <th style="text-align:right;">UNIT PRICE</th>
+                                    <th style="text-align:right;">SUBTOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div style="width: 44px; height: 44px; border-radius: 6px; overflow: hidden; background: #F9FAFB; border: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                {% if item.get_image_url %}
+                                                    <img src="{{ item.get_image_url }}" alt="{{ item.product_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                {% else %}
+                                                    <i class="fa-solid fa-image" style="color: #ccc; font-size: 14px;"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="item-name">{{ item.product_name }}</div>
+                                                <div class="item-variant">{{ item.variant_name }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="color:#888; font-size:12px;">{{ item.sku|default:"—" }}</td>
+                                    <td style="text-align:center; font-weight:600;">{{ item.quantity }}</td>
+                                    <td style="text-align:right;">₹{{ item.unit_price|floatformat:2 }}</td>
+                                    <td style="text-align:right; font-weight:700;">₹{{ item.subtotal|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" style="text-align:center; color:#999; padding:30px 0;">
+                                        No items found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PRICE SUMMARY -->
+                <div class="card">
+                    <div class="card-header"><h3>Price Summary</h3></div>
+                    <div class="card-body">
+                        <div class="price-row"><span>Subtotal</span><span>₹{{ order.subtotal|floatformat:2 }}</span></div>
+                        <div class="price-row"><span>Discount</span><span style="color:#059669;">− ₹{{ order.discount|floatformat:2 }}</span></div>
+                        <div class="price-row"><span>Shipping</span><span>₹{{ order.shipping_charge|floatformat:2 }}</span></div>
+                        <div class="price-row"><span>Grand Total</span><span>₹{{ order.total|floatformat:2 }}</span></div>
+                    </div>
+                </div>
+
+                <!-- SHIPPING ADDRESS -->
+                <div class="card">
+                    <div class="card-header"><h3>Shipping Address</h3></div>
+                    <div class="card-body">
+                        {% if order.full_name %}
+                            <div style="font-weight:700; font-size:14px; margin-bottom:8px;">{{ order.full_name }}</div>
+                            <div style="font-size:13px; color:#555; line-height:2;">
+                                {{ order.address_line }}<br>
+                                {{ order.city }}, {{ order.state }} — {{ order.pincode }}<br>
+                                📞 {{ order.phone }}
+                            </div>
+                        {% else %}
+                            <p style="color:#999; font-size:13px;">No address recorded.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div>
+
+                <!-- UPDATE STATUS -->
+                <div class="card">
+                    <div class="card-header"><h3>Order Status</h3></div>
+                    <div class="card-body">
+                        <!-- Timeline -->
+                        <div class="timeline" style="margin-bottom:20px;">
+                            {% for val, label in order.STATUS_CHOICES %}
+                            <div class="tl-item">
+                                <div class="tl-dot {% if order.status == val or order.status == 'delivered' and forloop.counter <= 4 %}done{% endif %}"></div>
+                                <span class="tl-label {% if order.status == val %}done{% endif %}">{{ label }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <!-- Update form -->
+                        <form method="POST" action="{% url 'admin_order_update_status' order.id %}" class="status-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="detail">
+                            <select name="status" class="status-select">
+                                {% for val, label in order.STATUS_CHOICES %}
+                                    {% if val == order.status or order.status == 'pending' and val == 'shipped' or order.status == 'pending' and val == 'cancelled' or order.status == 'shipped' and val == 'out_for_delivery' or order.status == 'shipped' and val == 'cancelled' or order.status == 'out_for_delivery' and val == 'delivered' or order.status == 'out_for_delivery' and val == 'cancelled' or order.status == 'return_requested' and val == 'returned' %}
+                                        <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="update-btn">Save</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ORDER INFO -->
+                <div class="card">
+                    <div class="card-header"><h3>Order Info</h3></div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <span class="info-label">Order ID</span>
+                            <span class="info-value">#{{ order.order_id }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Placed</span>
+                            <span class="info-value">{{ order.created_at|date:"d M Y, h:i A" }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Last Updated</span>
+                            <span class="info-value">{{ order.updated_at|date:"d M Y, h:i A" }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Payment</span>
+                            <span class="info-value">{{ order.get_payment_method_display }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Payment Status</span>
+                            <span class="badge {% if order.payment_status == 'paid' %}badge-paid{% else %}badge-unpaid{% endif %}">
+                                {{ order.payment_status|title }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CUSTOMER -->
+                <div class="card">
+                    <div class="card-header"><h3>Customer</h3></div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <span class="info-label">Name</span>
+                            <span class="info-value">{{ order.user.get_full_name|default:order.user.username }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ order.user.email }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Joined</span>
+                            <span class="info-value">{{ order.user.date_joined|date:"d M Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function showToast(msg, isError) {
+            var c = document.getElementById('toastContainer');
+            var t = document.createElement('div');
+            t.className = 'toast ' + (isError ? 'error' : 'success');
+            t.textContent = (isError ? '❌ ' : '✅ ') + msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 4000);
+        }
+        {% for message in messages %}
+            showToast("{{ message|escapejs }}", {% if 'error' in message.tags %}true{% else %}false{% endif %});
+        {% endfor %}
+    </script>
+
+</body>
+</html>

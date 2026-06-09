@@ -614,7 +614,6 @@
 
     <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
         <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
-
     </a>
 
     <a href="{% url 'cart' %}"
@@ -856,16 +855,29 @@
                 });
                 const data = await res.json();
                 if (data.success) {
+                    const navHeart = document.querySelector('.nav-icons a[href*="wishlist"] i');
                     if (data.action === 'added') {
                         btn.classList.add('wishlisted');
                         icon.className = 'fa-solid fa-heart';
                         btn.title = 'Remove from wishlist';
                         showShopToast('Added to wishlist ❤️');
+                        
+                        if (navHeart) {
+                            navHeart.className = 'fa-solid fa-heart';
+                            navHeart.style.color = '#ef4444';
+                        }
                     } else {
                         btn.classList.remove('wishlisted');
                         icon.className = 'fa-regular fa-heart';
                         btn.title = 'Add to wishlist';
                         showShopToast('Removed from wishlist');
+                        
+                        if (data.wishlist_count === 0) {
+                            if (navHeart) {
+                                navHeart.className = 'fa-regular fa-heart';
+                                navHeart.removeAttribute('style');
+                            }
+                        }
                     }
                 } else {
                     showShopToast(data.message || 'Failed.', 'error');

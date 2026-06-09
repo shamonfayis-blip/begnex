@@ -24,7 +24,7 @@ class Product(models.Model):
         return self.name
 
     def get_default_variant(self):
-        # Return default variant or first variant
+        
         variant = self.variants.filter(
             is_deleted=False, is_default=True
         ).first()
@@ -33,7 +33,7 @@ class Product(models.Model):
         return variant
 
     def get_primary_image(self):
-        """Returns the primary VariantImage for the default variant."""
+        
         variant = self.get_default_variant()
         if not variant:
             return None
@@ -43,12 +43,12 @@ class Product(models.Model):
         return img
 
     def get_price(self):
-        """Returns price from the default variant."""
+    
         variant = self.get_default_variant()
         return variant.price if variant else None
 
     def get_total_stock(self):
-        """Returns total stock across all active variants."""
+    
         return sum(variant.stock for variant in self.variants.filter(is_deleted=False))
 
 

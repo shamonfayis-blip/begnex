@@ -13,7 +13,13 @@ from .models import Wishlist
 @login_required(login_url="login")
 def wishlist_view(request):
     """Render the wishlist page for the authenticated user."""
-    wishlist_items = Wishlist.objects.filter(user=request.user).select_related(
+    wishlist_items = Wishlist.objects.filter(
+        user=request.user,
+        product__is_active=True,
+        product__is_deleted=False,
+        product__category__is_active=True,
+        product__category__is_deleted=False,
+    ).select_related(
         "product", "product__category"
     ).prefetch_related("product__variants")
 
@@ -66,6 +72,9 @@ def toggle_wishlist_api(request):
     if not created:
         # Already wishlisted → remove
         obj.delete()
-        return JsonResponse({"success": True, "action": "removed", "message": "Removed from wishlist."})
+        count = Wishlist.objects.filter(user=request.user).count()
+        return JsonResponse({"success": True, "action": "removed", "wishlist_count": count, "message": "Removed from wishlist."})
 
-    return JsonResponse({"success": True, "action": "added", "message": "Added to wishlist."})
+    count = Wishlist.objects.filter(user=request.user).count()
+    return JsonResponse({"success": True, "action": "added", "wishlist_count": count, "message": "Added to wishlist."})
+

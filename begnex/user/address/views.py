@@ -44,6 +44,9 @@ def add_address(request):
         )
         address.save()
         messages.success(request, "Address added successfully!")
+        next_url = request.GET.get("next") or request.POST.get("next")
+        if next_url:
+            return redirect(next_url)
         return redirect("address_list")
 
     return render(request, "address/address_form.html")
@@ -66,6 +69,9 @@ def edit_address(request, id):
 
         address.save()
         messages.success(request, "Address updated successfully!")
+        next_url = request.GET.get("next") or request.POST.get("next")
+        if next_url:
+            return redirect(next_url)
         return redirect("address_list")
 
     return render(request, "address/address_form.html", {"address": address})

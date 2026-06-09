@@ -192,6 +192,14 @@ body{
     text-decoration: none;
     font-size: 14px;
     font-weight: 600;
+    transition: opacity .2s;
+}
+
+.resend a.disabled{
+    color: #4B5563;
+    pointer-events: none;
+    cursor: not-allowed;
+    text-decoration: none;
 }
 
 /* FOOTER */
@@ -347,15 +355,10 @@ body{
                 </form>
 
                 <div class="resend">
-
-                    <span>
-                        Didn’t receive a code?
-                    </span>
-
-                <a href="{% url 'resend_otp' %}">
-                    Resend
-                </a>
-
+                    <span>Didn't receive a code?&nbsp;</span>
+                    <a href="{% url 'resend_otp' %}" id="resendLink" class="disabled">
+                        Resend
+                    </a>
                 </div>
 
                 <div class="footer">
@@ -380,27 +383,27 @@ body{
 
     </main>
 <script>
-
     let timeLeft = 60;
 
-    const timer = document.getElementById("timer");
+    const timer      = document.getElementById('timer');
+    const resendLink = document.getElementById('resendLink');
+
+    // Start disabled
+    resendLink.classList.add('disabled');
 
     const countdown = setInterval(() => {
-
         timeLeft--;
 
-        timer.innerHTML = `OTP expires in ${timeLeft}s`;
-
-        if(timeLeft <= 0){
-
+        if (timeLeft > 0) {
+            timer.innerHTML = `OTP expires in <strong>${timeLeft}s</strong>`;
+        } else {
             clearInterval(countdown);
+            timer.innerHTML = 'OTP Expired.';
 
-            timer.innerHTML = "OTP Expired";
-
+            // Enable Resend now that timer has reached zero
+            resendLink.classList.remove('disabled');
         }
-
     }, 1000);
-
 </script>
 
 

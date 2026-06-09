@@ -1,4 +1,6 @@
+import base64
 import os
+import uuid
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -11,6 +13,16 @@ from django.views.decorators.http import require_POST
 from admin_panel.admin_product.models import Product
 
 from .models import Category
+
+
+def _save_base64_image(b64_string):
+    """Decode a base64 data-URL and return a Django ContentFile."""
+    from django.core.files.base import ContentFile
+    if not b64_string or ";base64," not in b64_string:
+        return None
+    _, imgstr = b64_string.split(";base64,", 1)
+    filename = f"cat_{uuid.uuid4().hex}.jpg"
+    return ContentFile(base64.b64decode(imgstr), name=filename)
 
 
 def generate_category_id():
@@ -76,9 +88,21 @@ def admin_category_add_view(request):
         description = request.POST.get("description", "").strip()
         is_active = request.POST.get("is_active", "true") == "true"
         image = request.FILES.get("image")
+        if not image:
+            image = _save_base64_image(request.POST.get("image_base64", ""))
 
         if not name:
             messages.error(request, "Category name is required.")
+            return redirect("admin_categories")
+
+        if len(name) < 2:
+            messages.error(request, "Category name must be at least 2 characters.")
+            return redirect("admin_categories")
+        if len(name) > 100:
+            messages.error(request, "Category name cannot exceed 100 characters.")
+            return redirect("admin_categories")
+        if not any(c.isalpha() for c in name):
+            messages.error(request, "Category name must contain at least one letter.")
             return redirect("admin_categories")
 
         if Category.objects.filter(
@@ -86,6 +110,11 @@ def admin_category_add_view(request):
         ).exists():
             
             messages.error(request, f'Category "{name}" already exists.')
+            return redirect("admin_categories")
+
+        ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+        if image and hasattr(image, 'content_type') and image.content_type not in ALLOWED_IMAGE_TYPES:
+            messages.error(request, "Invalid image format. Only JPG, PNG, and WEBP are allowed.")
             return redirect("admin_categories")
 
         category_id = generate_category_id()
@@ -113,10 +142,22 @@ def admin_category_edit_view(request, category_id):
         description = request.POST.get("description", "").strip()
         is_active = request.POST.get("is_active", "true") == "true"
         image = request.FILES.get("image")
+        if not image:
+            image = _save_base64_image(request.POST.get("image_base64", ""))
         clear_image = request.POST.get("clear_image") == "1"
 
         if not name:
             messages.error(request, "Category name is required.")
+            return redirect("admin_categories")
+
+        if len(name) < 2:
+            messages.error(request, "Category name must be at least 2 characters.")
+            return redirect("admin_categories")
+        if len(name) > 100:
+            messages.error(request, "Category name cannot exceed 100 characters.")
+            return redirect("admin_categories")
+        if not any(c.isalpha() for c in name):
+            messages.error(request, "Category name must contain at least one letter.")
             return redirect("admin_categories")
 
         if (
@@ -125,6 +166,11 @@ def admin_category_edit_view(request, category_id):
             .exists()
         ):
             messages.error(request, f'Category "{name}" already exists.')
+            return redirect("admin_categories")
+
+        ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+        if image and hasattr(image, 'content_type') and image.content_type not in ALLOWED_IMAGE_TYPES:
+            messages.error(request, "Invalid image format. Only JPG, PNG, and WEBP are allowed.")
             return redirect("admin_categories")
 
         category.name = name

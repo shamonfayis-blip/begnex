@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Success – Begnex</title>
+    <meta name="description" content="Thank you for your order on Begnex.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #05070D; color: #fff; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+        a { text-decoration: none; color: inherit; }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            width: 100%;
+            height: 72px;
+            background: #05070D;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 36px;
+        }
+        .nav-links a {
+            color: #A1A1AA;
+            font-size: 11px;
+            letter-spacing: 2px;
+            transition: .3s;
+        }
+        .nav-links a:hover {
+            color: white;
+        }
+        .nav-icons {
+            display: flex;
+            gap: 16px;
+            color: #D4D4D8;
+            font-size: 14px;
+        }
+        .nav-icons a {
+            position: relative;
+            color: #D4D4D8;
+        }
+        .nav-icons a:hover {
+            color: white;
+        }
+        .cart-badge {
+            position: absolute;
+            top: -6px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            font-weight: 800;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        /* ── MAIN AREA ── */
+        .success-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 24px; }
+        
+        .success-card {
+            background: rgba(10,12,19,0.7); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 20px;
+            padding: 48px; max-width: 600px; width: 100%; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: cardAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Animated Success Checkmark */
+        .success-icon-box {
+            width: 100px; height: 100px; background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 30px; position: relative;
+        }
+        .success-icon-box i { font-size: 40px; color: #10B981; animation: checkmarkBounce 0.5s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+        
+        @keyframes checkmarkBounce {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Ring animation */
+        .success-icon-box::before {
+            content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border-radius: 50%; border: 1px solid rgba(16, 185, 129, 0.15);
+            animation: ringPulse 2s infinite ease-out;
+        }
+        @keyframes ringPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.15); opacity: 0; }
+        }
+
+        h2 { font-size: 32px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 12px; }
+        p.thank-you-msg { color: #A1A1AA; font-size: 15px; line-height: 1.5; margin-bottom: 32px; }
+
+        /* Order Details Box */
+        .order-info-box {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; padding: 24px; margin-bottom: 40px; text-align: left;
+        }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: #A1A1AA; }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-row .label { font-weight: 500; }
+        .info-row .val { color: #fff; font-weight: 700; }
+        .info-row.highlight .val { color: #4F7DF3; font-size: 15px; }
+
+        /* Action Buttons */
+        .actions-group { display: flex; gap: 16px; justify-content: center; }
+        
+        .btn-primary {
+            flex: 1; height: 48px; background: #4F7DF3; border: none; color: #fff;
+            border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer;
+            transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary:hover { background: #3d6be0; transform: translateY(-1px); }
+
+        .btn-secondary {
+            flex: 1; height: 48px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            color: #fff; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer;
+            transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.08); transform: translateY(-1px); }
+
+        /* ── FOOTER ── */
+        .footer { background: #0A0C13; border-top: 1px solid rgba(255,255,255,0.04); padding: 40px 48px 30px; text-align: center; }
+        .footer p { color: #555; font-size: 12px; }
+
+        @media (max-width: 600px) {
+            .success-card { padding: 32px 20px; }
+            h2 { font-size: 26px; }
+            .actions-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo">
+            BEGNEX
+        </div>
+        <div class="nav-links">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'shop' %}">PRODUCTS</a>
+            <a href="{% url 'categories' %}">CATEGORIES</a>
+            <a href="#">ABOUT</a>
+        </div>
+        <div class="nav-icons">
+            <a href="{% url 'shop' %}">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </a>
+            <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
+                <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
+            </a>
+            <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
+            </a>
+            <a href="{% url 'profile' %}">
+                <i class="fa-regular fa-user"></i>
+            </a>
+        </div>
+    </nav>
+
+    <!-- MAIN AREA -->
+    <div class="success-wrapper">
+        
+        <div class="success-card">
+            
+            <!-- Success Icon Box -->
+            <div class="success-icon-box">
+                <i class="fa-solid fa-check"></i>
+            </div>
+
+            <h2>ORDER PLACED!</h2>
+            <p class="thank-you-msg">Thank you for shopping with us. Your order has been registered and is currently being processed by our logistical unit.</p>
+
+            <!-- Order info snapshot -->
+            <div class="order-info-box">
+                <div class="info-row">
+                    <span class="label">Order Reference</span>
+                    <span class="val">#{{ order.order_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Payment Method</span>
+                    <span class="val">Cash on Delivery</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Delivery Status</span>
+                    <span class="val" style="text-transform: capitalize;">{{ order.get_status_display }}</span>
+                </div>
+                <div class="info-row highlight">
+                    <span class="label">Grand Total</span>
+                    <span class="val">₹{{ order.total }}</span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions-group">
+                <a href="{% url 'order_list' %}" class="btn-primary">
+                    <i class="fa-solid fa-receipt"></i> ORDER DETAILS
+                </a>
+                <a href="{% url 'shop' %}" class="btn-secondary">
+                    <i class="fa-solid fa-bag-shopping"></i> CONTINUE SHOPPING
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>&copy; 2026 BEGNEX. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

@@ -171,6 +171,14 @@
         .confirm-cancel-btn { flex: 1; height: 48px; background: white; color: #555; border: 1.5px solid #E5E7EB; font-size: 13px; font-weight: 700; border-radius: 10px; cursor: pointer; font-family: 'Inter', sans-serif; transition: .2s; }
         .confirm-cancel-btn:hover { background: #F3F4F6; border-color: #D1D5DB; }
 
+        /* ─── FIELD ERRORS ─── */
+        .field-error { color: #DC2626; font-size: 11px; margin-top: 5px; display: none; font-weight: 500; }
+        .field-error.show { display: block; animation: fadeIn .2s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:translateY(0); } }
+        .field input.invalid, .field select.invalid, .field textarea.invalid {
+            border-color: #DC2626 !important; background: #FFF8F8 !important;
+        }
+
     </style>
 </head>
 <body>
@@ -190,7 +198,7 @@
             </div>
             <div class="menu">
                 <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
-                <a href="#">📦 Orders</a>
+                <a href="{% url 'admin_orders' %}">📦 Orders</a>
                 <a href="{% url 'admin_products' %}" class="active">👜 Products</a>
                 <a href="{% url 'admin_categories' %}">🏷 Categories</a>
                 <a href="{% url 'admin_user_list' %}">👥 Users</a>
@@ -500,25 +508,28 @@
                 <h2 id="drawerTitle">Add Product</h2>
                 <button class="drawer-close" onclick="closeDrawer('productDrawer')">✕</button>
             </div>
-            <form method="POST" id="productForm" action="{% url 'admin_product_add' %}" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+            <form method="POST" id="productForm" action="{% url 'admin_product_add' %}" style="display:flex;flex-direction:column;flex:1;overflow:hidden;" onsubmit="return validateProductForm()">
                 {% csrf_token %}
                 <div class="drawer-body">
                     <div class="field">
-                        <label>Product Name</label>
-                        <input type="text" name="name" id="p_name" required>
+                        <label>Product Name *</label>
+                        <input type="text" name="name" id="p_name" placeholder="e.g. Classic Backpack" maxlength="200">
+                        <span class="field-error" id="err_p_name"></span>
                     </div>
                     <div class="field">
-                        <label>Category</label>
-                        <select name="category" id="p_category" required>
+                        <label>Category *</label>
+                        <select name="category" id="p_category">
                             <option value="">Select Category</option>
                             {% for c in categories %}
                                 <option value="{{ c.id }}">{{ c.name }}</option>
                             {% endfor %}
                         </select>
+                        <span class="field-error" id="err_p_category"></span>
                     </div>
                     <div class="field">
                         <label>Material</label>
-                        <input type="text" name="material" id="p_material">
+                        <input type="text" name="material" id="p_material" placeholder="e.g. Canvas, Leather" maxlength="100">
+                        <span class="field-error" id="err_p_material"></span>
                     </div>
                     <div class="field">
                         <label>Status</label>
@@ -530,7 +541,8 @@
                     </div>
                     <div class="field">
                         <label>Description</label>
-                        <textarea name="description" id="p_description"></textarea>
+                        <textarea name="description" id="p_description" placeholder="Describe the product..." maxlength="2000"></textarea>
+                        <span class="field-error" id="err_p_desc"></span>
                     </div>
                 </div>
                 <div class="drawer-footer">
@@ -691,6 +703,61 @@
             if(delInput.value) { delInput.disabled = false; }
         }
 
+        /* ─── PRODUCT FORM CLIENT-SIDE VALIDATION ─── */
+        function validateProductForm() {
+            let valid = true;
+            // Clear previous errors
+            document.querySelectorAll('#productDrawer .field-error').forEach(e => { e.classList.remove('show'); e.textContent = ''; });
+            document.querySelectorAll('#productDrawer .invalid').forEach(e => e.classList.remove('invalid'));
+
+            const pName = document.getElementById('p_name').value.trim();
+            if (!pName) {
+                markProdErr('p_name', 'err_p_name', 'Product name is required.'); valid = false;
+            } else if (pName.length < 2) {
+                markProdErr('p_name', 'err_p_name', 'Name must be at least 2 characters.'); valid = false;
+            } else if (pName.length > 200) {
+                markProdErr('p_name', 'err_p_name', 'Name cannot exceed 200 characters.'); valid = false;
+            } else if (!/[a-zA-Z]/.test(pName)) {
+                markProdErr('p_name', 'err_p_name', 'Name must contain at least one letter.'); valid = false;
+            }
+
+            const pCat = document.getElementById('p_category').value;
+            if (!pCat) {
+                markProdErr('p_category', 'err_p_category', 'Please select a category.'); valid = false;
+            }
+
+            const pMat = document.getElementById('p_material').value.trim();
+            if (pMat.length > 100) {
+                markProdErr('p_material', 'err_p_material', 'Material cannot exceed 100 characters.'); valid = false;
+            }
+
+            const pDesc = document.getElementById('p_description').value.trim();
+            if (pDesc.length > 2000) {
+                markProdErr('p_description', 'err_p_desc', 'Description cannot exceed 2000 characters.'); valid = false;
+            }
+
+            return valid;
+        }
+
+        function markProdErr(fieldId, errorId, msg) {
+            const f = document.getElementById(fieldId);
+            const e = document.getElementById(errorId);
+            if (f) f.classList.add('invalid');
+            if (e) { e.textContent = msg; e.classList.add('show'); }
+        }
+
+        // Clear field error on user input
+        ['p_name', 'p_category', 'p_material', 'p_description'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', () => {
+                el.classList.remove('invalid');
+                const errMap = {p_name:'err_p_name', p_category:'err_p_category', p_material:'err_p_material', p_description:'err_p_desc'};
+                const errEl = document.getElementById(errMap[id]);
+                if (errEl) { errEl.classList.remove('show'); errEl.textContent = ''; }
+            });
+        });
+
     </script>
+
 </body>
 </html>

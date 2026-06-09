@@ -99,7 +99,6 @@
             <a href="{% url 'shop' %}"><i class="fa-solid fa-magnifying-glass"></i></a>
             <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
                 <i class="fa-solid fa-heart" style="color:#ef4444;"></i>
-
             </a>
             <a href="{% url 'cart' %}" style="position: relative;">
                 <i class="fa-solid fa-bag-shopping"></i>
@@ -124,7 +123,7 @@
                 <a href="{% url 'address_list' %}">
                     <i class="fa-solid fa-location-dot"></i> ADDRESS
                 </a>
-                <a href="#">
+                <a href="{% url 'order_list' %}">
                     <i class="fa-solid fa-box"></i> MY ORDERS
                 </a>
                 <a href="{% url 'wishlist' %}" class="active">
@@ -330,17 +329,13 @@
                                         }
                                     }
                                     
-                                    // Update navbar heart badge
-                                    const wlBadge = document.querySelector('.nav-icons a[href*="wishlist"] .cart-badge');
-                                    if (data.wishlist_count > 0) {
-                                        if (wlBadge) wlBadge.textContent = data.wishlist_count;
-                                    } else {
+                                    // Update navbar heart
+                                    if (data.wishlist_count === 0) {
                                         const navHeart = document.querySelector('.nav-icons a[href*="wishlist"] i');
                                         if (navHeart) {
                                             navHeart.className = 'fa-regular fa-heart';
                                             navHeart.removeAttribute('style');
                                         }
-                                        if (wlBadge) wlBadge.remove();
                                     }
                                 }, 300);
                             }, 500);
@@ -364,5 +359,20 @@
             }
         }
     </script>
+{% if messages %}
+<div id="dj-toast-wrap" style="position:fixed;top:88px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;">
+  {% for message in messages %}
+  <div style="min-width:300px;max-width:420px;padding:14px 20px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,0.45);animation:djToastIn .4s ease;pointer-events:auto;
+    {% if message.tags == 'error' %}background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#FCA5A5;
+    {% elif message.tags == 'warning' %}background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#FDE68A;
+    {% else %}background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#6EE7B7;{% endif %}">
+    <i class="fa-solid {% if message.tags == 'error' %}fa-circle-xmark{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %}" style="font-size:16px;flex-shrink:0;"></i>
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+<style>@keyframes djToastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}</style>
+<script>setTimeout(function(){var w=document.getElementById('dj-toast-wrap');if(w){w.style.transition='opacity .5s ease';w.style.opacity='0';setTimeout(function(){w.remove();},500);}},3500);</script>
+{% endif %}
 </body>
 </html>

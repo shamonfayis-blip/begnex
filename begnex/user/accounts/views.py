@@ -368,3 +368,31 @@ def logout_view(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
     return redirect("login")
+
+
+from allauth.core.exceptions import ImmediateHttpResponse
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+
+
+class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
+
+    def pre_social_login(self, request, sociallogin):
+        user = sociallogin.user
+        email = None
+        if user and user.email:
+            email = user.email
+        elif sociallogin.account and sociallogin.account.extra_data:
+            email = sociallogin.account.extra_data.get("email")
+
+        if email:
+            User = get_user_model()
+            try:
+                db_user = User.objects.get(email__iexact=email)
+                if db_user.is_blocked:
+                    messages.error(
+                        request,
+                        "Your account has been blocked. Please contact support.",
+                    )
+                    raise ImmediateHttpResponse(redirect("login"))
+            except User.DoesNotExist:
+                pass
