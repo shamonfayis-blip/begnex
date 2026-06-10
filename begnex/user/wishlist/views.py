@@ -12,7 +12,7 @@ from .models import Wishlist
 
 @login_required(login_url="login")
 def wishlist_view(request):
-    """Render the wishlist page for the authenticated user."""
+   
     wishlist_items = Wishlist.objects.filter(
         user=request.user,
         product__is_active=True,
@@ -23,7 +23,7 @@ def wishlist_view(request):
         "product", "product__category"
     ).prefetch_related("product__variants")
 
-    # Annotate each product with its minimum price
+    
     product_ids = wishlist_items.values_list("product_id", flat=True)
     products_with_price = Product.objects.filter(id__in=product_ids).annotate(
         computed_min_price=Min(
@@ -33,12 +33,12 @@ def wishlist_view(request):
     )
     price_map = {p.id: p.computed_min_price for p in products_with_price}
 
-    # Attach price and default variant ID to each wishlist item's product for template convenience
+   
     items = []
     for wi in wishlist_items:
         wi.product.min_price = price_map.get(wi.product.id)
         
-        # Find the default active variant (in-memory since we prefetched)
+       
         active_variants = [v for v in wi.product.variants.all() if v.is_active and not v.is_deleted]
         default_variant = next((v for v in active_variants if v.is_default), active_variants[0] if active_variants else None)
         wi.product.default_variant_id = default_variant.id if default_variant else None
@@ -55,7 +55,7 @@ def wishlist_view(request):
 @login_required(login_url="login")
 @require_POST
 def toggle_wishlist_api(request):
-    """Toggle wishlist: add if not present, remove if present. Returns JSON."""
+
     try:
         data = json.loads(request.body)
         product_id = data.get("product_id")
@@ -70,7 +70,7 @@ def toggle_wishlist_api(request):
     obj, created = Wishlist.objects.get_or_create(user=request.user, product=product)
 
     if not created:
-        # Already wishlisted → remove
+     
         obj.delete()
         count = Wishlist.objects.filter(user=request.user).count()
         return JsonResponse({"success": True, "action": "removed", "wishlist_count": count, "message": "Removed from wishlist."})

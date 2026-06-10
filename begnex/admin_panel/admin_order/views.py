@@ -86,10 +86,11 @@ def admin_order_update_status_view(request, order_id):
             "pending": ["shipped", "cancelled"],
             "shipped": ["out_for_delivery", "cancelled"],
             "out_for_delivery": ["delivered", "cancelled"],
-            "return_requested": ["returned"],
+            "return_requested": ["returned", "return_rejected"],
             "delivered": [],
             "cancelled": [],
             "returned": [],
+            "return_rejected": [],
         }
 
         current = order.status
@@ -105,6 +106,41 @@ def admin_order_update_status_view(request, order_id):
                 order.payment_status = "paid"
             elif new_status == "returned":
                 order.payment_status = "refunded"
+                for item in order.items.all():
+                    if item.status == "return_requested":
+                        item.status = "returned"
+                        item.save()
+                        if item.variant:
+                            item.variant.stock += item.return_requested_quantity
+                            item.variant.save()
+                # Re-evaluate order status: if any items are still 'ordered', go back to delivered
+                all_items = list(order.items.all())
+                has_active_ordered = any(
+                    i.status == "ordered" and (i.quantity - i.cancelled_quantity) > 0
+                    for i in all_items
+                )
+                all_non_cancelled_returned = all(
+                    i.status in ["returned", "return_rejected", "cancelled"]
+                    for i in all_items
+                )
+                if has_active_ordered:
+                    order.status = "delivered"
+                    order.payment_status = "paid"
+                elif all_non_cancelled_returned:
+                    order.status = "returned"  # already set above
+            elif new_status == "return_rejected":
+                for item in order.items.all():
+                    if item.status == "return_requested":
+                        item.status = "return_rejected"
+                        item.save()
+                # Re-evaluate: if some items still ordered → back to delivered
+                all_items = list(order.items.all())
+                has_active_ordered = any(
+                    i.status == "ordered" and (i.quantity - i.cancelled_quantity) > 0
+                    for i in all_items
+                )
+                if has_active_ordered:
+                    order.status = "delivered"
             order.save()
             messages.success(
                 request,

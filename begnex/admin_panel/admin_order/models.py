@@ -13,6 +13,7 @@ class Order(models.Model):
         ("cancelled",        "Cancelled"),
         ("return_requested", "Return Requested"),
         ("returned",         "Returned"),
+        ("return_rejected",  "Return Rejected"),
     ]
 
     PAYMENT_METHOD_CHOICES = [
@@ -93,6 +94,7 @@ class OrderItem(models.Model):
             ("cancelled",        "Cancelled"),
             ("return_requested", "Return Requested"),
             ("returned",         "Returned"),
+            ("return_rejected",  "Return Rejected"),
         ],
         default="ordered"
     )

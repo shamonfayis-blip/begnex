@@ -410,6 +410,14 @@
                         <p style="font-size: 13px;">Reason: {{ order.return_reason }}</p>
                     </div>
                 </div>
+            {% elif is_return_rejected %}
+                <div class="status-banner banner-cancelled">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 4px;">RETURN REJECTED</h3>
+                        <p style="font-size: 13px;">Reason: {{ order.return_reason }}</p>
+                    </div>
+                </div>
             {% else %}
                 <!-- TRACKER CARD (active/delivered/shipped) -->
                 <div class="tracker-card">
@@ -555,10 +563,18 @@
                                             <button class="btn-action-small" onclick="openCancelItemModal('{% url 'cancel_order_item' item.pk %}', '{{ item.product_name|escapejs }}', {{ item.active_qty }})">
                                                 <i class="fa-solid fa-circle-xmark"></i> CANCEL
                                             </button>
-                                        {% elif can_return and item.return_pending_qty > 0 and item.status == 'ordered' %}
+                                        {% elif item.can_return_item %}
                                             <button class="btn-action-small btn-return" onclick="openReturnItemModal('{% url 'return_order_item' item.pk %}', '{{ item.product_name|escapejs }}', {{ item.return_pending_qty }})">
                                                 <i class="fa-solid fa-arrows-rotate"></i> RETURN
                                             </button>
+                                        {% elif item.status == 'return_requested' %}
+                                            <span style="color: #C084FC; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-clock"></i> Return Pending</span>
+                                        {% elif item.status == 'returned' %}
+                                            <span style="color: #34D399; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Returned</span>
+                                        {% elif item.status == 'return_rejected' %}
+                                            <span style="color: #F87171; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
+                                        {% elif item.status == 'cancelled' %}
+                                            <span style="color: #6B7280; font-size: 11px;">Cancelled</span>
                                         {% else %}
                                             <span style="color: #6B7280; font-size: 11px;">N/A</span>
                                         {% endif %}
@@ -580,7 +596,7 @@
                     <button class="btn-danger-large" onclick="openCancelModal('{% url 'cancel_order' order.pk %}', 'Order #{{ order.order_id }}')">
                         <i class="fa-solid fa-circle-xmark"></i> CANCEL ORDER
                     </button>
-                {% elif can_return %}
+                {% elif order.status == 'delivered' %}
                     <button class="btn-purple-large" onclick="openReturnModal('{% url 'return_order' order.pk %}', 'Order #{{ order.order_id }}')">
                         <i class="fa-solid fa-arrows-rotate"></i> RETURN ORDER
                     </button>

@@ -458,6 +458,14 @@
                     if (incBtn) incBtn.disabled = data.new_quantity >= maxAllowed;
                     if (decBtn) decBtn.disabled = data.new_quantity <= 1;
 
+                    // Show success toast
+                    const itemName = card ? card.querySelector('.item-name').textContent.trim() : 'Product';
+                    if (action === 'increment') {
+                        showToast(`Increased quantity of ${itemName}.`, 'success');
+                    } else if (action === 'decrement') {
+                        showToast(`Decreased quantity of ${itemName}.`, 'success');
+                    }
+
                 } else {
                     showToast(data.message, 'error');
                     // Re-enable buttons

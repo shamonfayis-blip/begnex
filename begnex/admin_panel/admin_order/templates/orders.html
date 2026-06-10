@@ -78,6 +78,9 @@
         .badge-out_for_delivery { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
         .badge-delivered        { background: #ECFDF5; color: #065F46; border: 1px solid #D1FAE5; }
         .badge-cancelled        { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+        .badge-return_requested { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+        .badge-returned         { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+        .badge-return_rejected  { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
         .badge-paid   { background: #ECFDF5; color: #059669; border: 1px solid #D1FAE5; }
         .badge-unpaid { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
 
@@ -398,8 +401,9 @@
             'out_for_delivery': ['out_for_delivery', 'delivered', 'cancelled'],
             'delivered': ['delivered'],
             'cancelled': ['cancelled'],
-            'return_requested': ['return_requested', 'returned'],
-            'returned': ['returned']
+            'return_requested': ['return_requested', 'returned', 'return_rejected'],
+            'returned': ['returned'],
+            'return_rejected': ['return_rejected']
         };
 
         function openStatusModal(orderId, orderCode, currentStatus) {

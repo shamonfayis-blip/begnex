@@ -70,23 +70,34 @@ def order_detail_view(request, order_pk):
     is_cancelled = current_status == "cancelled"
     is_return_requested = current_status == "return_requested"
     is_returned = current_status == "returned"
+    is_return_rejected = current_status == "return_rejected"
 
-    if not (is_cancelled or is_return_requested or is_returned):
+    if not (is_cancelled or is_return_requested or is_returned or is_return_rejected):
         for idx, step in enumerate(steps):
             if step["code"] == current_status:
                 current_step_index = idx
                 break
 
    
-    can_cancel = order.status in ["pending", "shipped", "out_for_delivery"]#allowed
-    can_return = order.status == "delivered"
-    
-    
+    can_cancel = order.status == "pending"
+    # can_return is True if order is delivered, or if it is partially returned (return_requested
+    # but some items are still 'ordered' and eligible for return)
+    can_return = (
+        order.status == "delivered"
+        or order.status == "return_requested"
+    )
+
     items = []
     for item in order.items.all():
         item.active_qty = item.quantity - item.cancelled_quantity
         item.return_pending_qty = (
             item.active_qty - item.return_requested_quantity
+        )
+        # individual item return is allowed if the item itself is still 'ordered'
+        item.can_return_item = (
+            item.status == "ordered"
+            and item.return_pending_qty > 0
+            and order.status in ["delivered", "return_requested"]
         )
         items.append(item)
 
@@ -98,6 +109,7 @@ def order_detail_view(request, order_pk):
         "is_cancelled": is_cancelled,
         "is_return_requested": is_return_requested,
         "is_returned": is_returned,
+        "is_return_rejected": is_return_rejected,
         "can_cancel": can_cancel,
         "can_return": can_return,
     }
@@ -110,10 +122,7 @@ def cancel_order(request, order_pk):
     
     order = get_object_or_404(Order, pk=order_pk, user=request.user)
 
-    invalid_statuses = [
-        "delivered", "cancelled", "return_requested", "returned"
-    ]
-    if order.status in invalid_statuses:
+    if order.status != "pending":
         messages.error(request, "This order cannot be cancelled.")
         return redirect("user_order_detail", order_pk=order.pk)
 
@@ -161,10 +170,7 @@ def cancel_order_item(request, item_pk):
     item = get_object_or_404(OrderItem, pk=item_pk, order__user=request.user)
     order = item.order
 
-    invalid_order_statuses = [
-        "delivered", "cancelled", "return_requested", "returned"
-    ]
-    if order.status in invalid_order_statuses or item.status != "ordered":
+    if order.status != "pending" or item.status != "ordered":
         messages.error(request, "This product cannot be cancelled.")
         return redirect("user_order_detail", order_pk=order.pk)
 
@@ -295,7 +301,7 @@ def return_order_item(request, item_pk):
 
     order = item.order
 
-    if order.status != "delivered" or item.status != "ordered":
+    if order.status not in ["delivered", "return_requested"] or item.status != "ordered":
         messages.error(request, "This product cannot be returned.")
         return redirect("user_order_detail", order_pk=order.pk)
 
@@ -324,16 +330,11 @@ def return_order_item(request, item_pk):
 
             item.save()
 
-            
-            all_items = order.items.all()
-            still_ordered = [
-                i for i in all_items
-                if i.status == "ordered"
-                and (i.quantity - i.cancelled_quantity) > i.return_requested_quantity
-            ]
-            if not still_ordered:
+            # Set order to return_requested as soon as ANY item has a return pending,
+            # so admin can see and process the request even on partial returns.
+            if order.status == "delivered":
                 order.status = "return_requested"
-                order.return_reason = "All products return requested"
+                order.return_reason = f"Return requested for: {item.product_name}"
                 order.save()
 
         if return_qty == active_qty:

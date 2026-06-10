@@ -75,6 +75,9 @@
         .badge-out_for_delivery { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
         .badge-delivered        { background: #ECFDF5; color: #065F46; border: 1px solid #D1FAE5; }
         .badge-cancelled        { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+        .badge-return_requested { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+        .badge-returned         { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+        .badge-return_rejected  { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
         .badge-paid   { background: #ECFDF5; color: #059669; border: 1px solid #D1FAE5; }
         .badge-unpaid { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
 
@@ -256,18 +259,39 @@
                             {% endfor %}
                         </div>
                         <!-- Update form -->
+                        {% if order.status == 'return_requested' %}
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <form method="POST" action="{% url 'admin_order_update_status' order.id %}" style="margin: 0; width: 100%;">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="detail">
+                                <input type="hidden" name="status" value="returned">
+                                <button type="submit" class="update-btn" style="width: 100%; background: #059669; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fa-solid fa-circle-check"></i> Approve Return
+                                </button>
+                            </form>
+                            <form method="POST" action="{% url 'admin_order_update_status' order.id %}" style="margin: 0; width: 100%;">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="detail">
+                                <input type="hidden" name="status" value="return_rejected">
+                                <button type="submit" class="update-btn" style="width: 100%; background: #DC2626; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fa-solid fa-circle-xmark"></i> Reject Return
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
                         <form method="POST" action="{% url 'admin_order_update_status' order.id %}" class="status-form">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="detail">
                             <select name="status" class="status-select">
                                 {% for val, label in order.STATUS_CHOICES %}
-                                    {% if val == order.status or order.status == 'pending' and val == 'shipped' or order.status == 'pending' and val == 'cancelled' or order.status == 'shipped' and val == 'out_for_delivery' or order.status == 'shipped' and val == 'cancelled' or order.status == 'out_for_delivery' and val == 'delivered' or order.status == 'out_for_delivery' and val == 'cancelled' or order.status == 'return_requested' and val == 'returned' %}
+                                    {% if val == order.status or order.status == 'pending' and val == 'shipped' or order.status == 'pending' and val == 'cancelled' or order.status == 'shipped' and val == 'out_for_delivery' or order.status == 'shipped' and val == 'cancelled' or order.status == 'out_for_delivery' and val == 'delivered' or order.status == 'out_for_delivery' and val == 'cancelled' or order.status == 'return_requested' and val == 'returned' or order.status == 'return_requested' and val == 'return_rejected' %}
                                         <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
                                     {% endif %}
                                 {% endfor %}
                             </select>
                             <button type="submit" class="update-btn">Save</button>
                         </form>
+                        {% endif %}
                     </div>
                 </div>
 

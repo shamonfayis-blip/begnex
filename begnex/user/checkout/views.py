@@ -16,7 +16,7 @@ from user.cart.models import Cart
 
 
 def generate_unique_order_id():
-    """Generates a unique order code like ORD-XXXXXX."""
+ 
     while True:
         code = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
         order_id = f"ORD-{code}"
@@ -25,7 +25,7 @@ def generate_unique_order_id():
 
 
 def serialize_addresses(user):
-    """Utility to serialize user addresses for JSON responses."""
+   
     addresses = Address.objects.filter(user=user).order_by("-is_default", "-created_at")
     data = []
     for addr in addresses:
@@ -47,13 +47,13 @@ def serialize_addresses(user):
 
 @login_required(login_url="login")
 def checkout_page(request):
-    """Renders the checkout page if cart items are valid."""
+   
     cart = Cart.objects.filter(user=request.user).first()
     if not cart or not cart.items.exists():
         messages.warning(request, "Your cart is empty.")
         return redirect("cart")
 
-    # Verify if there are any inactive, deleted, or out of stock items in the cart
+    
     blocked_items = []
     for item in cart.items.all():
         is_inactive = (
