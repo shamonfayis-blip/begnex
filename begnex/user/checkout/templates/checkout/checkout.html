@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -80,9 +81,12 @@
         .addr-phone { font-size: 13px; color: #A1A1AA; margin-bottom: 12px; }
         .addr-text { font-size: 13px; color: #D4D4D8; line-height: 1.5; word-break: break-word; }
 
-        .address-actions { display: flex; gap: 12px; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 12px; }
+        .address-actions { display: flex; gap: 12px; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 12px; align-items: center; }
         .address-action-btn { background: transparent; border: none; color: #71717A; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
         .address-action-btn:hover { color: #fff; }
+        
+        .remove-btn { background: transparent; border: none; color: #71717A; cursor: pointer; font-size: 15px; transition: 0.2s; padding: 4px; display: inline-flex; align-items: center; justify-content: center; margin-left: auto; }
+        .remove-btn:hover { color: #ef4444; }
 
         .no-addresses { grid-column: 1 / -1; text-align: center; padding: 40px 20px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; color: #71717A; }
         .no-addresses i { font-size: 32px; margin-bottom: 12px; display: block; color: #3F3F46; }
@@ -235,6 +239,118 @@
         /* Responsive */
         @media (max-width: 1050px) { .checkout-container { grid-template-columns: 1fr; } .right-col { position: static; } }
         @media (max-width: 768px) { .checkout-hero { padding: 40px 20px 10px; } .checkout-container { padding: 0 20px 80px; } .navbar { padding: 0 20px; } .nav-links { display: none; } .address-grid { grid-template-columns: 1fr; } .footer-top { grid-template-columns: 1fr 1fr; } }
+
+        /* ── PAYMENT RESULT MODALS ── */
+        .pay-result-overlay {
+            position: fixed; inset: 0;
+            background: rgba(5,7,13,0.88);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 9500;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .pay-result-overlay.open {
+            opacity: 1; pointer-events: all;
+        }
+        .pay-result-box {
+            background: linear-gradient(145deg, #0D1018, #111520);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 40px 36px 36px;
+            max-width: 480px; width: 100%;
+            text-align: center;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+        }
+        .pay-result-overlay.open .pay-result-box {
+            transform: scale(1) translateY(0);
+        }
+        .pay-result-illus {
+            width: 130px; height: 130px;
+            margin: 0 auto 20px;
+        }
+        .pay-result-illus svg { width: 100%; height: 100%; }
+
+        .pay-result-badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            font-size: 10px; font-weight: 800; letter-spacing: 2px;
+            padding: 5px 14px; border-radius: 100px;
+            margin-bottom: 14px;
+        }
+        .pay-result-badge--success {
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.28);
+            color: #34D399;
+        }
+        .pay-result-badge--error {
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.28);
+            color: #FCA5A5;
+        }
+        .pay-result-title {
+            font-size: 26px; font-weight: 900;
+            letter-spacing: -0.8px;
+            margin-bottom: 10px;
+            line-height: 1.1;
+        }
+        .pay-result-sub {
+            font-size: 13px; color: #71717A;
+            line-height: 1.65; margin-bottom: 22px;
+        }
+
+        /* order summary rows (success modal) */
+        .pay-result-rows {
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        .pay-result-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 11px 18px; font-size: 13px;
+        }
+        .pay-result-row + .pay-result-row { border-top: 1px solid rgba(255,255,255,0.05); }
+        .pay-result-row .r-lbl { color: #71717A; }
+        .pay-result-row .r-val { color: #fff; font-weight: 700; }
+        .pay-result-row.r-total .r-val { color: #10B981; font-size: 15px; }
+
+        /* reasons list (failed modal) */
+        .pay-result-reasons {
+            background: rgba(239,68,68,0.04);
+            border: 1px solid rgba(239,68,68,0.10);
+            border-radius: 12px; padding: 16px 18px;
+            margin-bottom: 24px; text-align: left;
+        }
+        .reason-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            font-size: 12px; color: #A1A1AA;
+            padding: 5px 0;
+        }
+        .reason-item i { color: #F87171; margin-top: 2px; flex-shrink: 0; }
+
+        /* buttons */
+        .pay-result-actions { display: flex; gap: 12px; }
+        .pay-btn {
+            flex: 1; height: 46px;
+            border-radius: 10px;
+            font-size: 11px; font-weight: 800; letter-spacing: 1px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer; transition: all 0.22s; border: none;
+            font-family: 'Inter', sans-serif; text-decoration: none;
+        }
+        .pay-btn--primary { background: #4F7DF3; color: #fff; }
+        .pay-btn--primary:hover { background: #3d6be0; transform: translateY(-2px); box-shadow: 0 10px 26px rgba(79,125,243,0.3); }
+        .pay-btn--danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35); color: #FCA5A5; }
+        .pay-btn--danger:hover { background: rgba(239,68,68,0.28); transform: translateY(-2px); }
+        .pay-btn--ghost { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); color: #A1A1AA; }
+        .pay-btn--ghost:hover { background: rgba(255,255,255,0.09); color: #fff; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -316,9 +432,12 @@
                                 </div>
 
                                 <div class="address-actions" onclick="event.stopPropagation();">
-                                    <a href="{% url 'edit_address' id=address.id %}?next={% url 'checkout_page' %}" class="address-action-btn">
+                                    <button type="button" class="address-action-btn" onclick="openEditAddressModal('{{ address.id }}')">
                                         <i class="fa-solid fa-pen"></i> Edit
-                                    </a>
+                                    </button>
+                                    <button type="button" class="remove-btn" onclick="deleteAddress('{{ address.id }}')" title="Remove">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
                                 </div>
                             </div>
                         {% endfor %}
@@ -348,25 +467,36 @@
                         </div>
                     </div>
 
-                    <!-- Razorpay Payment (Coming Soon) -->
-                    <div class="payment-card disabled" onclick="selectPayment('razorpay')">
-                        <input type="radio" name="payment_radio_btn" value="razorpay" disabled class="payment-radio" id="payment-razorpay">
+                    <!-- Razorpay Payment -->
+                    <div class="payment-card" id="payment-card-online" onclick="selectPayment('online')">
+                        <input type="radio" name="payment_radio_btn" value="online" class="payment-radio" id="payment-online">
                         <div class="payment-icon"><i class="fa-solid fa-credit-card"></i></div>
                         <div class="payment-text">
-                            <h4>Razorpay Payment <span class="badge-soon">Coming Soon</span></h4>
+                            <h4>Online Payment (Razorpay)</h4>
                             <p>Instant UPI, Netbanking, Cards, and Wallets.</p>
                         </div>
                     </div>
 
-                    <!-- Wallet (Coming Soon) -->
-                    <div class="payment-card disabled" onclick="selectPayment('wallet')">
-                        <input type="radio" name="payment_radio_btn" value="wallet" disabled class="payment-radio">
+                    <!-- Wallet -->
+                    {% if wallet_balance >= total %}
+                    <div class="payment-card" id="payment-card-wallet" onclick="selectPayment('wallet')">
+                        <input type="radio" name="payment_radio_btn" value="wallet" class="payment-radio" id="payment-wallet">
                         <div class="payment-icon"><i class="fa-solid fa-wallet"></i></div>
                         <div class="payment-text">
-                            <h4>Begnex Wallet <span class="badge-soon">Coming Soon</span></h4>
-                            <p>Pay seamlessly from your accumulated wallet balance.</p>
+                            <h4>Begnex Wallet <span class="badge-balance" style="background: rgba(16, 185, 129, 0.15); color: #10B981; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Balance: ₹{{ wallet_balance }}</span></h4>
+                            <p>Pay seamlessly from your wallet balance.</p>
                         </div>
                     </div>
+                    {% else %}
+                    <div class="payment-card disabled" id="payment-card-wallet" onclick="selectPayment('wallet')" style="opacity: 0.5; cursor: not-allowed;" title="Insufficient wallet balance">
+                        <input type="radio" name="payment_radio_btn" value="wallet" disabled class="payment-radio" id="payment-wallet">
+                        <div class="payment-icon"><i class="fa-solid fa-wallet"></i></div>
+                        <div class="payment-text">
+                            <h4>Begnex Wallet <span class="badge-soon" style="background: rgba(239, 68, 68, 0.15); color: #FCA5A5; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Insufficient Balance (₹{{ wallet_balance }})</span></h4>
+                            <p>Required: ₹{{ total }} (Available: ₹{{ wallet_balance }})</p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -406,12 +536,12 @@
                     {% endfor %}
                 </div>
 
-                <!-- Coupon Validation (Disabled) -->
-                <div class="coupon-section" style="opacity: 0.5; pointer-events: none; cursor: not-allowed;">
+                <!-- Coupon Validation -->
+                <div class="coupon-section">
                     <span class="coupon-label"><i class="fa-solid fa-ticket"></i> Apply Promo Code</span>
                     <div class="coupon-input-group">
-                        <input type="text" class="coupon-input" id="couponCodeInput" placeholder="ENTER CODE" disabled>
-                        <button type="button" class="btn-coupon" disabled>Apply</button>
+                        <input type="text" class="coupon-input" id="couponCodeInput" placeholder="ENTER CODE">
+                        <button type="button" class="btn-coupon" onclick="applyCoupon()">Apply</button>
                     </div>
 
                     <div class="applied-coupon" id="appliedCouponBlock">
@@ -473,6 +603,7 @@
                     <!-- Form parameters -->
                     <input type="hidden" name="address_id" id="formAddressId" value="{% if addresses.0 %}{{ addresses.0.id }}{% endif %}">
                     <input type="hidden" name="coupon_code" id="formCouponCode" value="">
+                    <input type="hidden" name="payment_method" id="formPaymentMethod" value="cod">
                     
                     <button type="submit" class="btn-order" id="submitOrderBtn">
                         PLACE COD ORDER <i class="fa-solid fa-arrow-right"></i>
@@ -595,6 +726,106 @@
                 </div>
                 <button type="submit" class="btn-primary">UPDATE ADDRESS</button>
             </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  PAYMENT SUCCESS MODAL                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="pay-result-overlay" id="paySuccessModal">
+        <div class="pay-result-box">
+
+            <!-- SVG Illustration -->
+            <div class="pay-result-illus">
+                <svg viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="90" cy="90" r="72" stroke="rgba(16,185,129,0.10)" stroke-width="1">
+                        <animate attributeName="r" values="72;80;72" dur="3s" repeatCount="indefinite"/>
+                        <animate attributeName="stroke-opacity" values="0.10;0.03;0.10" dur="3s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="90" cy="90" r="56" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.25)" stroke-width="1.5"/>
+                    <circle cx="90" cy="90" r="40" fill="rgba(16,185,129,0.10)"/>
+                    <polyline points="72,90 84,103 112,75" stroke="#10B981" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="60" stroke-dashoffset="60">
+                        <animate attributeName="stroke-dashoffset" from="60" to="0" dur="0.55s" begin="0.1s" fill="freeze"/>
+                    </polyline>
+                    <!-- sparkles -->
+                    <circle cx="32" cy="48" r="3" fill="#10B981" opacity="0.5"><animate attributeName="cy" values="48;42;48" dur="2.5s" repeatCount="indefinite"/></circle>
+                    <circle cx="150" cy="60" r="2.5" fill="#34D399" opacity="0.4"><animate attributeName="cy" values="60;54;60" dur="2.8s" repeatCount="indefinite"/></circle>
+                    <circle cx="24" cy="126" r="2.5" fill="#4F7DF3" opacity="0.35"><animate attributeName="cy" values="126;120;126" dur="3.1s" repeatCount="indefinite"/></circle>
+                    <circle cx="158" cy="132" r="3" fill="#10B981" opacity="0.4"><animate attributeName="cy" values="132;126;132" dur="2.3s" repeatCount="indefinite"/></circle>
+                    <polygon points="138,34 141,41 138,48 135,41" fill="rgba(16,185,129,0.45)" transform="rotate(10 138 41)"><animate attributeName="opacity" values="0.45;0.9;0.45" dur="3s" repeatCount="indefinite"/></polygon>
+                    <line x1="48" y1="155" x2="48" y2="163" stroke="#34D399" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+                    <line x1="44" y1="159" x2="52" y2="159" stroke="#34D399" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+                </svg>
+            </div>
+
+            <div class="pay-result-badge pay-result-badge--success">
+                <i class="fa-solid fa-circle-check"></i> PAYMENT CONFIRMED
+            </div>
+
+            <h2 class="pay-result-title">Payment <span style="color:#10B981">Successful!</span></h2>
+            <p class="pay-result-sub">Your order has been placed and payment is confirmed. We'll start processing it right away.</p>
+
+            <!-- Order summary rows injected by JS -->
+            <div class="pay-result-rows" id="successOrderRows"></div>
+
+            <div class="pay-result-actions">
+                <a id="successViewOrderBtn" href="#" class="pay-btn pay-btn--primary">
+                    <i class="fa-solid fa-receipt"></i> VIEW ORDER
+                </a>
+                <a href="{% url 'shop' %}" class="pay-btn pay-btn--ghost">
+                    <i class="fa-solid fa-bag-shopping"></i> SHOP MORE
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  PAYMENT FAILED MODAL                                   -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="pay-result-overlay" id="payFailedModal">
+        <div class="pay-result-box">
+
+            <!-- SVG Illustration -->
+            <div class="pay-result-illus">
+                <svg viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="90" cy="90" r="72" stroke="rgba(239,68,68,0.08)" stroke-width="1">
+                        <animate attributeName="r" values="72;80;72" dur="3s" repeatCount="indefinite"/>
+                        <animate attributeName="stroke-opacity" values="0.08;0.02;0.08" dur="3s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx="90" cy="90" r="56" fill="rgba(239,68,68,0.06)" stroke="rgba(239,68,68,0.25)" stroke-width="1.5"/>
+                    <circle cx="90" cy="90" r="40" fill="rgba(239,68,68,0.09)"/>
+                    <line x1="72" y1="72" x2="108" y2="108" stroke="#EF4444" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="52" stroke-dashoffset="52">
+                        <animate attributeName="stroke-dashoffset" from="52" to="0" dur="0.35s" begin="0.05s" fill="freeze"/>
+                    </line>
+                    <line x1="108" y1="72" x2="72" y2="108" stroke="#EF4444" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="52" stroke-dashoffset="52">
+                        <animate attributeName="stroke-dashoffset" from="52" to="0" dur="0.35s" begin="0.2s" fill="freeze"/>
+                    </line>
+                    <!-- warning triangles -->
+                    <polygon points="28,52 34,42 40,52" fill="none" stroke="rgba(239,68,68,0.5)" stroke-width="1.5" stroke-linejoin="round"><animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/></polygon>
+                    <circle cx="34" cy="50" r="0.8" fill="rgba(239,68,68,0.7)"/>
+                    <polygon points="140,128 147,117 154,128" fill="none" stroke="rgba(239,68,68,0.4)" stroke-width="1.5" stroke-linejoin="round"><animate attributeName="opacity" values="0.4;0.9;0.4" dur="3s" repeatCount="indefinite"/></polygon>
+                    <circle cx="32" cy="118" r="2.5" fill="#EF4444" opacity="0.3"><animate attributeName="cy" values="118;112;118" dur="2.7s" repeatCount="indefinite"/></circle>
+                    <circle cx="150" cy="66" r="2" fill="#F87171" opacity="0.35"><animate attributeName="cy" values="66;60;66" dur="2.2s" repeatCount="indefinite"/></circle>
+                </svg>
+            </div>
+
+            <div class="pay-result-badge pay-result-badge--error">
+                <i class="fa-solid fa-triangle-exclamation"></i> PAYMENT FAILED
+            </div>
+
+            <h2 class="pay-result-title">Payment <span style="color:#EF4444">Failed!</span></h2>
+            <p class="pay-result-sub">Your payment was not successful. No charges were made, and your cart is still saved.</p>
+
+            <div class="pay-result-actions">
+                <button type="button" id="failedRetryBtn" class="pay-btn pay-btn--primary" onclick="closeFailedModalAndRetry()">
+                    <i class="fa-solid fa-rotate-right"></i> RETRY PAYMENT
+                </button>
+                <a href="{% url 'shop' %}" class="pay-btn pay-btn--ghost">
+                    <i class="fa-solid fa-bag-shopping"></i> CONTINUE SHOPPING
+                </a>
+            </div>
+
         </div>
     </div>
 
@@ -833,9 +1064,12 @@
                         </div>
 
                         <div class="address-actions" onclick="event.stopPropagation();">
-                            <a href="/address/edit/${addr.id}/" class="address-action-btn">
+                            <button type="button" class="address-action-btn" onclick="openEditAddressModal('${addr.id}')">
                                 <i class="fa-solid fa-pen"></i> Edit
-                            </a>
+                            </button>
+                            <button type="button" class="remove-btn" onclick="deleteAddress('${addr.id}')" title="Remove">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
                         </div>
                     </div>
                 `;
@@ -845,12 +1079,49 @@
             // Update userAddresses cache
             userAddresses = addresses;
 
-            // Auto-select default/first
-            const selectedRadio = document.querySelector('.address-radio:checked');
-            if (selectedRadio) {
-                selectAddress(selectedRadio.value);
+            // Auto-select selection preserving logic
+            const currentSelectedId = document.getElementById('formAddressId').value;
+            const stillExists = addresses.some(addr => addr.id === parseInt(currentSelectedId));
+
+            if (stillExists) {
+                selectAddress(currentSelectedId);
             } else if (addresses.length > 0) {
-                selectAddress(addresses[0].id);
+                const defaultAddr = addresses.find(addr => addr.is_default) || addresses[0];
+                selectAddress(defaultAddr.id);
+            }
+        }
+
+        /* DELETE ADDRESS AJAX */
+        async function deleteAddress(id) {
+            const card = document.getElementById(`addr-card-${id}`);
+            if (!card) return;
+
+            card.style.transition = 'all 0.3s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(30px)';
+            
+            try {
+                const url = "{% url 'checkout_delete_address_api' id=99999 %}".replace('99999', id);
+                const res = await fetch(url, {
+                    method: "POST",
+                    headers: { "X-CSRFToken": CSRF }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    setTimeout(() => {
+                        redrawAddressList(data.addresses);
+                        showToast("Address deleted successfully!", "success");
+                    }, 300);
+                } else {
+                    card.style.opacity = '1';
+                    card.style.transform = '';
+                    showToast(data.message || "Failed to delete address.", "error");
+                }
+            } catch (err) {
+                card.style.opacity = '1';
+                card.style.transform = '';
+                showToast("Network error. Failed to delete address.", "error");
             }
         }
 
@@ -963,7 +1234,14 @@
         let activePaymentMethod = "cod";
 
         function selectPayment(method) {
-            if (method === 'wallet' || method === 'razorpay') return; // disabled/coming soon
+            // Check if wallet option is disabled
+            if (method === 'wallet') {
+                const walletCard = document.getElementById('payment-card-wallet');
+                if (walletCard && walletCard.classList.contains('disabled')) {
+                    showToast("Insufficient wallet balance for this payment method.", "error");
+                    return;
+                }
+            }
 
             // Unselect all payment cards & radio inputs
             document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
@@ -981,7 +1259,31 @@
                 if (btn) {
                     btn.innerHTML = 'PLACE COD ORDER <i class="fa-solid fa-arrow-right"></i>';
                 }
+            } else if (method === 'wallet') {
+                const card = document.getElementById('payment-card-wallet');
+                if (card) card.classList.add('selected');
+                const radio = document.getElementById('payment-wallet');
+                if (radio) radio.checked = true;
+                activePaymentMethod = "wallet";
+                
+                if (btn) {
+                    btn.innerHTML = 'PLACE WALLET ORDER <i class="fa-solid fa-arrow-right"></i>';
+                }
+            } else if (method === 'online') {
+                const card = document.getElementById('payment-card-online');
+                if (card) card.classList.add('selected');
+                const radio = document.getElementById('payment-online');
+                if (radio) radio.checked = true;
+                activePaymentMethod = "online";
+                
+                if (btn) {
+                    btn.innerHTML = 'PAY SECURELY WITH RAZORPAY <i class="fa-solid fa-arrow-right"></i>';
+                }
             }
+            
+            // Update hidden input
+            const formPayMethod = document.getElementById('formPaymentMethod');
+            if (formPayMethod) formPayMethod.value = activePaymentMethod;
         }
 
         /* SUBMIT ORDER FORM VALIDATION */
@@ -993,12 +1295,153 @@
                 return;
             }
 
-            if (activePaymentMethod === 'razorpay') {
+            if (activePaymentMethod === 'online') {
                 e.preventDefault();
-                showToast("Razorpay payment integration is not available yet. Please use Cash on Delivery.", "error");
-                return;
+                initiateRazorpayPayment();
             }
         });
+
+        async function initiateRazorpayPayment() {
+            const addrId = document.getElementById('formAddressId').value;
+            const couponCode = document.getElementById('formCouponCode').value;
+            
+            const btn = document.getElementById('submitOrderBtn');
+            const originalBtnText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            
+            try {
+                const res = await fetch("{% url 'initiate_razorpay_payment' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": CSRF
+                    },
+                    body: new URLSearchParams({
+                        'address_id': addrId,
+                        'coupon_code': couponCode
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    const orderData = {
+                        amount_display: (data.amount / 100).toLocaleString('en-IN')
+                    };
+                    var options = {
+                        "key": data.razorpay_key_id,
+                        "amount": data.amount,
+                        "currency": "INR",
+                        "name": "BEGNEX",
+                        "description": "Payment for Cart Order",
+                        "order_id": data.razorpay_order_id,
+                        "handler": function (response) {
+                            verifyRazorpayPayment(response, data.address_id, data.coupon_code, orderData);
+                        },
+                        "prefill": {
+                            "name": data.user_name,
+                            "email": data.user_email,
+                            "contact": data.user_phone
+                        },
+                        "theme": { "color": "#4F7DF3" },
+                        "modal": {
+                            "ondismiss": function() {
+                                showFailedModal();
+                            }
+                        }
+                    };
+                    var rzp1 = new Razorpay(options);
+                    rzp1.on('payment.failed', function() {
+                        showFailedModal();
+                    });
+                    rzp1.open();
+                } else {
+                    showToast(data.message || "Failed to initiate payment.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Network error. Failed to initiate payment.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
+            }
+        }
+
+        async function verifyRazorpayPayment(response, addressId, couponCode, orderData) {
+            try {
+                const res = await fetch("{% url 'verify_razorpay_payment' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": CSRF
+                    },
+                    body: JSON.stringify({
+                        'razorpay_payment_id': response.razorpay_payment_id,
+                        'razorpay_order_id': response.razorpay_order_id,
+                        'razorpay_signature': response.razorpay_signature,
+                        'address_id': addressId,
+                        'coupon_code': couponCode
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showSuccessModal(data.order_id, orderData.amount_display, data.redirect_url);
+                } else {
+                    showFailedModal();
+                }
+            } catch (err) {
+                console.error(err);
+                showFailedModal();
+            }
+        }
+
+        /* ── PAYMENT RESULT MODAL HELPERS ── */
+        function showSuccessModal(orderId, amountDisplay, viewUrl) {
+            // Fill order rows
+            const rows = document.getElementById('successOrderRows');
+            rows.innerHTML = `
+                <div class="pay-result-row">
+                    <span class="r-lbl">Order Reference</span>
+                    <span class="r-val">#${orderId}</span>
+                </div>
+                <div class="pay-result-row">
+                    <span class="r-lbl">Payment Method</span>
+                    <span class="r-val" style="display:flex;align-items:center;gap:6px;">
+                        <span style="background:rgba(79,125,243,0.12);border:1px solid rgba(79,125,243,0.25);color:#93BBFD;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;">
+                            <i class="fa-solid fa-credit-card"></i> Razorpay
+                        </span>
+                    </span>
+                </div>
+                <div class="pay-result-row">
+                    <span class="r-lbl">Payment Status</span>
+                    <span class="r-val" style="display:flex;align-items:center;gap:6px;">
+                        <span style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:#34D399;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;">
+                            <i class="fa-solid fa-circle-check"></i> Paid
+                        </span>
+                    </span>
+                </div>
+                <div class="pay-result-row r-total">
+                    <span class="r-lbl">Grand Total</span>
+                    <span class="r-val">₹${amountDisplay}</span>
+                </div>
+            `;
+            // Set view order button href
+            document.getElementById('successViewOrderBtn').href = viewUrl;
+            // Open modal
+            document.getElementById('paySuccessModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function showFailedModal() {
+            document.getElementById('payFailedModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFailedModalAndRetry() {
+            document.getElementById('payFailedModal').classList.remove('open');
+            document.body.style.overflow = '';
+        }
 
         // Initialize selection on load
         window.addEventListener('DOMContentLoaded', () => {

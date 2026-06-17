@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
@@ -102,45 +103,103 @@ def admin_order_update_status_view(request, order_id):
         elif new_status in allowed:
             order.status = new_status
 
-            if new_status == "delivered":
+            if new_status == "cancelled":
+                reason = request.POST.get("reason", "").strip() or "Cancelled by Admin"
+                order.cancel_reason = reason
+                
+                with transaction.atomic():
+                    for item in order.items.all():
+                        active_qty = item.quantity - item.cancelled_quantity
+                        if active_qty > 0:
+                            item.cancelled_quantity = item.quantity
+                            item.status = "cancelled"
+                            item.cancel_reason = reason
+                            item.save()
+                            if item.variant:
+                                item.variant.stock += active_qty
+                                item.variant.save()
+
+                if order.payment_status == "paid":
+                    from user.wallet.utils import refund_to_wallet
+                    refund_to_wallet(order.user, order.total, f"Refund for cancelled Order #{order.order_id} (Admin)")
+                    order.payment_status = "refunded"
+            elif new_status == "delivered":
                 order.payment_status = "paid"
             elif new_status == "returned":
-                order.payment_status = "refunded"
-                for item in order.items.all():
-                    if item.status == "return_requested":
+                reason = request.POST.get("reason", "").strip()
+                if reason:
+                    order.return_reason = reason
+                
+                with transaction.atomic():
+                    order.payment_status = "refunded"
+                    
+                    # Proportional wallet refund calculation
+                    refund_total = 0
+                    all_items = list(order.items.all())
+                    active_items = [i for i in all_items if i.quantity - i.cancelled_quantity > 0]
+                    returning_items = [i for i in active_items if i.status == "return_requested"]
+                    
+                    # Check if all active items are now being returned (or already returned)
+                    all_active_returned = all(i.status in ["return_requested", "returned"] for i in active_items)
+                    
+                    discount_ratio = order.discount / order.subtotal if order.subtotal > 0 else 0
+                    
+                    for item in returning_items:
                         item.status = "returned"
+                        if reason:
+                            item.return_reason = reason
                         item.save()
                         if item.variant:
                             item.variant.stock += item.return_requested_quantity
                             item.variant.save()
-                # Re-evaluate order status: if any items are still 'ordered', go back to delivered
-                all_items = list(order.items.all())
-                has_active_ordered = any(
-                    i.status == "ordered" and (i.quantity - i.cancelled_quantity) > 0
-                    for i in all_items
-                )
-                all_non_cancelled_returned = all(
-                    i.status in ["returned", "return_rejected", "cancelled"]
-                    for i in all_items
-                )
-                if has_active_ordered:
-                    order.status = "delivered"
-                    order.payment_status = "paid"
-                elif all_non_cancelled_returned:
-                    order.status = "returned"  # already set above
+                            
+                        effective_price = item.unit_price * (1 - discount_ratio)
+                        item_refund = item.return_requested_quantity * effective_price
+                        refund_total += item_refund
+                    
+                    if all_active_returned and order.shipping_charge > 0:
+                        refund_total += order.shipping_charge
+                    
+                    refund_total = round(refund_total, 2)
+                    
+                    # Refund to user wallet
+                    if refund_total > 0:
+                        from user.wallet.utils import refund_to_wallet
+                        refund_to_wallet(order.user, refund_total, f"Refund for returned items in Order #{order.order_id}")
+                    
+                    has_active_ordered = any(
+                        i.status == "ordered" and (i.quantity - i.cancelled_quantity) > 0
+                        for i in all_items
+                    )
+                    all_non_cancelled_returned = all(
+                        i.status in ["returned", "return_rejected", "cancelled"]
+                        for i in all_items
+                    )
+                    if has_active_ordered:
+                        order.status = "delivered"
+                        order.payment_status = "paid"
+                    elif all_non_cancelled_returned:
+                        order.status = "returned"  # already set above
             elif new_status == "return_rejected":
-                for item in order.items.all():
-                    if item.status == "return_requested":
-                        item.status = "return_rejected"
-                        item.save()
-                # Re-evaluate: if some items still ordered → back to delivered
-                all_items = list(order.items.all())
-                has_active_ordered = any(
-                    i.status == "ordered" and (i.quantity - i.cancelled_quantity) > 0
-                    for i in all_items
-                )
-                if has_active_ordered:
-                    order.status = "delivered"
+                reason = request.POST.get("reason", "").strip()
+                if reason:
+                    order.return_reason = f"Rejected: {reason}"
+                
+                with transaction.atomic():
+                    for item in order.items.all():
+                        if item.status == "return_requested":
+                            item.status = "return_rejected"
+                            if reason:
+                                item.return_reason = f"Rejected: {reason}"
+                            item.save()
+                    
+                    all_items = list(order.items.all())
+                    has_active_ordered = any(
+                        i.status == "ordered" and (i.quantity - i.cancelled_quantity) > 0
+                        for i in all_items
+                    )
+                    if has_active_ordered:
+                        order.status = "delivered"
             order.save()
             messages.success(
                 request,

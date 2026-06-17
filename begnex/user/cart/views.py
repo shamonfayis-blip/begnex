@@ -218,7 +218,7 @@ def update_cart_api(request):
 
 @require_POST
 def remove_cart_api(request):
-    """Remove a single item from the cart."""
+  
     try:
         data = json.loads(request.body)
         item_id = data.get("item_id")

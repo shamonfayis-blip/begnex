@@ -19,6 +19,7 @@ urlpatterns = [
     path("wishlist/", include("user.wishlist.urls")),
     path("checkout/", include("user.checkout.urls")),
     path("orders/", include("user.order.urls")),
+    path("wallet/", include("user.wallet.urls")),
 ]
 
 if settings.DEBUG:

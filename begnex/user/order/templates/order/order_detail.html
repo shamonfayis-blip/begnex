@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details - Begnex</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
@@ -311,6 +312,60 @@
             .order-details-actions { flex-direction: column; width: 100%; }
             .order-details-actions button, .order-details-actions a { width: 100%; justify-content: center; }
         }
+
+        /* ── PAYMENT RESULT MODALS ── */
+        .pay-result-overlay {
+            position: fixed; inset: 0;
+            background: rgba(5,7,13,0.88);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 9500;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .pay-result-overlay.open { opacity: 1; pointer-events: all; }
+        .pay-result-box {
+            background: linear-gradient(145deg, #0D1018, #111520);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 40px 36px 36px;
+            max-width: 480px; width: 100%;
+            text-align: center;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .pay-result-overlay.open .pay-result-box { transform: scale(1) translateY(0); }
+        .pay-result-illus { width: 120px; height: 120px; margin: 0 auto 18px; }
+        .pay-result-illus svg { width: 100%; height: 100%; }
+        .pay-result-badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            font-size: 10px; font-weight: 800; letter-spacing: 2px;
+            padding: 5px 14px; border-radius: 100px; margin-bottom: 12px;
+        }
+        .pay-result-badge--success { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.28); color: #34D399; }
+        .pay-result-badge--error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.28); color: #FCA5A5; }
+        .pay-result-title { font-size: 24px; font-weight: 900; letter-spacing: -0.8px; margin-bottom: 8px; }
+        .pay-result-sub { font-size: 13px; color: #71717A; line-height: 1.65; margin-bottom: 22px; }
+        .pay-result-rows { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; overflow: hidden; margin-bottom: 22px; text-align: left; }
+        .pay-result-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 18px; font-size: 13px; }
+        .pay-result-row + .pay-result-row { border-top: 1px solid rgba(255,255,255,0.05); }
+        .pay-result-row .r-lbl { color: #71717A; }
+        .pay-result-row .r-val { color: #fff; font-weight: 700; }
+        .pay-result-row.r-total .r-val { color: #10B981; font-size: 15px; }
+        .pay-result-reasons { background: rgba(239,68,68,0.04); border: 1px solid rgba(239,68,68,0.10); border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; text-align: left; }
+        .reason-item-p { display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: #A1A1AA; padding: 4px 0; }
+        .reason-item-p i { color: #F87171; margin-top: 2px; flex-shrink: 0; }
+        .pay-result-actions { display: flex; gap: 12px; }
+        .pay-btn { flex: 1; height: 46px; border-radius: 10px; font-size: 11px; font-weight: 800; letter-spacing: 1px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.22s; border: none; font-family: 'Inter', sans-serif; text-decoration: none; }
+        .pay-btn--primary { background: #4F7DF3; color: #fff; }
+        .pay-btn--primary:hover { background: #3d6be0; transform: translateY(-2px); box-shadow: 0 10px 26px rgba(79,125,243,0.3); }
+        .pay-btn--danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35); color: #FCA5A5; }
+        .pay-btn--danger:hover { background: rgba(239,68,68,0.28); transform: translateY(-2px); }
+        .pay-btn--ghost { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); color: #A1A1AA; }
+        .pay-btn--ghost:hover { background: rgba(255,255,255,0.09); color: #fff; transform: translateY(-2px); }
     </style>
 </head>
 
@@ -350,7 +405,7 @@
                 <a href="{% url 'address_list' %}"><i class="fa-solid fa-location-dot"></i> ADDRESS</a>
                 <a href="{% url 'order_list' %}" class="active"><i class="fa-solid fa-box"></i> MY ORDERS</a>
                 <a href="{% url 'wishlist' %}"><i class="fa-regular fa-heart"></i> WISHLIST</a>
-                <a href="#"><i class="fa-solid fa-wallet"></i> WALLET</a>
+                <a href="{% url 'wallet_details' %}"><i class="fa-solid fa-wallet"></i> WALLET</a>
             </div>
         </div>
 
@@ -487,6 +542,8 @@
                             {{ order.get_payment_status_display }}
                         </span>
                     </div>
+
+
                 </div>
             </div>
 
@@ -682,6 +739,66 @@
         </div>
     </div>
 
+    <!-- ══ PAYMENT SUCCESS MODAL ══ -->
+    <div class="pay-result-overlay" id="paySuccessModal">
+        <div class="pay-result-box">
+            <div class="pay-result-illus">
+                <svg viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="90" cy="90" r="72" stroke="rgba(16,185,129,0.10)" stroke-width="1"><animate attributeName="r" values="72;80;72" dur="3s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.10;0.03;0.10" dur="3s" repeatCount="indefinite"/></circle>
+                    <circle cx="90" cy="90" r="56" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.25)" stroke-width="1.5"/>
+                    <circle cx="90" cy="90" r="40" fill="rgba(16,185,129,0.10)"/>
+                    <polyline points="72,90 84,103 112,75" stroke="#10B981" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="60" stroke-dashoffset="60"><animate attributeName="stroke-dashoffset" from="60" to="0" dur="0.55s" begin="0.1s" fill="freeze"/></polyline>
+                    <circle cx="32" cy="48" r="3" fill="#10B981" opacity="0.5"><animate attributeName="cy" values="48;42;48" dur="2.5s" repeatCount="indefinite"/></circle>
+                    <circle cx="150" cy="60" r="2.5" fill="#34D399" opacity="0.4"><animate attributeName="cy" values="60;54;60" dur="2.8s" repeatCount="indefinite"/></circle>
+                    <circle cx="158" cy="132" r="3" fill="#10B981" opacity="0.4"><animate attributeName="cy" values="132;126;132" dur="2.3s" repeatCount="indefinite"/></circle>
+                    <polygon points="138,34 141,41 138,48 135,41" fill="rgba(16,185,129,0.45)" transform="rotate(10 138 41)"><animate attributeName="opacity" values="0.45;0.9;0.45" dur="3s" repeatCount="indefinite"/></polygon>
+                </svg>
+            </div>
+            <div class="pay-result-badge pay-result-badge--success"><i class="fa-solid fa-circle-check"></i> PAYMENT CONFIRMED</div>
+            <h2 class="pay-result-title">Payment <span style="color:#10B981">Successful!</span></h2>
+            <p class="pay-result-sub">Your payment has been verified and your order is now being processed.</p>
+            <div class="pay-result-rows" id="detailSuccessRows"></div>
+            <div class="pay-result-actions">
+                <a id="detailSuccessViewBtn" href="#" class="pay-btn pay-btn--primary"><i class="fa-solid fa-receipt"></i> VIEW ORDER</a>
+                <a href="{% url 'shop' %}" class="pay-btn pay-btn--ghost"><i class="fa-solid fa-bag-shopping"></i> SHOP MORE</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ PAYMENT FAILED MODAL ══ -->
+    <div class="pay-result-overlay" id="payFailedModal">
+        <div class="pay-result-box">
+            <div class="pay-result-illus">
+                <svg viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="90" cy="90" r="72" stroke="rgba(239,68,68,0.08)" stroke-width="1"><animate attributeName="r" values="72;80;72" dur="3s" repeatCount="indefinite"/></circle>
+                    <circle cx="90" cy="90" r="56" fill="rgba(239,68,68,0.06)" stroke="rgba(239,68,68,0.25)" stroke-width="1.5"/>
+                    <circle cx="90" cy="90" r="40" fill="rgba(239,68,68,0.09)"/>
+                    <line x1="72" y1="72" x2="108" y2="108" stroke="#EF4444" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="52" stroke-dashoffset="52"><animate attributeName="stroke-dashoffset" from="52" to="0" dur="0.35s" begin="0.05s" fill="freeze"/></line>
+                    <line x1="108" y1="72" x2="72" y2="108" stroke="#EF4444" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="52" stroke-dashoffset="52"><animate attributeName="stroke-dashoffset" from="52" to="0" dur="0.35s" begin="0.2s" fill="freeze"/></line>
+                    <polygon points="28,52 34,42 40,52" fill="none" stroke="rgba(239,68,68,0.5)" stroke-width="1.5" stroke-linejoin="round"><animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/></polygon>
+                    <circle cx="32" cy="118" r="2.5" fill="#EF4444" opacity="0.3"><animate attributeName="cy" values="118;112;118" dur="2.7s" repeatCount="indefinite"/></circle>
+                    <circle cx="150" cy="66" r="2" fill="#F87171" opacity="0.35"><animate attributeName="cy" values="66;60;66" dur="2.2s" repeatCount="indefinite"/></circle>
+                </svg>
+            </div>
+            <div class="pay-result-badge pay-result-badge--error"><i class="fa-solid fa-triangle-exclamation"></i> PAYMENT FAILED</div>
+            <h2 class="pay-result-title">Order <span style="color:#EF4444">Cancelled!</span></h2>
+            <p class="pay-result-sub">Your payment failed and the order has been automatically cancelled. No money was charged. Stock has been restored.</p>
+            <div class="pay-result-reasons">
+                <div class="reason-item-p"><i class="fa-solid fa-circle-check" style="color:#10B981"></i> Order cancelled — no charge made</div>
+                <div class="reason-item-p"><i class="fa-solid fa-circle-check" style="color:#10B981"></i> Stock has been restored</div>
+                <div class="reason-item-p"><i class="fa-solid fa-circle-xmark"></i> Possible cause: card declined, OTP timeout or bank error</div>
+            </div>
+            <div class="pay-result-actions">
+                <a href="{% url 'checkout_page' %}" class="pay-btn pay-btn--primary">
+                    <i class="fa-solid fa-bag-shopping"></i> TRY AGAIN
+                </a>
+                <button class="pay-btn pay-btn--ghost" onclick="closeFailedModal()">
+                    <i class="fa-solid fa-xmark"></i> CLOSE
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- INTERACTIVE SCRIPTS -->
     <script>
         // ── Quantity stepper helper ───────────────────────────────────────
@@ -763,7 +880,8 @@
             if (event.target == cancelModal) { closeCancelModal(); }
             if (event.target == returnModal) { closeReturnModal(); }
         };
+
+
     </script>
 </body>
 </html>
-

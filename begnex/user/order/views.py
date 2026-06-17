@@ -23,17 +23,14 @@ def order_list_view(request):
     
     search_query = request.GET.get("q", "").strip()
     orders = (
-        Order.objects.filter(user=request.user)
-        .prefetch_related("items")
-        .order_by("-created_at")
-    )
+        Order.objects.filter(user=request.user).prefetch_related("items").order_by("-created_at"))
 
     if search_query:
         orders = orders.filter(
             Q(order_id__icontains=search_query) |
             Q(items__product_name__icontains=search_query)
         ).distinct()
-
+                                        
     paginator = Paginator(orders, 5) 
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -80,8 +77,7 @@ def order_detail_view(request, order_pk):
 
    
     can_cancel = order.status == "pending"
-    # can_return is True if order is delivered, or if it is partially returned (return_requested
-    # but some items are still 'ordered' and eligible for return)
+   
     can_return = (
         order.status == "delivered"
         or order.status == "return_requested"
@@ -93,7 +89,6 @@ def order_detail_view(request, order_pk):
         item.return_pending_qty = (
             item.active_qty - item.return_requested_quantity
         )
-        # individual item return is allowed if the item itself is still 'ordered'
         item.can_return_item = (
             item.status == "ordered"
             and item.return_pending_qty > 0
@@ -130,6 +125,7 @@ def cancel_order(request, order_pk):
 
     try:
         with transaction.atomic():
+            refund_amount = order.total
             order.status = "cancelled"
             order.cancel_reason = reason or "Cancelled by user"
             order.subtotal = 0
@@ -150,6 +146,13 @@ def cancel_order(request, order_pk):
                     if item.variant and active_qty > 0:
                         item.variant.stock += active_qty
                         item.variant.save()
+
+            # Process refund if order is paid
+            if order.payment_status == "paid":
+                from user.wallet.utils import refund_to_wallet
+                refund_to_wallet(request.user, refund_amount, f"Refund for cancelled Order #{order.order_id}")
+                order.payment_status = "refunded"
+                order.save()
 
         messages.success(
             request,
@@ -186,6 +189,7 @@ def cancel_order_item(request, item_pk):
 
     try:
         with transaction.atomic():
+            old_total = order.total
             item.cancelled_quantity += cancel_qty
             item.cancel_reason = reason or "Cancelled by user"
 
@@ -236,6 +240,15 @@ def cancel_order_item(request, item_pk):
                 order.total = max(0, new_subtotal + new_shipping - new_discount)
 
             order.save()
+
+            # Process refund if order is paid and total decreased
+            refund_amount = old_total - order.total
+            if refund_amount > 0 and order.payment_status == "paid":
+                from user.wallet.utils import refund_to_wallet
+                refund_to_wallet(request.user, refund_amount, f"Refund for cancelled units of {item.product_name} in Order #{order.order_id}")
+                if not active_items:
+                    order.payment_status = "refunded"
+                    order.save()
 
         if cancel_qty == active_qty:
             messages.success(
@@ -330,8 +343,7 @@ def return_order_item(request, item_pk):
 
             item.save()
 
-            # Set order to return_requested as soon as ANY item has a return pending,
-            # so admin can see and process the request even on partial returns.
+           
             if order.status == "delivered":
                 order.status = "return_requested"
                 order.return_reason = f"Return requested for: {item.product_name}"
@@ -420,7 +432,7 @@ def download_invoice(request, order_pk):
             )
         ],
         [
-            Paragraph("<b>Payment Method:</b> Cash on Delivery (COD)",
+            Paragraph(f"<b>Payment Method:</b> {order.get_payment_method_display()}",
                       normal_style),
             Paragraph(
                 f"<b>Payment Status:</b> "

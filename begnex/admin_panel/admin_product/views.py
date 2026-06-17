@@ -20,7 +20,6 @@ from .models import Product, ProductImage, ProductVariant, VariantImage
 
 
 def generate_product_id():
-    """Auto-generate a unique product ID like PRD-001, PRD-002"""
     last = Product.objects.order_by("-id").first()
     if last:
         try:
@@ -59,7 +58,7 @@ def handle_base64_image(base64_string, product, is_primary):
 
 
 def _save_base64_image(b64_string, prefix="var"):
-    """Decode a base64 data-URL and return a Django ContentFile."""
+   
     if not b64_string or ";base64," not in b64_string:
         return None
     _, imgstr = b64_string.split(";base64,", 1)
@@ -267,12 +266,12 @@ def admin_product_edit_view(request, product_id):
     product.is_active = is_active
     product.save()
 
-    # Remove from wishlists if made inactive
+   
     if not product.is_active:
         from user.wishlist.models import Wishlist
         Wishlist.objects.filter(product=product).delete()
 
-    # Handle image deletions
+    
     delete_images = request.POST.getlist("delete_images")
     if delete_images:
         for img_id in delete_images:
@@ -318,7 +317,7 @@ def admin_product_toggle_view(request, product_id):
     product.is_active = not product.is_active
     product.save()
 
-    # Remove from wishlists if made inactive
+   
     if not product.is_active:
         from user.wishlist.models import Wishlist
         Wishlist.objects.filter(product=product).delete()
@@ -337,7 +336,7 @@ def admin_product_delete_view(request, product_id):
     product.is_deleted = True
     product.save()
 
-    # Remove from wishlists
+   
     from user.wishlist.models import Wishlist
     Wishlist.objects.filter(product=product).delete()
 
@@ -424,7 +423,6 @@ def admin_variant_add_view(request, product_id):
 
     name = f"{color} / {size}"
 
-    # ── Color / Size ──────────────────────────────────────────
     if not color or not size:
         messages.error(request, "Color and Size are required.")
         return redirect("admin_variants", product_id=product.id)
@@ -432,7 +430,7 @@ def admin_variant_add_view(request, product_id):
         messages.error(request, "Color must be at least 2 characters and contain at least one letter.")
         return redirect("admin_variants", product_id=product.id)
 
-    # ── SKU ───────────────────────────────────────────────────
+    
     if not sku:
         messages.error(request, "SKU is required.")
         return redirect("admin_variants", product_id=product.id)
@@ -440,7 +438,6 @@ def admin_variant_add_view(request, product_id):
         messages.error(request, f'SKU "{sku}" already exists.')
         return redirect("admin_variants", product_id=product.id)
 
-    # ── Price ─────────────────────────────────────────────────
     try:
         price_val = Decimal(price_str)
         if price_val <= 0:
@@ -453,7 +450,7 @@ def admin_variant_add_view(request, product_id):
         messages.error(request, "Invalid price value entered.")
         return redirect("admin_variants", product_id=product.id)
 
-    # ── Stock ─────────────────────────────────────────────────
+   
     try:
         stock_val = int(stock_str)
         if stock_val < 0:
@@ -466,7 +463,6 @@ def admin_variant_add_view(request, product_id):
         messages.error(request, "Stock must be a whole number.")
         return redirect("admin_variants", product_id=product.id)
 
-    # ── Images ────────────────────────────────────────────────
     image1 = None
     image2 = None
     image3 = None
@@ -503,7 +499,7 @@ def admin_variant_add_view(request, product_id):
             )
             return redirect("admin_variants", product_id=product.id)
 
-    # ── Create Variant ────────────────────────────────────────
+
     is_default = not ProductVariant.objects.filter(product=product, is_deleted=False).exists()
 
     variant = ProductVariant.objects.create(
@@ -549,7 +545,7 @@ def admin_variant_edit_view(request, variant_id):
 
     name = f"{color} / {size}"
 
-    # ── Color / Size ──────────────────────────────────────────
+    
     if not color or not size:
         messages.error(request, "Color and Size are required.")
         return redirect("admin_variants", product_id=product_id)
@@ -557,7 +553,7 @@ def admin_variant_edit_view(request, variant_id):
         messages.error(request, "Color must be at least 2 characters and contain at least one letter.")
         return redirect("admin_variants", product_id=product_id)
 
-    # ── SKU ───────────────────────────────────────────────────
+   
     if not sku:
         messages.error(request, "SKU is required.")
         return redirect("admin_variants", product_id=product_id)
@@ -569,7 +565,6 @@ def admin_variant_edit_view(request, variant_id):
         messages.error(request, f'SKU "{sku}" already exists.')
         return redirect("admin_variants", product_id=product_id)
 
-    # ── Price ─────────────────────────────────────────────────
     try:
         price_val = Decimal(price_str)
         if price_val <= 0:
@@ -582,7 +577,7 @@ def admin_variant_edit_view(request, variant_id):
         messages.error(request, "Invalid price value entered.")
         return redirect("admin_variants", product_id=product_id)
 
-    # ── Stock ─────────────────────────────────────────────────
+    
     try:
         stock_val = int(stock_str)
         if stock_val < 0:
@@ -595,7 +590,6 @@ def admin_variant_edit_view(request, variant_id):
         messages.error(request, "Stock must be a whole number.")
         return redirect("admin_variants", product_id=product_id)
 
-    # ── Image type validation for new uploads ─────────────────
     ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
     for i in range(1, 4):
         img = request.FILES.get(f"image_{i}")
@@ -606,7 +600,7 @@ def admin_variant_edit_view(request, variant_id):
             )
             return redirect("admin_variants", product_id=product_id)
 
-    # ── Update Variant ────────────────────────────────────────
+    
     variant.name = name
     variant.sku = sku
     variant.price = price_val
@@ -614,7 +608,7 @@ def admin_variant_edit_view(request, variant_id):
     variant.is_active = is_active
     variant.save()
 
-    # DELETE SELECTED IMAGES
+    
     for i in range(1, 4):
         clear_value = request.POST.get(f"clear_image_{i}")
         if clear_value and clear_value.isdigit():
@@ -626,7 +620,7 @@ def admin_variant_edit_view(request, variant_id):
             except VariantImage.DoesNotExist:
                 pass
 
-    # ADD NEW IMAGES (either base64 or normal files)
+    
     for i in range(1, 4):
         b64_data = request.POST.get(f"image_{i}_base64")
         if b64_data:
@@ -645,7 +639,7 @@ def admin_variant_edit_view(request, variant_id):
                 )
                 resize_image(variant_image.image.path)
 
-    # ENSURE ONE PRIMARY IMAGE
+   
     first_image = variant.images.first()
     if first_image and not variant.images.filter(is_primary=True).exists():
         first_image.is_primary = True
@@ -671,7 +665,7 @@ def admin_variant_delete_view(request, variant_id):
     variant.is_deleted = True
     variant.save()
 
-    # SET NEW DEFAULT VARIANT
+    
 
     if was_default:
 
