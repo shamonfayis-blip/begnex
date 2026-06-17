@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+bvenv/
+venv/
+env/
+.env
+.venv
+
+# Django local configurations / database / media
+db.sqlite3
+db.sqlite3-journal
+*.log
+media/
+
+# IDE configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
