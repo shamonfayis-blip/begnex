@@ -13,6 +13,8 @@ urlpatterns = [
     path("admin-category/", include("admin_panel.admin_category.urls")),
     path("admin-product/", include("admin_panel.admin_product.urls")),
     path("admin-order/", include("admin_panel.admin_order.urls")),
+    path("admin-coupon/", include("admin_panel.admin_coupon.urls")),
+    path("admin-offer/", include("admin_panel.admin_offer.urls")),
     path("product/", include("user.product.urls")),
     path("category/", include("user.category.urls")),
     path("cart/", include("user.cart.urls")),

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referral Offers Management – Begnex</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #F9FAFB; color: #111827; display: flex; min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            width: 260px; height: 100vh; background: #FAFAFA;
+            border-right: 1px solid #E5E7EB; padding: 20px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            position: fixed; left: 0; top: 0; z-index: 100;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #D1D5DB;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .logo-icon {
+            width: 32px; height: 32px; background: black; color: white;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; font-weight: 700; font-size: 14px;
+        }
+        .logo h2 { font-size: 22px; font-weight: 700; }
+        .logo p { font-size: 10px; color: #777; letter-spacing: 2px; }
+
+        .menu { display: flex; flex-direction: column; gap: 3px; }
+        .menu a {
+            height: 40px; display: flex; align-items: center; gap: 12px;
+            padding: 0 14px; border-radius: 8px; font-size: 14px; color: #555; transition: .2s;
+        }
+        .menu a:hover, .menu .active {
+            background: white; color: black; font-weight: 600;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .sidebar-bottom { border-top: 1px solid #E5E7EB; padding-top: 18px; }
+        .admin-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .admin-avatar {
+            width: 42px; height: 42px; background: #111; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 16px; font-weight: 700; flex-shrink: 0;
+        }
+        .admin-profile h4 { font-size: 14px; font-weight: 600; }
+        .admin-profile p { font-size: 11px; color: #777; }
+        .logout-btn { width: 100%; height: 42px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; color: #DC2626; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logout-btn:hover { background: #FEE2E2; }
+
+        /* ─── MAIN CONTENT ─── */
+        .main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; }
+        .topbar { height: 72px; background: white; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; }
+        .topbar-left { display: flex; align-items: center; gap: 14px; }
+        .back-link { width: 34px; height: 34px; border-radius: 8px; border: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: center; color: #555; background: white; transition: .2s; }
+        .back-link:hover { background: #F3F4F6; color: #111; }
+        .topbar h1 { font-size: 22px; font-weight: 700; }
+        .topbar p { font-size: 12px; color: #777; margin-top: 2px; }
+        .content { padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
+
+        /* ─── TOAST NOTIFICATION ─── */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 300px; padding: 14px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; animation: slideIn .35s ease; box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+        .toast.success { background: #ECFDF5; border: 1px solid #D1FAE5; color: #065F46; }
+        .toast.error   { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* ─── STATS GRID ─── */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px; }
+        .stat-card { background: white; padding: 24px; border-radius: 16px; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .stat-info h3 { font-size: 13px; color: #6B7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-info p { font-size: 32px; font-weight: 800; color: #111827; margin-top: 8px; }
+        .stat-icon { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .stat-icon.blue { background: #EFF6FF; color: #3B82F6; }
+        .stat-icon.green { background: #ECFDF5; color: #10B981; }
+
+        /* ─── CONFIGURATION CARD ─── */
+        .config-card { background: white; padding: 32px; border-radius: 16px; border: 1px solid #E5E7EB; margin-bottom: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .config-title { font-size: 18px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 24px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 12px; font-weight: 700; color: #4B5563; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input { height: 48px; padding: 0 16px; border-radius: 10px; border: 1px solid #D1D5DB; font-size: 14px; font-family: inherit; font-weight: 500; outline: none; transition: .2s; }
+        .form-group input:focus { border-color: #111827; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+        
+        /* Toggle Switch */
+        .toggle-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #D1D5DB; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #10B981; }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .toggle-label { font-size: 14px; font-weight: 600; color: #374151; }
+
+        .save-btn { background: #111827; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: .2s; }
+        .save-btn:hover { background: #374151; }
+
+        /* ─── TABLES ─── */
+        .table-wrap { background: white; border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .table-title { padding: 24px; font-size: 16px; font-weight: 800; border-bottom: 1px solid #E5E7EB; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: #F9FAFB; padding: 16px 24px; font-size: 11px; font-weight: 700; color: #4B5563; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #E5E7EB; }
+        td { padding: 18px 24px; font-size: 14px; border-bottom: 1px solid #F3F4F6; color: #111827; }
+        tr:last-child td { border-bottom: none; }
+        
+        .empty-state { text-align: center; padding: 48px; color: #6B7280; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <div class="logo-icon">Bx</div>
+                <div><h2>Begnex</h2><p>ADMIN PANEL</p></div>
+            </div>
+            <div class="menu">
+                <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
+                <a href="{% url 'admin_orders' %}">📦 Orders</a>
+                <a href="{% url 'admin_products' %}">👜 Products</a>
+                <a href="{% url 'admin_categories' %}">🏷 Categories</a>
+                <a href="{% url 'admin_user_list' %}">👥 Users</a>
+                <a href="{% url 'admin_coupons' %}">🎟 Coupons</a>
+                <a href="{% url 'admin_offers' %}" class="active">🎁 Offers</a>
+                <a href="{% url 'sales_report' %}">📈 Sales Report</a>
+                <a href="{% url 'admin_reviews' %}">⭐ Reviews</a>
+            </div>
+        </div>
+        <div class="sidebar-bottom">
+            <div class="admin-profile">
+                <div class="admin-avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</div>
+                <div>
+                    <h4>{{ request.user.first_name|default:request.user.username }}</h4>
+                    <p>{{ request.user.email }}</p>
+                </div>
+            </div>
+            <form action="{% url 'admin_logout' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <a href="{% url 'admin_offers' %}" class="back-link" title="Back to Offers">
+                    <i class="fa-solid fa-arrow-left" style="font-size:13px;"></i>
+                </a>
+                <div>
+                    <h1>Referral Offers</h1>
+                    <p>Configure referral bonus policies and monitor reward payouts</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Total Referrals</h3>
+                    <p>{{ total_referrals }}</p>
+                </div>
+                <div class="stat-icon blue">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Total Reward Payout</h3>
+                    <p>₹{{ total_payout }}</p>
+                </div>
+                <div class="stat-icon green">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIGURATION CARD -->
+        <div class="config-card">
+            <h2 class="config-title"><i class="fa-solid fa-sliders"></i> Referral Rewards Configuration</h2>
+            <form action="{% url 'admin_referral_offer_save' %}" method="POST">
+                {% csrf_token %}
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="referrer_reward">Referrer Reward (₹)</label>
+                        <input type="number" step="0.01" id="referrer_reward" name="referrer_reward" value="{{ config.referrer_reward }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="referee_reward">Referee Reward (₹)</label>
+                        <input type="number" step="0.01" id="referee_reward" name="referee_reward" value="{{ config.referee_reward }}" required>
+                    </div>
+                </div>
+
+                <div class="toggle-wrapper">
+                    <label class="switch">
+                        <input type="checkbox" name="is_active" {% if config.is_active %}checked{% endif %}>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label">Enable Referral Program Rewards</span>
+                </div>
+
+                <button type="submit" class="save-btn"><i class="fa-solid fa-save"></i> Save Settings</button>
+            </form>
+        </div>
+
+        <!-- REPORTING TABLE -->
+        <div class="table-wrap">
+            <h2 class="table-title"><i class="fa-solid fa-list"></i> Referral History Logs</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Referrer (Invited By)</th>
+                        <th>Referee (Signed Up)</th>
+                        <th>Referrer Payout</th>
+                        <th>Referee Payout</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <b>{{ record.referrer.username }}</b><br>
+                            <span style="font-size: 11px; color: #6B7280;">{{ record.referrer.email }}</span>
+                        </td>
+                        <td>
+                            <b>{{ record.referee.username }}</b><br>
+                            <span style="font-size: 11px; color: #6B7280;">{{ record.referee.email }}</span>
+                        </td>
+                        <td><span style="color: #10B981; font-weight: 700;">+₹{{ record.referrer_reward_paid }}</span></td>
+                        <td><span style="color: #10B981; font-weight: 700;">+₹{{ record.referee_reward_paid }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            <i class="fa-regular fa-folder-open" style="font-size: 32px; display: block; margin-bottom: 12px; color: #9CA3AF;"></i>
+                            No referral log records found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </main>
+
+    <script>
+        /* TOAST NOTIFICATION */
+        function showToast(msg, isError = false) {
+            const container = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast ${isError ? 'error' : 'success'}`;
+            t.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-xmark' : 'fa-circle-check'}"></i><span>${msg}</span>`;
+            container.appendChild(t);
+            setTimeout(() => {
+                t.remove();
+            }, 4000);
+        }
+
+        {% if messages %}
+            {% for message in messages %}
+                showToast("{{ message|escapejs }}", {% if 'error' in message.tags %}true{% else %}false{% endif %});
+            {% endfor %}
+        {% endif %}
+    </script>
+</body>
+</html>

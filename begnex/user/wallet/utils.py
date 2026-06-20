@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import transaction
 from .models import Wallet, WalletTransaction
 
@@ -7,6 +8,7 @@ def get_user_wallet(user):
 
 @transaction.atomic
 def refund_to_wallet(user, amount, description):
+    amount = Decimal(str(amount))
     if amount <= 0:
         return None
     wallet = get_user_wallet(user)
@@ -22,6 +24,7 @@ def refund_to_wallet(user, amount, description):
 
 @transaction.atomic
 def pay_using_wallet(user, amount, description):
+    amount = Decimal(str(amount))
     if amount <= 0:
         raise ValueError("Amount must be greater than zero.")
     wallet = get_user_wallet(user)

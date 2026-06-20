@@ -1,639 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
-    <title>User Directory</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Detail — {{ target_user.get_full_name|default:target_user.username }} | Begnex Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-
-        *{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body{
-            font-family: 'Inter', sans-serif;
-            background: #F5F5F5;
-            display: flex;
-        }
-
-        a{
-            text-decoration: none;
-            color: inherit;
-        }
+        *{ margin:0; padding:0; box-sizing:border-box; }
+        body{ font-family:'Inter',sans-serif; background:#F5F5F5; display:flex; }
+        a{ text-decoration:none; color:inherit; }
 
         /* SIDEBAR */
+        .sidebar{ width:260px; height:100vh; background:#FAFAFA; border-right:1px solid #E5E7EB; padding:20px; display:flex; flex-direction:column; justify-content:space-between; position:fixed; left:0; top:0; overflow-y:auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 4px; }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+        .logo{ display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+        .logo-icon{ width:32px; height:32px; background:black; color:white; display:flex; align-items:center; justify-content:center; border-radius:6px; font-weight:700; font-size:14px; }
+        .logo h2{ font-size:22px; font-weight:700; }
+        .logo p{ font-size:10px; color:#777; letter-spacing:2px; }
+        .menu{ display:flex; flex-direction:column; gap:3px; }
+        .menu a{ height:40px; display:flex; align-items:center; gap:12px; padding:0 14px; border-radius:8px; font-size:14px; color:#555; transition:.2s; }
+        .menu a:hover, .menu .active{ background:white; color:black; font-weight:600; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+        .sidebar-bottom{ border-top:1px solid #E5E7EB; padding-top:18px; }
+        .admin-profile{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+        .admin-avatar{ width:42px; height:42px; background:#111; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; font-weight:700; flex-shrink:0; }
+        .admin-profile h4{ font-size:13px; font-weight:600; }
+        .admin-profile p{ font-size:11px; color:#888; }
+        .logout-btn{ width:100%; height:42px; background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; color:#DC2626; font-size:13px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:.2s; display:flex; align-items:center; justify-content:center; gap:8px; }
+        .logout-btn:hover{ background:#FEE2E2; }
 
-        .sidebar{
-            width: 250px;
-            height: 100vh;
-            background: #F8F9FB;
-            border-right: 1px solid #E5E7EB;
-            padding: 24px 16px;
-            position: fixed;
-            left: 0;
-            top: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
+        /* ─── MAIN ─── */
+        .main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; }
+        .topbar { height: 72px; background: white; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; }
+        .topbar-left { display: flex; align-items: center; gap: 14px; }
+        .back-link { width: 34px; height: 34px; border-radius: 8px; border: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: center; color: #555; background: white; transition: .2s; }
+        .back-link:hover { background: #F3F4F6; color: #111; }
+        .topbar h1 { font-size: 20px; font-weight: 700; }
+        .topbar p { font-size: 12px; color: #777; margin-top: 2px; }
+        .content { padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
 
-        .logo h1{
-            font-size: 34px;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
+        /* USER PROFILE CARD */
+        .profile-card{ background:white; border:1px solid #E5E7EB; border-radius:14px; padding:28px 32px; display:flex; align-items:center; gap:24px; margin-bottom:24px; }
+        .big-avatar{ width:72px; height:72px; background:#111; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:28px; font-weight:700; flex-shrink:0; }
+        .profile-info h2{ font-size:20px; font-weight:700; margin-bottom:4px; }
+        .profile-info p{ font-size:13px; color:#777; margin-bottom:2px; }
+        .status-badge{ display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; margin-top:8px; }
+        .badge-active{ background:#D1FAE5; color:#065F46; }
+        .badge-blocked{ background:#FEE2E2; color:#991B1B; }
 
-        .logo p{
-            font-size: 10px;
-            letter-spacing: 2px;
-            color: #9CA3AF;
-        }
+        /* STATS ROW */
+        .stats-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
+        .stat-box{ background:white; border:1px solid #E5E7EB; border-radius:12px; padding:20px 24px; }
+        .stat-box span{ font-size:11px; color:#888; font-weight:600; letter-spacing:1px; display:block; margin-bottom:8px; }
+        .stat-box h3{ font-size:22px; font-weight:800; }
 
-        /* MENU */
+        /* SECTION CARD */
+        .section-card{ background:white; border:1px solid #E5E7EB; border-radius:14px; padding:24px 28px; margin-bottom:24px; }
+        .section-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .section-header h3{ font-size:16px; font-weight:700; }
+        .count-chip{ background:#F3F4F6; border-radius:20px; padding:2px 10px; font-size:12px; font-weight:600; color:#555; }
 
-        .menu{
-            margin-top: 34px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        /* ORDERS TABLE */
+        .orders-table{ width:100%; border-collapse:collapse; }
+        .orders-table th{ text-align:left; font-size:11px; font-weight:700; color:#9CA3AF; letter-spacing:1px; padding:0 12px 12px; border-bottom:1px solid #E5E7EB; }
+        .orders-table td{ padding:14px 12px; font-size:13px; border-bottom:1px solid #F3F4F6; }
+        .orders-table tr:last-child td{ border-bottom:none; }
+        .order-status{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+        .status-delivered{ background:#D1FAE5; color:#065F46; }
+        .status-pending{ background:#FEF3C7; color:#92400E; }
+        .status-cancelled{ background:#FEE2E2; color:#991B1B; }
+        .status-shipped{ background:#DBEAFE; color:#1E40AF; }
+        .status-returned{ background:#F3F4F6; color:#374151; }
+        .status-default{ background:#F3F4F6; color:#374151; }
 
-        .menu a{
-            height: 48px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 0 16px;
-            border-radius: 10px;
-            font-size: 15px;
-            color: #64748B;
-            transition: .3s;
-        }
+        /* REVIEWS */
+        .review-row{ display:flex; gap:14px; padding:14px 0; border-bottom:1px solid #F3F4F6; }
+        .review-row:last-child{ border-bottom:none; }
+        .review-product{ font-size:13px; font-weight:600; margin-bottom:4px; }
+        .review-comment{ font-size:13px; color:#777; margin-top:4px; }
+        .review-date{ font-size:11px; color:#BBB; margin-top:6px; }
+        .stars{ color:#F59E0B; font-size:14px; letter-spacing:1px; }
+        .empty-state{ text-align:center; padding:32px 0; color:#BBB; font-size:13px; }
 
-        .menu a:hover,
-        .menu .active{
-            background: white;
-            color: black;
-            font-weight: 600;
-        }
-
-        /* ADD USER */
-
-        .add-user-btn{
-            width: 100%;
-            height: 50px;
-            border: none;
-            background: black;
-            color: white;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-bottom: 18px;
-        }
-
-        /* PROFILE */
-
-        .admin-profile{
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .admin-profile img{
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .admin-profile h4{
-            font-size: 13px;
-        }
-
-        .admin-profile p{
-            font-size: 10px;
-            color: #777;
-        }
-
-        /* MAIN */
-
-        .main{
-            margin-left: 250px;
-            width: calc(100% - 250px);
-            padding: 24px 30px;
-        }
-
-        /* TOP */
-
-        .topbar{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-        }
-
-        .topbar h2{
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .top-actions{
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .search-box input{
-            width: 320px;
-            height: 46px;
-            border: 1px solid #E5E7EB;
-            border-radius: 10px;
-            background: white;
-            padding: 0 16px;
-            outline: none;
-        }
-
-        .filter-btn{
-            height: 44px;
-            padding: 0 18px;
-            border: 1px solid #E5E7EB;
-            background: white;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        /* TABLE */
-
-        .table-box{
-            background: white;
-            border: 1px solid #ECECEC;
-            border-radius: 16px;
-            overflow: hidden;
-        }
-
-        table{
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead{
-            background: #FAFAFA;
-        }
-
-        th{
-            text-align: left;
-            padding: 18px 20px;
-            font-size: 11px;
-            color: #888;
-            letter-spacing: 1px;
-        }
-
-        td{
-            padding: 20px;
-            border-top: 1px solid #F1F1F1;
-            font-size: 14px;
-            color: #333;
-        }
-
-        /* USER */
-
-        .user-info{
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-info img{
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .user-info h4{
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-
-        .user-info p{
-            font-size: 12px;
-            color: #888;
-        }
-
-        /* STATUS */
-
-        .status{
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .active-status{
-            background: #DCFCE7;
-            color: #16A34A;
-        }
-
-        .blocked-status{
-            background: #FEE2E2;
-            color: #DC2626;
-        }
-
-        /* ACTIONS */
-
-        .actions{
-            display: flex;
-            gap: 16px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .view{
-            color: black;
-        }
-
-        .block{
-            color: red;
-        }
-
-        .unblock{
-            color: #16A34A;
-        }
-
-        /* FOOT */
-
-        .table-footer{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 10px;
-            color: #777;
-            font-size: 13px;
-        }
-
-        .pagination{
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .page{
-            width: 34px;
-            height: 34px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .page.active{
-            background: black;
-            color: white;
-        }
-
-        /* RESPONSIVE */
-
-        @media(max-width: 1100px){
-
-            .search-box input{
-                width: 220px;
-            }
-
-        }
-
-        @media(max-width: 900px){
-
-            .sidebar{
-                display: none;
-            }
-
-            .main{
-                margin-left: 0;
-                width: 100%;
-            }
-
-        }
-
+        /* BLOCK BUTTON */
+        .block-btn{ padding:8px 20px; border-radius:8px; font-size:13px; font-weight:600; border:none; cursor:pointer; font-family:'Inter',sans-serif; transition:.2s; }
+        .btn-block-red{ background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; }
+        .btn-block-red:hover{ background:#FEE2E2; }
+        .btn-unblock-green{ background:#F0FDF4; color:#16A34A; border:1px solid #BBF7D0; }
+        .btn-unblock-green:hover{ background:#DCFCE7; }
     </style>
-
 </head>
-
 <body>
 
     <!-- SIDEBAR -->
-
     <aside class="sidebar">
-
         <div>
-
             <div class="logo">
-
-                <h1>Begnex</h1>
-
-                <p>ADMIN PORTAL</p>
-
-            </div>
-
-            <div class="menu">
-
-                <a href="#"
-                    class="active">
-
-                    📊 Dashboard
-
-                </a>
-
-                <a href="{% url 'admin_orders' %}">📦 Orders</a>
-
-                <a href="{% url 'admin_products' %}">👜 Products</a>
-
-                <a href="{% url 'admin_categories' %}">🏷 Categories</a>
-
-                <a href="#">👥 Users</a>
-
-                <a href="#">🏷 Coupons</a>
-
-                <a href="#">🖼 Reviews</a>
-
-            </div>
-
-        </div>
-
-        <div>
-
-            <button class="add-user-btn">
-
-                ✚ Add New User
-
-            </button>
-
-            <div class="sidebar-bottom">
-                <div class="admin-profile" style="margin-bottom: 14px;">
-                    <div class="admin-avatar" style="width: 42px; height: 42px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 700; flex-shrink: 0;">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</div>
-                    <div>
-                        <h4>{{ request.user.first_name|default:request.user.username }}</h4>
-                        <p style="font-size: 10px; color: #777;">{{ request.user.email }}</p>
-                    </div>
+                <div class="logo-icon">B</div>
+                <div>
+                    <h2>Begnex</h2>
+                    <p>ADMIN PANEL</p>
                 </div>
-                <form action="{% url 'admin_logout' %}" method="POST" style="width: 100%;">
-                    {% csrf_token %}
-                    <button type="submit" class="logout-btn" style="width: 100%; height: 42px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; color: #DC2626; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s; display: flex; align-items: center; justify-content: center; gap: 8px;">Logout</button>
-                </form>
             </div>
+            <div class="menu">
+                <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
+                <a href="{% url 'admin_orders' %}">📦 Orders</a>
+                <a href="{% url 'admin_products' %}">👜 Products</a>
+                <a href="{% url 'admin_categories' %}">🏷 Categories</a>
+                <a href="{% url 'admin_user_list' %}" class="active">👥 Users</a>
+                <a href="{% url 'admin_coupons' %}">🎟 Coupons</a>
+                <a href="{% url 'admin_offers' %}">🎁 Offers</a>
+                <a href="{% url 'sales_report' %}">📈 Sales Report</a>
+                <a href="{% url 'admin_reviews' %}">⭐ Reviews</a>
+            </div>
+        </div>
+        <div class="sidebar-bottom">
+            <div class="admin-profile">
+                <div class="admin-avatar">{{ request.user.first_name|slice:":1"|upper|default:"A" }}</div>
+                <div>
+                    <h4>{{ request.user.first_name|default:request.user.username }}</h4>
+                    <p>{{ request.user.email }}</p>
+                </div>
+            </div>
+            <form action="{% url 'admin_logout' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">🚪 Sign Out</button>
+            </form>
+        </div>
+    </aside>
 
     <!-- MAIN -->
-
     <main class="main">
-
-        <!-- TOPBAR -->
-
         <div class="topbar">
-
-            <h2>User Directory</h2>
-
-            <div class="top-actions">
-
-                <div class="search-box">
-
-                    <input type="text"
-                        placeholder="Search users...">
-
+            <div class="topbar-left">
+                <a href="{% url 'admin_user_list' %}" class="back-link" title="Back to Users">
+                    <i class="fa-solid fa-arrow-left" style="font-size:13px;"></i>
+                </a>
+                <div>
+                    <h1>User Detail</h1>
+                    <p>View profile and order details for {{ target_user.get_full_name|default:target_user.username }}</p>
                 </div>
-
-                <button class="filter-btn">
-
-                    ▾ Filters
-
-                </button>
-
-                🔔
-
-                ❔
-
             </div>
-
+            <form method="POST" action="{% url 'toggle_block_user' target_user.id %}" onsubmit="return confirm('{% if target_user.is_blocked %}Unblock{% else %}Block{% endif %} this user?');">
+                {% csrf_token %}
+                {% if target_user.is_blocked %}
+                    <button type="submit" class="block-btn btn-unblock-green">✅ Unblock User</button>
+                {% else %}
+                    <button type="submit" class="block-btn btn-block-red">🚫 Block User</button>
+                {% endif %}
+            </form>
         </div>
 
-        <!-- TABLE -->
+        <div class="content">
 
-        <div class="table-box">
+        <!-- PROFILE CARD -->
+        <div class="profile-card">
+            <div class="big-avatar">{{ target_user.first_name|slice:":1"|upper|default:target_user.username|slice:":1"|upper }}</div>
+            <div class="profile-info">
+                <h2>{{ target_user.get_full_name|default:target_user.username }}</h2>
+                <p>📧 {{ target_user.email }}</p>
+                {% if target_user.phone_number %}<p>📞 {{ target_user.phone_number }}</p>{% endif %}
+                <p style="font-size:12px; color:#aaa; margin-top:4px;">Joined {{ target_user.date_joined|date:"d M Y" }}</p>
+                {% if target_user.is_blocked %}
+                    <span class="status-badge badge-blocked">🔴 Blocked</span>
+                {% else %}
+                    <span class="status-badge badge-active">🟢 Active</span>
+                {% endif %}
+            </div>
+        </div>
 
-            <table>
+        <!-- STATS -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <span>TOTAL ORDERS</span>
+                <h3>{{ order_count }}</h3>
+            </div>
+            <div class="stat-box">
+                <span>TOTAL SPENT</span>
+                <h3>₹{{ total_spent|floatformat:2 }}</h3>
+            </div>
+            <div class="stat-box">
+                <span>REVIEWS WRITTEN</span>
+                <h3>{{ reviews|length }}</h3>
+            </div>
+        </div>
 
+        <!-- ORDER HISTORY -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3>📦 Order History</h3>
+                <span class="count-chip">Last {{ orders|length }} orders</span>
+            </div>
+            {% if orders %}
+            <table class="orders-table">
                 <thead>
-
                     <tr>
-
-                        <th>SL NO</th>
-                        <th>USER</th>
-                        <th>USER ID</th>
+                        <th>ORDER ID</th>
+                        <th>DATE</th>
+                        <th>PAYMENT</th>
                         <th>STATUS</th>
-                        <th>JOINED AT</th>
-                        <th>ACTIONS</th>
-
+                        <th>TOTAL</th>
                     </tr>
-
                 </thead>
-
                 <tbody>
-
+                    {% for order in orders %}
                     <tr>
-
-                        <td>01</td>
-
+                        <td style="font-weight:600;">#{{ order.order_id }}</td>
+                        <td style="color:#777;">{{ order.created_at|date:"d M Y" }}</td>
+                        <td style="color:#777; text-transform:uppercase; font-size:12px;">{{ order.payment_method }}</td>
                         <td>
-
-                            <div class="user-info">
-
-                                <img src="https://i.pravatar.cc/100?img=1">
-
-                                <div>
-
-                                    <h4>Jordan Henderson</h4>
-
-                                    <p>j.hendo@begnex.com</p>
-
-                                </div>
-
-                            </div>
-
-                        </td>
-
-                        <td>#BGX-9283</td>
-
-                        <td>
-
-                            <span class="status active-status">
-
-                                ACTIVE
-
+                            <span class="order-status
+                                {% if order.status == 'delivered' %}status-delivered
+                                {% elif order.status == 'pending' %}status-pending
+                                {% elif order.status == 'cancelled' %}status-cancelled
+                                {% elif order.status == 'shipped' or order.status == 'out_for_delivery' %}status-shipped
+                                {% elif order.status == 'returned' or order.status == 'return_requested' %}status-returned
+                                {% else %}status-default{% endif %}">
+                                {{ order.get_status_display }}
                             </span>
-
                         </td>
-
-                        <td>Oct 12, 2023</td>
-
-                        <td>
-
-                            <div class="actions">
-
-                                <span class="view">VIEW</span>
-
-                                <span class="block">BLOCK</span>
-
-                            </div>
-
-                        </td>
-
+                        <td style="font-weight:700;">₹{{ order.total|floatformat:2 }}</td>
                     </tr>
-
-                    <tr>
-
-                        <td>02</td>
-
-                        <td>
-
-                            <div class="user-info">
-
-                                <img src="https://i.pravatar.cc/100?img=5">
-
-                                <div>
-
-                                    <h4>Amara Miller</h4>
-
-                                    <p>amara.m@begnex.com</p>
-
-                                </div>
-
-                            </div>
-
-                        </td>
-
-                        <td>#BGX-4112</td>
-
-                        <td>
-
-                            <span class="status blocked-status">
-
-                                BLOCKED
-
-                            </span>
-
-                        </td>
-
-                        <td>Nov 04, 2023</td>
-
-                        <td>
-
-                            <div class="actions">
-
-                                <span class="view">VIEW</span>
-
-                                <span class="unblock">UNBLOCK</span>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>03</td>
-
-                        <td>
-
-                            <div class="user-info">
-
-                                <img src="https://i.pravatar.cc/100?img=8">
-
-                                <div>
-
-                                    <h4>Linh Tran</h4>
-
-                                    <p>l.tran@begnex.com</p>
-
-                                </div>
-
-                            </div>
-
-                        </td>
-
-                        <td>#BGX-5590</td>
-
-                        <td>
-
-                            <span class="status active-status">
-
-                                ACTIVE
-
-                            </span>
-
-                        </td>
-
-                        <td>Dec 01, 2023</td>
-
-                        <td>
-
-                            <div class="actions">
-
-                                <span class="view">VIEW</span>
-
-                                <span class="block">BLOCK</span>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-
+                    {% endfor %}
                 </tbody>
-
             </table>
-
+            {% else %}
+            <div class="empty-state">No orders yet for this user.</div>
+            {% endif %}
         </div>
 
-        <!-- FOOT -->
-
-        <div class="table-footer">
-
-            <p>
-
-                Showing 5 of 1,248 users
-
-            </p>
-
-            <div class="pagination">
-
-                <div class="page">‹</div>
-
-                <div class="page active">1</div>
-
-                <div class="page">2</div>
-
-                <div class="page">3</div>
-
-                <div class="page">›</div>
-
+        <!-- REVIEWS -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3>⭐ Reviews Written</h3>
+                <span class="count-chip">{{ reviews|length }} review{{ reviews|length|pluralize }}</span>
             </div>
-
+            {% if reviews %}
+                {% for review in reviews %}
+                <div class="review-row">
+                    <div style="flex:1;">
+                        <div class="review-product">{{ review.product.name }}</div>
+                        <div class="stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                            <span style="color:#888; font-size:12px; margin-left:6px;">{{ review.rating }}/5</span>
+                        </div>
+                        {% if review.comment %}
+                        <div class="review-comment">"{{ review.comment }}"</div>
+                        {% endif %}
+                        <div class="review-date">{{ review.created_at|date:"d M Y, H:i" }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">This user hasn't written any reviews yet.</div>
+            {% endif %}
         </div>
-
+        </div>
     </main>
 
 </body>
-
 </html>

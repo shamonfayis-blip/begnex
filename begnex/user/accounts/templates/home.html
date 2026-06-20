@@ -393,6 +393,153 @@
             letter-spacing: 2px;
         }
 
+        /* REFERRAL BANNER */
+
+        .referral-banner {
+            width: 100%;
+            padding: 100px 60px;
+            background: #05070D;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .referral-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            background: #08090F;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 4px;
+            padding: 72px 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 60px;
+            position: relative;
+        }
+
+        .referral-text {
+            flex: 1;
+        }
+
+        .referral-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 0;
+            padding: 6px 16px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            color: #A1A1AA;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .referral-badge i { font-size: 12px; color: white; }
+
+        .referral-text h2 {
+            font-size: 52px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 56px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .referral-text h2 span {
+            color: white;
+            -webkit-text-fill-color: white;
+        }
+
+        .referral-text p {
+            font-size: 15px;
+            color: #8D95A5;
+            line-height: 28px;
+            max-width: 480px;
+        }
+
+        .referral-cta {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .referral-pill-group {
+            display: flex;
+            gap: 16px;
+        }
+
+        .referral-pill {
+            background: #05070D;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 4px;
+            padding: 18px 28px;
+            text-align: center;
+            min-width: 110px;
+        }
+
+        .referral-pill .pill-amount {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: white;
+            display: block;
+        }
+
+        .referral-pill .pill-label {
+            font-size: 10px;
+            color: #4B5563;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .referral-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            color: black;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border: none;
+            border-radius: 0;
+            padding: 16px 36px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .referral-btn:hover {
+            background: #E5E7EB;
+        }
+
+        .referral-rules-strip {
+            display: flex;
+            gap: 28px;
+            margin-top: 14px;
+        }
+
+        .referral-rules-strip span {
+            font-size: 11px;
+            color: #4B5563;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .referral-rules-strip i {
+            color: #6B7280;
+            font-size: 10px;
+        }
+
         /* RESPONSIVE */
 
         @media(max-width: 992px){
@@ -452,6 +599,14 @@
                 flex-wrap: wrap;
             }
 
+            .referral-banner { padding: 70px 24px; }
+            .referral-inner { flex-direction: column; padding: 48px 32px; gap: 40px; text-align: center; }
+            .referral-text h2 { font-size: 36px; line-height: 42px; }
+            .referral-text p { max-width: 100%; }
+            .referral-badge { justify-content: center; }
+            .referral-cta { width: 100%; }
+            .referral-pill-group { justify-content: center; }
+
         }
 
     </style>
@@ -473,7 +628,7 @@
             <a href="#">HOME</a>
             <a href="{% url 'shop' %}">PRODUCTS</a>
             <a href="{% url 'categories' %}">CATEGORIES</a>
-            <a href="#">ABOUT</a>
+            <a href="{% url 'about' %}">ABOUT</a>
 
         </div>
 
@@ -620,6 +775,48 @@
 
         </div>
 
+    </section>
+
+    <!-- REFERRAL BANNER -->
+
+    <section class="referral-banner">
+        <div class="referral-inner">
+
+            <div class="referral-text">
+                <div class="referral-badge">
+                    <i class="fa-solid fa-gift"></i>
+                    REFER &amp; EARN
+                </div>
+                <h2>Share Begnex.<br><span>Earn Rewards.</span></h2>
+                <p>
+                    Invite your friends to Begnex and earn wallet credits for every
+                    successful signup. Your friend gets a bonus too — everyone wins.
+                </p>
+                <div class="referral-rules-strip">
+                    <span><i class="fa-solid fa-circle-check"></i> Instant wallet credit</span>
+                    <span><i class="fa-solid fa-circle-check"></i> No limit on referrals</span>
+                    <span><i class="fa-solid fa-circle-check"></i> Works on first purchase</span>
+                </div>
+            </div>
+
+            <div class="referral-cta">
+                <div class="referral-pill-group">
+                    <div class="referral-pill">
+                        <span class="pill-amount">{% if referral_offer %}₹{{ referral_offer.referrer_reward|floatformat:0 }}{% else %}₹100{% endif %}</span>
+                        <span class="pill-label">YOU EARN</span>
+                    </div>
+                    <div class="referral-pill">
+                        <span class="pill-amount">{% if referral_offer %}₹{{ referral_offer.referee_reward|floatformat:0 }}{% else %}₹50{% endif %}</span>
+                        <span class="pill-label">FRIEND EARNS</span>
+                    </div>
+                </div>
+                <a href="{% url 'user_referrals' %}" class="referral-btn">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    GET YOUR REFERRAL CODE
+                </a>
+            </div>
+
+        </div>
     </section>
 
     <!-- PREMIUM -->

@@ -1,18 +1,11 @@
 
 import os
 from pathlib import Path
-
-from pathlib import Path
 from dotenv import load_dotenv
-import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(os.path.join(BASE_DIR, ".env"))
-
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -50,6 +43,8 @@ INSTALLED_APPS = [
     "admin_panel.admin_category",
     "admin_panel.admin_product",
     "admin_panel.admin_order",
+    "admin_panel.admin_coupon",
+    "admin_panel.admin_offer",
     "django.contrib.sites",
     "allauth",
     "allauth.account",

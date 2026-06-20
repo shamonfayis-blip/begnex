@@ -32,4 +32,4 @@ class CartItem(models.Model):
         return f"{self.quantity} x {self.variant.product.name} ({self.variant.name})"
 
     def get_subtotal(self):
-        return self.variant.price * self.quantity
+        return self.variant.get_discounted_price() * self.quantity

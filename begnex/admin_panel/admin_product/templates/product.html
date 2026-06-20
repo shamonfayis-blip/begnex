@@ -39,6 +39,21 @@
             display:flex;
             flex-direction:column;
             justify-content:space-between;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #D1D5DB;
         }
 
         .logo h2{
@@ -53,18 +68,18 @@
         }
 
         .menu{
-            margin-top:40px;
+            margin-top:20px;
         }
 
         .menu a{
             display:flex;
             align-items:center;
             gap:12px;
-            padding:14px 12px;
+            padding:10px 12px;
             border-radius:10px;
             text-decoration:none;
             color:#555;
-            margin-bottom:8px;
+            margin-bottom:4px;
             font-size:15px;
         }
 
@@ -326,52 +341,15 @@
             </div>
 
             <div class="menu">
-
-                <a href="#">
-                    <i class="fa-solid fa-table-columns"></i>
-                    Dashboard
-                </a>
-
-                <a href="#">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                    Orders
-                </a>
-
-                <a href="#">
-                    <i class="fa-solid fa-layer-group"></i>
-                    Categories
-                </a>
-
-                <a href="#">
-                    <i class="fa-solid fa-users"></i>
-                    Users
-                </a>
-
-                <a href="#">
-                    <i class="fa-solid fa-ticket"></i>
-                    Coupons
-                </a>
-
-                <a href="#">
-                    <i class="fa-regular fa-star"></i>
-                    Reviews
-                </a>
-
-                <a href="#" class="active">
-                    <i class="fa-solid fa-box"></i>
-                    Products
-                </a>
-
-                <a href="#">
-                    <i class="fa-solid fa-tag"></i>
-                    Offer
-                </a>
-
-                <a href="#">
-                    <i class="fa-regular fa-gem"></i>
-                    Brands
-                </a>
-
+                <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
+                <a href="{% url 'admin_orders' %}">📦 Orders</a>
+                <a href="{% url 'admin_products' %}" class="active">👜 Products</a>
+                <a href="{% url 'admin_categories' %}">🏷 Categories</a>
+                <a href="{% url 'admin_user_list' %}">👥 Users</a>
+                <a href="{% url 'admin_coupons' %}">🎟 Coupons</a>
+                <a href="{% url 'admin_offers' %}">🎁 Offers</a>
+                <a href="{% url 'sales_report' %}">📈 Sales Report</a>
+                <a href="{% url 'admin_reviews' %}">⭐ Reviews</a>
             </div>
 
         </div>

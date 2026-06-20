@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.db import transaction
 
 from admin_panel.admin_order.models import Order, OrderItem
-from admin_panel.admin_product.models import Coupon
+from admin_panel.admin_coupon.models import Coupon
 from user.address.models import Address
 from user.cart.models import Cart
 from user.wallet.utils import get_user_wallet
@@ -75,11 +75,12 @@ def checkout_page(request):
         return redirect("cart")
 
     subtotal = cart.get_total_price()
-    shipping_charge = 0 if subtotal >= 1000 else 99
+    shipping_charge = 0
     total = subtotal + shipping_charge
 
     addresses = Address.objects.filter(user=request.user).order_by("-is_default", "-created_at")
-    active_coupons = Coupon.objects.filter(is_active=True, valid_until__gte=timezone.now())
+    today = timezone.now().date()
+    active_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=today, valid_until__gte=today)
     wallet = get_user_wallet(request.user)
 
     context = {
@@ -172,43 +173,74 @@ def checkout_edit_address_api(request, id):
 @login_required(login_url="login")
 @require_POST
 def checkout_apply_coupon_api(request):
-  
     try:
         data = json.loads(request.body)
         code = data.get("code", "").strip()
+        cart_subtotal = float(data.get("subtotal", 0) or 0)
     except json.JSONDecodeError:
         code = request.POST.get("code", "").strip()
+        cart_subtotal = 0
 
     if not code:
         return JsonResponse({"success": False, "message": "Please enter a coupon code."})
 
+    today = timezone.now().date()
     coupon = Coupon.objects.filter(code__iexact=code, is_active=True).first()
     if not coupon:
-        return JsonResponse({"success": False, "message": "Invalid coupon code."})
+        return JsonResponse({"success": False, "message": "Invalid or inactive coupon code."})
 
-    if coupon.valid_until and coupon.valid_until < timezone.now():
-        return JsonResponse({"success": False, "message": "This coupon has expired."})
+    if today < coupon.valid_from or today > coupon.valid_until:
+        return JsonResponse({"success": False, "message": "This coupon has expired or is not yet active."})
+
+    if coupon.usage_limit is not None and coupon.used_count >= coupon.usage_limit:
+        return JsonResponse({"success": False, "message": "This coupon has reached its usage limit."})
+
+    if cart_subtotal > 0 and coupon.min_order_amount > 0:
+        if float(coupon.min_order_amount) > cart_subtotal:
+            return JsonResponse({
+                "success": False,
+                "message": f"Minimum order amount of \u20b9{coupon.min_order_amount:.0f} required for this coupon."
+            })
+
+    # Calculate discount preview
+    from decimal import Decimal
+    subtotal_dec = Decimal(str(cart_subtotal))
+    if coupon.discount_type == "percentage":
+        discount = (subtotal_dec * coupon.discount_value) / 100
+        if coupon.max_discount_amount:
+            discount = min(discount, coupon.max_discount_amount)
+    else:
+        discount = min(coupon.discount_value, subtotal_dec)
 
     return JsonResponse({
         "success": True,
         "code": coupon.code,
-        "discount_percentage": coupon.discount_percentage
+        "discount_type": coupon.discount_type,
+        "discount_value": float(coupon.discount_value),
+        "discount_amount": float(discount),
+        "min_order_amount": float(coupon.min_order_amount),
+        "message": f"Coupon applied! You save \u20b9{discount:.2f}"
     })
 
 
 @login_required(login_url="login")
 @require_POST
 def place_order(request):
-    
     address_id = request.POST.get("address_id")
     coupon_code = request.POST.get("coupon_code", "").strip()
     payment_method = request.POST.get("payment_method", "cod").strip().lower()
 
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+
     if not address_id:
+        if is_ajax:
+            return JsonResponse({"success": False, "message": "Please select or add a shipping address."})
         messages.error(request, "Please select or add a shipping address.")
         return redirect("checkout_page")
 
     if payment_method not in ["cod", "wallet"]:
+        if is_ajax:
+            return JsonResponse({"success": False, "message": "Please complete the payment via the checkout page for online orders."})
         messages.error(request, "Please complete the payment via the checkout page for online orders.")
         return redirect("checkout_page")
 
@@ -216,15 +248,15 @@ def place_order(request):
     cart = Cart.objects.filter(user=request.user).first()
 
     if not cart or not cart.items.exists():
+        if is_ajax:
+            return JsonResponse({"success": False, "message": "Your cart is empty."})
         messages.error(request, "Your cart is empty.")
         return redirect("cart")
 
-    
     try:
         with transaction.atomic():
             cart_items = list(cart.items.select_related('variant', 'variant__product').all())
             for item in cart_items:
-                
                 is_active = (
                     item.variant.is_active
                     and not item.variant.is_deleted
@@ -237,20 +269,30 @@ def place_order(request):
                 if item.variant.stock < item.quantity:
                     raise ValueError(f"Insufficient stock for '{item.variant.product.name} ({item.variant.name})'. Only {item.variant.stock} left.")
 
-         
             subtotal = cart.get_total_price()
-            shipping_charge = 0 if subtotal >= 1000 else 99
+            shipping_charge = 0
             discount = 0
 
+            coupon_obj = None
             if coupon_code:
-                coupon = Coupon.objects.filter(code__iexact=coupon_code, is_active=True).first()
-                if coupon and (not coupon.valid_until or coupon.valid_until >= timezone.now()):
-                    discount = (subtotal * coupon.discount_percentage) / 100
+                today = timezone.now().date()
+                coupon_obj = Coupon.objects.filter(
+                    code__iexact=coupon_code,
+                    is_active=True,
+                    valid_from__lte=today,
+                    valid_until__gte=today
+                ).first()
+                if coupon_obj:
+                    if coupon_obj.discount_type == "percentage":
+                        discount = (subtotal * coupon_obj.discount_value) / 100
+                        if coupon_obj.max_discount_amount:
+                            discount = min(discount, coupon_obj.max_discount_amount)
+                    else:
+                        discount = min(coupon_obj.discount_value, subtotal)
 
             total = subtotal + shipping_charge - discount
             total = max(0, total)
 
-           
             order_id = generate_unique_order_id()
 
             if payment_method == "wallet":
@@ -260,12 +302,10 @@ def place_order(request):
                 except ValueError as e:
                     raise ValueError(f"Wallet payment failed: {str(e)}")
 
-            
             addr_lines = [address.address_line_1]
             if address.address_line_2:
                 addr_lines.append(address.address_line_2)
 
-            
             order = Order.objects.create(
                 order_id=order_id,
                 user=request.user,
@@ -284,7 +324,6 @@ def place_order(request):
                 total=total
             )
 
-            
             for item in cart_items:
                 variant = item.variant
                 variant.stock -= item.quantity
@@ -297,20 +336,37 @@ def place_order(request):
                     variant_name=variant.name,
                     sku=variant.sku,
                     quantity=item.quantity,
-                    unit_price=variant.price,
+                    unit_price=variant.get_discounted_price(),
                     subtotal=item.get_subtotal()
                 )
 
-           
             cart.items.all().delete()
+
+            if coupon_obj:
+                coupon_obj.used_count += 1
+                coupon_obj.save(update_fields=["used_count"])
+
+            if is_ajax:
+                from django.urls import reverse
+                return JsonResponse({
+                    "success": True,
+                    "order_id": order.order_id,
+                    "amount_display": f"{total:,.2f}",
+                    "payment_method": payment_method,
+                    "redirect_url": reverse("user_order_detail", kwargs={"order_pk": order.pk})
+                })
 
             messages.success(request, f"Order #{order.order_id} placed successfully!")
             return redirect("user_order_detail", order_pk=order.pk)
 
     except ValueError as e:
+        if is_ajax:
+            return JsonResponse({"success": False, "message": str(e)})
         messages.error(request, str(e))
         return redirect("checkout_page")
     except Exception as e:
+        if is_ajax:
+            return JsonResponse({"success": False, "message": f"An error occurred while placing the order: {str(e)}"})
         messages.error(request, f"An error occurred while placing the order: {str(e)}")
         return redirect("checkout_page")
 
@@ -348,13 +404,24 @@ def initiate_razorpay_payment(request):
                 return JsonResponse({"success": False, "message": f"Insufficient stock for '{item.variant.product.name} ({item.variant.name})'. Only {item.variant.stock} left."})
 
         subtotal = cart.get_total_price()
-        shipping_charge = 0 if subtotal >= 1000 else 99
+        shipping_charge = 0
         discount = 0
 
         if coupon_code:
-            coupon = Coupon.objects.filter(code__iexact=coupon_code, is_active=True).first()
-            if coupon and (not coupon.valid_until or coupon.valid_until >= timezone.now()):
-                discount = (subtotal * coupon.discount_percentage) / 100
+            today = timezone.now().date()
+            coupon = Coupon.objects.filter(
+                code__iexact=coupon_code,
+                is_active=True,
+                valid_from__lte=today,
+                valid_until__gte=today
+            ).first()
+            if coupon:
+                if coupon.discount_type == "percentage":
+                    discount = (subtotal * coupon.discount_value) / 100
+                    if coupon.max_discount_amount:
+                        discount = min(discount, coupon.max_discount_amount)
+                else:
+                    discount = min(coupon.discount_value, subtotal)
 
         total = subtotal + shipping_charge - discount
         total = max(0, total)
@@ -462,13 +529,25 @@ def verify_razorpay_payment(request):
                     raise ValueError(f"Insufficient stock for '{item.variant.product.name} ({item.variant.name})'. Only {item.variant.stock} left.")
 
             subtotal = cart.get_total_price()
-            shipping_charge = 0 if subtotal >= 1000 else 99
+            shipping_charge = 0
             discount = 0
 
+            coupon_obj = None
             if coupon_code:
-                coupon = Coupon.objects.filter(code__iexact=coupon_code, is_active=True).first()
-                if coupon and (not coupon.valid_until or coupon.valid_until >= timezone.now()):
-                    discount = (subtotal * coupon.discount_percentage) / 100
+                today = timezone.now().date()
+                coupon_obj = Coupon.objects.filter(
+                    code__iexact=coupon_code,
+                    is_active=True,
+                    valid_from__lte=today,
+                    valid_until__gte=today
+                ).first()
+                if coupon_obj:
+                    if coupon_obj.discount_type == "percentage":
+                        discount = (subtotal * coupon_obj.discount_value) / 100
+                        if coupon_obj.max_discount_amount:
+                            discount = min(discount, coupon_obj.max_discount_amount)
+                    else:
+                        discount = min(coupon_obj.discount_value, subtotal)
 
             total = subtotal + shipping_charge - discount
             total = max(0, total)
@@ -515,12 +594,17 @@ def verify_razorpay_payment(request):
                     variant_name=variant.name,
                     sku=variant.sku,
                     quantity=item.quantity,
-                    unit_price=variant.price,
+                    unit_price=variant.get_discounted_price(),
                     subtotal=item.get_subtotal()
                 )
 
             # Clear user's cart
             cart.items.all().delete()
+
+            # Increment coupon usage count
+            if coupon_obj:
+                coupon_obj.used_count += 1
+                coupon_obj.save(update_fields=["used_count"])
 
             messages.success(request, f"Order #{order.order_id} placed successfully!")
             return JsonResponse({

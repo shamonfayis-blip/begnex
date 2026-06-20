@@ -17,12 +17,13 @@
 
         /* ── NAVBAR ── */
         .navbar { width: 100%; height: 72px; background: #05070D; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; padding: 0 48px; position: sticky; top: 0; z-index: 1000; }
-        .logo { font-size: 15px; font-weight: 800; letter-spacing: 2px; }
+        .logo { font-size: 15px; font-weight: 800; letter-spacing: 2px; color: white; }
+        .logo a { color: white; }
         .nav-links { display: flex; gap: 36px; }
         .nav-links a { color: #A1A1AA; font-size: 11px; letter-spacing: 2px; transition: .3s; }
         .nav-links a:hover { color: white; }
         .nav-icons { display: flex; gap: 18px; color: #D4D4D8; font-size: 14px; align-items: center; }
-        .nav-icons a { color: #A1A1AA; transition: .3s; position: relative; }
+        .nav-icons a { color: #D4D4D8; transition: .3s; position: relative; }
         .nav-icons a:hover { color: white; }
         .cart-badge { position: absolute; top: -6px; right: -8px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 
@@ -155,6 +156,10 @@
         .coupon-chips { display: flex; flex-wrap: wrap; gap: 6px; }
         .coupon-chip { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 700; color: #A1A1AA; cursor: pointer; transition: 0.2s; }
         .coupon-chip:hover { border-color: #4F7DF3; color: #fff; background: rgba(79,125,243,0.1); }
+        .see-more-btn { background: none; border: none; color: #4F7DF3; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 0; transition: color 0.2s; }
+        .see-more-btn:hover { color: #3d6be0; text-decoration: underline; }
+        .see-more-btn i { font-size: 9px; transition: transform 0.2s; }
+        .see-more-btn.expanded i { transform: rotate(180deg); }
 
         /* Totals */
         .summary-totals { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; display: flex; flex-direction: column; gap: 12px; }
@@ -357,14 +362,12 @@
 
     <!-- NAVBAR -->
     <nav class="navbar">
-        <div class="logo">
-            BEGNEX
-        </div>
+        <div class="logo"><a href="{% url 'home' %}">BEGNEX</a></div>
         <div class="nav-links">
             <a href="{% url 'home' %}">HOME</a>
             <a href="{% url 'shop' %}">PRODUCTS</a>
             <a href="{% url 'categories' %}">CATEGORIES</a>
-            <a href="#">ABOUT</a>
+            <a href="{% url 'about' %}">ABOUT</a>
         </div>
         <div class="nav-icons">
             <a href="{% url 'shop' %}">
@@ -546,17 +549,24 @@
 
                     <div class="applied-coupon" id="appliedCouponBlock">
                         <div>
-                            <i class="fa-solid fa-circle-check"></i> Applied: <span id="appliedCodeText"></span> (<span id="appliedPercentText"></span>% OFF)
+                            <i class="fa-solid fa-circle-check"></i> Applied: <span id="appliedCodeText"></span> &nbsp;<span id="appliedPercentText" style="opacity:0.8;"></span>
                         </div>
                         <i class="fa-solid fa-circle-xmark remove-coupon" onclick="removeCoupon()"></i>
                     </div>
 
                     {% if active_coupons %}
                         <div class="active-coupons-hint">
-                            <div class="active-coupons-title">Available Coupons</div>
-                            <div class="coupon-chips">
+                            <div class="active-coupons-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div class="active-coupons-title" style="margin-bottom: 0;">Available Coupons</div>
+                                <button type="button" class="see-more-btn" id="seeMoreCouponsBtn" onclick="toggleCoupons()">
+                                    <span id="seeMoreText">See More</span> <i class="fa-solid fa-chevron-down" id="seeMoreIcon"></i>
+                                </button>
+                            </div>
+                            <div class="coupon-chips" id="couponChipsWrapper" style="display: none; margin-top: 8px;">
                                 {% for coupon in active_coupons %}
-                                    <span class="coupon-chip" onclick="selectCouponChip('{{ coupon.code }}')">{{ coupon.code }}</span>
+                                    <span class="coupon-chip"
+                                          onclick="selectCouponChip('{{ coupon.code }}')"
+                                          title="{% if coupon.discount_type == 'percentage' %}{{ coupon.discount_value|floatformat:0 }}% OFF{% if coupon.max_discount_amount %} (max ₹{{ coupon.max_discount_amount|floatformat:0 }}){% endif %}{% else %}₹{{ coupon.discount_value|floatformat:0 }} OFF{% endif %}{% if coupon.min_order_amount %} · Min ₹{{ coupon.min_order_amount|floatformat:0 }}{% endif %}">{{ coupon.code }}</span>
                                 {% endfor %}
                             </div>
                         </div>
@@ -583,13 +593,9 @@
                         <span>Taxes</span>
                         <span class="val">₹0</span>
                     </div>
-                    <div class="totals-row">
-                        <span>Discounts</span>
-                        <span class="val">₹0</span>
-                    </div>
-                    <div class="totals-row discount" id="summaryDiscountRow" style="display:none;">
+                    <div class="totals-row" id="summaryDiscountRow">
                         <span>Discount</span>
-                        <span class="val" id="summaryDiscount">-₹0.00</span>
+                        <span class="val" id="summaryDiscount">₹0.00</span>
                     </div>
                     <div class="totals-row grand-total">
                         <span>Grand Total</span>
@@ -880,8 +886,8 @@
         const CSRF = "{{ csrf_token }}";
         const subtotal = parseFloat("{{ subtotal }}");
         const shipping = parseFloat("{{ shipping_charge }}");
-        let activeDiscountPercentage = 0;
         let appliedCouponCode = "";
+        let appliedDiscountAmount = 0;
 
         // Cache addresses locally to prefill edit fields
         let userAddresses = [
@@ -936,23 +942,15 @@
 
         /* DYNAMIC PRICING MATH */
         function recalculatePricing() {
-            let discountAmount = 0;
-            if (activeDiscountPercentage > 0) {
-                discountAmount = (subtotal * activeDiscountPercentage) / 100;
-            }
-            
-            const finalTotal = subtotal + shipping - discountAmount;
+            const finalTotal = subtotal + shipping - appliedDiscountAmount;
 
-            // Render on page
-            const discRow = document.getElementById('summaryDiscountRow');
             const discVal = document.getElementById('summaryDiscount');
             const grandTotalVal = document.getElementById('summaryGrandTotal');
 
-            if (discountAmount > 0) {
-                discRow.style.display = 'flex';
-                discVal.textContent = `-₹${discountAmount.toFixed(2)}`;
+            if (appliedDiscountAmount > 0) {
+                discVal.textContent = `-₹${appliedDiscountAmount.toFixed(2)}`;
             } else {
-                discRow.style.display = 'none';
+                discVal.textContent = `₹0.00`;
             }
 
             grandTotalVal.textContent = `₹${Math.max(0, finalTotal).toFixed(2)}`;
@@ -964,10 +962,28 @@
             applyCoupon();
         }
 
+        /* TOGGLE AVAILABLE COUPONS */
+        function toggleCoupons() {
+            const wrapper = document.getElementById('couponChipsWrapper');
+            const btn = document.getElementById('seeMoreCouponsBtn');
+            const text = document.getElementById('seeMoreText');
+            const icon = document.getElementById('seeMoreIcon');
+            
+            if (wrapper.style.display === 'none' || !wrapper.style.display) {
+                wrapper.style.display = 'flex';
+                btn.classList.add('expanded');
+                text.textContent = 'See Less';
+            } else {
+                wrapper.style.display = 'none';
+                btn.classList.remove('expanded');
+                text.textContent = 'See More';
+            }
+        }
+
         /* APPLY COUPON AJAX */
         async function applyCoupon() {
             const input = document.getElementById('couponCodeInput');
-            const code = input.value.trim();
+            const code = input.value.trim().toUpperCase();
 
             if (!code) {
                 showToast("Please enter a coupon code.", "error");
@@ -981,27 +997,28 @@
                         "Content-Type": "application/json",
                         "X-CSRFToken": CSRF
                     },
-                    body: JSON.stringify({ code: code })
+                    body: JSON.stringify({ code: code, subtotal: subtotal })
                 });
                 const data = await res.json();
 
                 if (data.success) {
-                    activeDiscountPercentage = data.discount_percentage;
+                    appliedDiscountAmount = data.discount_amount;
                     appliedCouponCode = data.code;
 
-                    // Update UI coupon state
-                    document.getElementById('appliedCodeText').textContent = data.code;
-                    document.getElementById('appliedPercentText').textContent = data.discount_percentage;
-                    document.getElementById('appliedCouponBlock').style.display = 'flex';
-                    
-                    // Set form parameter
-                    document.getElementById('formCouponCode').value = data.code;
+                    // Build label: e.g. "SAVE20 (20% OFF)" or "FLAT100 (₹100 OFF)"
+                    let discLabel = data.discount_type === 'percentage'
+                        ? `${data.discount_value}% OFF`
+                        : `₹${data.discount_value.toFixed(0)} OFF`;
 
-                    // Clear and hide inputs
+                    document.getElementById('appliedCodeText').textContent = data.code;
+                    document.getElementById('appliedPercentText').textContent = discLabel;
+                    document.getElementById('appliedCouponBlock').style.display = 'flex';
+
+                    document.getElementById('formCouponCode').value = data.code;
                     input.value = "";
-                    
+
                     recalculatePricing();
-                    showToast(`Coupon "${data.code}" applied successfully!`, "success");
+                    showToast(data.message || `Coupon "${data.code}" applied!`, "success");
                 } else {
                     showToast(data.message, "error");
                 }
@@ -1012,7 +1029,7 @@
 
         /* REMOVE COUPON */
         function removeCoupon() {
-            activeDiscountPercentage = 0;
+            appliedDiscountAmount = 0;
             appliedCouponCode = "";
 
             document.getElementById('appliedCouponBlock').style.display = 'none';
@@ -1288,18 +1305,61 @@
 
         /* SUBMIT ORDER FORM VALIDATION */
         document.getElementById('placeOrderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
             const addrId = document.getElementById('formAddressId').value;
             if (!addrId) {
-                e.preventDefault();
                 showToast("Please add or select a shipping address to proceed.", "error");
                 return;
             }
 
             if (activePaymentMethod === 'online') {
-                e.preventDefault();
                 initiateRazorpayPayment();
+            } else if (activePaymentMethod === 'cod' || activePaymentMethod === 'wallet') {
+                placeCodOrWalletOrder();
             }
         });
+
+        async function placeCodOrWalletOrder() {
+            const addrId = document.getElementById('formAddressId').value;
+            const couponCode = document.getElementById('formCouponCode').value;
+            const paymentMethod = activePaymentMethod;
+            
+            const btn = document.getElementById('submitOrderBtn');
+            const originalBtnText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            
+            try {
+                const res = await fetch("{% url 'place_order' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": CSRF,
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: new URLSearchParams({
+                        'address_id': addrId,
+                        'coupon_code': couponCode,
+                        'payment_method': paymentMethod
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showSuccessModal(data.order_id, data.amount_display, data.redirect_url, paymentMethod);
+                } else {
+                    showFailedModal(paymentMethod, data.message || "Failed to place order.");
+                }
+            } catch (err) {
+                console.error(err);
+                showFailedModal(paymentMethod, "Network error. Failed to place order.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
+            }
+        }
 
         async function initiateRazorpayPayment() {
             const addrId = document.getElementById('formAddressId').value;
@@ -1347,13 +1407,13 @@
                         "theme": { "color": "#4F7DF3" },
                         "modal": {
                             "ondismiss": function() {
-                                showFailedModal();
+                                showFailedModal('online');
                             }
                         }
                     };
                     var rzp1 = new Razorpay(options);
                     rzp1.on('payment.failed', function() {
-                        showFailedModal();
+                        showFailedModal('online');
                     });
                     rzp1.open();
                 } else {
@@ -1386,18 +1446,66 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showSuccessModal(data.order_id, orderData.amount_display, data.redirect_url);
+                    showSuccessModal(data.order_id, orderData.amount_display, data.redirect_url, 'online');
                 } else {
-                    showFailedModal();
+                    showFailedModal('online');
                 }
             } catch (err) {
                 console.error(err);
-                showFailedModal();
+                showFailedModal('online');
             }
         }
 
         /* ── PAYMENT RESULT MODAL HELPERS ── */
-        function showSuccessModal(orderId, amountDisplay, viewUrl) {
+        function showSuccessModal(orderId, amountDisplay, viewUrl, paymentMethod = 'online') {
+            let methodBadgeHtml = '';
+            let statusBadgeHtml = '';
+            let subtitleHtml = '';
+
+            if (paymentMethod === 'cod') {
+                methodBadgeHtml = `
+                    <span style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:#F59E0B;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:4px;">
+                        <i class="fa-solid fa-hand-holding-dollar"></i> Cash on Delivery
+                    </span>
+                `;
+                statusBadgeHtml = `
+                    <span style="background:rgba(107,114,128,0.12);border:1px solid rgba(107,114,128,0.25);color:#9CA3AF;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:4px;">
+                        <i class="fa-solid fa-clock"></i> Pay on Delivery
+                    </span>
+                `;
+                subtitleHtml = `Your order has been placed successfully. Please pay in cash when your package is delivered.`;
+            } else if (paymentMethod === 'wallet') {
+                methodBadgeHtml = `
+                    <span style="background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);color:#A78BFA;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:4px;">
+                        <i class="fa-solid fa-wallet"></i> Wallet
+                    </span>
+                `;
+                statusBadgeHtml = `
+                    <span style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:#34D399;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:4px;">
+                        <i class="fa-solid fa-circle-check"></i> Paid via Wallet
+                    </span>
+                `;
+                subtitleHtml = `Your order has been placed successfully and paid using your wallet balance.`;
+            } else {
+                methodBadgeHtml = `
+                    <span style="background:rgba(79,125,243,0.12);border:1px solid rgba(79,125,243,0.25);color:#93BBFD;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:4px;">
+                        <i class="fa-solid fa-credit-card"></i> Razorpay
+                    </span>
+                `;
+                statusBadgeHtml = `
+                    <span style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:#34D399;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:4px;">
+                        <i class="fa-solid fa-circle-check"></i> Paid
+                    </span>
+                `;
+                subtitleHtml = `Your order has been placed and payment is confirmed. We'll start processing it right away.`;
+            }
+
+            // Update subtitle text
+            const subEl = document.querySelector('#paySuccessModal .pay-result-sub');
+            if (subEl) {
+                subEl.innerHTML = subtitleHtml;
+            }
+
             // Fill order rows
             const rows = document.getElementById('successOrderRows');
             rows.innerHTML = `
@@ -1408,17 +1516,13 @@
                 <div class="pay-result-row">
                     <span class="r-lbl">Payment Method</span>
                     <span class="r-val" style="display:flex;align-items:center;gap:6px;">
-                        <span style="background:rgba(79,125,243,0.12);border:1px solid rgba(79,125,243,0.25);color:#93BBFD;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;">
-                            <i class="fa-solid fa-credit-card"></i> Razorpay
-                        </span>
+                        ${methodBadgeHtml}
                     </span>
                 </div>
                 <div class="pay-result-row">
                     <span class="r-lbl">Payment Status</span>
                     <span class="r-val" style="display:flex;align-items:center;gap:6px;">
-                        <span style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:#34D399;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:800;">
-                            <i class="fa-solid fa-circle-check"></i> Paid
-                        </span>
+                        ${statusBadgeHtml}
                     </span>
                 </div>
                 <div class="pay-result-row r-total">
@@ -1433,7 +1537,39 @@
             document.body.style.overflow = 'hidden';
         }
 
-        function showFailedModal() {
+        function showFailedModal(paymentMethod = 'online', errorMessage = '') {
+            let badgeText = "PAYMENT FAILED";
+            let titleText = `Payment <span style="color:#EF4444">Failed!</span>`;
+            let subText = "Your payment was not successful. No charges were made, and your cart is still saved.";
+            
+            if (paymentMethod === 'cod') {
+                badgeText = "ORDER FAILED";
+                titleText = `Order Placement <span style="color:#EF4444">Failed</span>`;
+                subText = errorMessage || "We could not place your Cash on Delivery order. Please try again.";
+            } else if (paymentMethod === 'wallet') {
+                badgeText = "WALLET PAYMENT FAILED";
+                titleText = `Wallet Payment <span style="color:#EF4444">Failed</span>`;
+                subText = errorMessage || "Your wallet payment could not be processed. Please check your balance and try again.";
+            } else if (paymentMethod === 'online') {
+                badgeText = "PAYMENT FAILED";
+                titleText = `Payment <span style="color:#EF4444">Failed!</span>`;
+                subText = errorMessage || "Your payment was not successful. No charges were made, and your cart is still saved.";
+            }
+
+            // Update badge, title, subtitle in failed modal HTML
+            const badgeEl = document.querySelector('#payFailedModal .pay-result-badge');
+            if (badgeEl) {
+                badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${badgeText}`;
+            }
+            const titleEl = document.querySelector('#payFailedModal .pay-result-title');
+            if (titleEl) {
+                titleEl.innerHTML = titleText;
+            }
+            const subEl = document.querySelector('#payFailedModal .pay-result-sub');
+            if (subEl) {
+                subEl.innerHTML = subText;
+            }
+
             document.getElementById('payFailedModal').classList.add('open');
             document.body.style.overflow = 'hidden';
         }

@@ -21,26 +21,16 @@
         a { text-decoration: none; color: inherit; }
 
         /* ── NAVBAR ── */
-        .navbar {
-            width: 100%; height: 72px;
-            background: #05070D;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 48px; position: sticky; top: 0; z-index: 1000;
-        }
-        .logo { font-size: 15px; font-weight: 800; letter-spacing: 2px; }
+        .navbar { width: 100%; height: 72px; background: #05070D; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; padding: 0 48px; position: sticky; top: 0; z-index: 1000; }
+        .logo { font-size: 15px; font-weight: 800; letter-spacing: 2px; color: white; }
+        .logo a { color: white; }
         .nav-links { display: flex; gap: 36px; }
         .nav-links a { color: #A1A1AA; font-size: 11px; letter-spacing: 2px; transition: .3s; }
         .nav-links a:hover, .nav-links a.active { color: white; }
-        .nav-icons { display: flex; gap: 18px; color: #D4D4D8; font-size: 14px; }
-        .nav-icons a { color: #A1A1AA; transition: .3s; }
-        .nav-icons a:hover { color: white; }
-        .cart-badge {
-            position: absolute; top: -6px; right: -8px;
-            background: #ef4444; color: white; font-size: 9px; font-weight: 800;
-            width: 16px; height: 16px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; pointer-events: none;
-        }
+        .nav-icons { display: flex; gap: 18px; color: #D4D4D8; font-size: 14px; align-items: center; }
+        .nav-icons a { position: relative; color: #D4D4D8; transition: .3s; }
+        .nav-icons a:hover, .nav-icons a.active { color: white; }
+        .cart-badge { position: absolute; top: -6px; right: -8px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 
         /* ── HERO BANNER ── */
         .shop-hero {
@@ -270,6 +260,113 @@
             box-shadow: 0 0 0 4px rgba(79, 125, 243, 0.15); 
         }
         .search-input::placeholder { color: #444; }
+
+        /* Suggestions dropdown style */
+        .search-suggestions-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: 100%;
+            background: rgba(13, 16, 23, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            max-height: 380px;
+            overflow-y: auto;
+            display: none;
+            padding: 8px 0;
+        }
+
+        .search-suggestions-dropdown::-webkit-scrollbar {
+            width: 4px;
+        }
+        .search-suggestions-dropdown::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .search-suggestions-dropdown::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .suggestion-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+
+        .suggestion-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .suggestion-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #E5E7EB;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .suggestion-category {
+            font-size: 10px;
+            color: #9CA3AF;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .suggestion-price-wrap {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .suggestion-price {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .suggestion-old-price {
+            font-size: 10px;
+            text-decoration: line-through;
+            color: #6B7280;
+            margin-right: 4px;
+        }
+
+        .suggestion-no-results {
+            padding: 16px;
+            text-align: center;
+            color: #9CA3AF;
+            font-size: 13px;
+        }
 
         .search-clear-inline {
             position: absolute;
@@ -591,44 +688,40 @@
     <nav class="navbar">
 
         <div class="logo">
-            BEGNEX
+            <a href="{% url 'home' %}">BEGNEX</a>
         </div>
 
         <div class="nav-links">
 
             <a href="{% url 'home' %}">HOME</a>
-            <a href="{% url 'shop' %}">PRODUCTS</a>
+            <a href="{% url 'shop' %}" class="active">PRODUCTS</a>
             <a href="{% url 'categories' %}">CATEGORIES</a>
-            <a href="#">ABOUT</a>
+            <a href="{% url 'about' %}">ABOUT</a>
 
         </div>
 
-<link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<div class="nav-icons">
+        <div class="nav-icons">
 
-    <a href="#">
-        <i class="fa-solid fa-magnifying-glass"></i>
-    </a>
+            <a href="{% url 'shop' %}">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </a>
 
-    <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
-        <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
-    </a>
+            <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
+                <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
+            </a>
 
-    <a href="{% url 'cart' %}"
-        class="cart-icon" style="position: relative;">
+            <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
+            </a>
 
-        <i class="fa-solid fa-bag-shopping"></i>
-        <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
+            <a href="{% url 'profile' %}">
+                <i class="fa-regular fa-user"></i>
+            </a>
 
-    </a>
-
-    <a href="{% url 'profile' %}">
-        <i class="fa-regular fa-user"></i>
-    </a>
-
-</div>
+        </div>
 
     </nav>
 
@@ -659,10 +752,12 @@
                             placeholder="Search products..."
                             class="search-input"
                             id="shopSearchInput"
+                            autocomplete="off"
                         >
                         <button type="button" class="search-clear-inline" id="searchClearBtn" onclick="clearSearch()" style="display:none;">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
+                        <div class="search-suggestions-dropdown" id="searchSuggestionsDropdown"></div>
                     </div>
                 </div>
 
@@ -763,10 +858,18 @@
                                 </div>
                                 <div class="product-content">
                                     <h3>{{ product.name }}</h3>
-                                    <div class="product-meta">
-                                        {% with price=product.get_price %}
+                                    <div class="product-meta" style="display: flex; flex-direction: column; gap: 4px;">
+                                        {% with price=product.get_price discounted_price=product.get_discounted_price pct=product.get_active_offer_percentage %}
                                         {% if price %}
-                                            <span class="product-price">₹{{ price }}</span>
+                                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                                {% if pct > 0 %}
+                                                    <span class="product-price">₹{{ discounted_price }}</span>
+                                                    <span class="product-old-price" style="text-decoration: line-through; color: #9CA3AF; font-size: 11px;">₹{{ price }}</span>
+                                                    <span class="product-discount-badge" style="background: #D1FAE5; color: #065F46; padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 700;">{{ pct }}% OFF</span>
+                                                {% else %}
+                                                    <span class="product-price">₹{{ price }}</span>
+                                                {% endif %}
+                                            </div>
                                         {% else %}
                                             <span class="no-price">Price on selection</span>
                                         {% endif %}
@@ -909,11 +1012,109 @@
         updateClearBtn();
         searchInput.addEventListener('input', updateClearBtn);
 
+        // --- SEARCH SUGGESTIONS ---
+        const suggestionsDropdown = document.getElementById('searchSuggestionsDropdown');
+        let suggestionsTimeout = null;
+
+        // Fetch recommendations from server
+        async function fetchSuggestions(query) {
+            if (!query.trim()) {
+                suggestionsDropdown.innerHTML = '';
+                suggestionsDropdown.style.display = 'none';
+                return;
+            }
+            try {
+                const url = `/product/suggestions/?q=${encodeURIComponent(query)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                renderSuggestions(data.results);
+            } catch (err) {
+                console.error('Error fetching suggestions:', err);
+            }
+        }
+
+        // Render HTML inside dropdown
+        function renderSuggestions(results) {
+            if (!results || results.length === 0) {
+                suggestionsDropdown.innerHTML = '<div class="suggestion-no-results">No products found</div>';
+                suggestionsDropdown.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            results.forEach(product => {
+                const detailUrl = `/product/product/${product.id}/`;
+                const imgTag = product.image_url 
+                    ? `<img src="${product.image_url}" class="suggestion-img" alt="${product.name}">`
+                    : `<div class="suggestion-img" style="display:flex;align-items:center;justify-content:center;color:#666;"><i class="fa-regular fa-image"></i></div>`;
+
+                let priceHtml = '';
+                if (product.price) {
+                    if (product.discount_percentage > 0) {
+                        priceHtml = `
+                            <span class="suggestion-old-price">₹${product.price}</span>
+                            <span class="suggestion-price">₹${product.discounted_price}</span>
+                        `;
+                    } else {
+                        priceHtml = `<span class="suggestion-price">₹${product.price}</span>`;
+                    }
+                }
+
+                html += `
+                    <a href="${detailUrl}" class="suggestion-item">
+                        ${imgTag}
+                        <div class="suggestion-info">
+                            <span class="suggestion-name">${product.name}</span>
+                            <span class="suggestion-category">${product.category}</span>
+                        </div>
+                        <div class="suggestion-price-wrap">
+                            ${priceHtml}
+                        </div>
+                    </a>
+                `;
+            });
+
+            suggestionsDropdown.innerHTML = html;
+            suggestionsDropdown.style.display = 'block';
+        }
+
+        // Handle user input with debouncing
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            clearTimeout(suggestionsTimeout);
+            
+            if (query.trim().length < 2) {
+                suggestionsDropdown.innerHTML = '';
+                suggestionsDropdown.style.display = 'none';
+                return;
+            }
+
+            suggestionsTimeout = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 300); // 300ms debounce
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !suggestionsDropdown.contains(e.target)) {
+                suggestionsDropdown.style.display = 'none';
+            }
+        });
+
+        // Show dropdown again when search input is focused (if search has value)
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim().length >= 2 && suggestionsDropdown.children.length > 0) {
+                suggestionsDropdown.style.display = 'block';
+            }
+        });
+
         // Clear search and reset to page 1
         function clearSearch() {
             searchInput.value = '';
             pageInput.value = '1';
             updateClearBtn();
+            suggestionsDropdown.innerHTML = '';
+            suggestionsDropdown.style.display = 'none';
             shopForm.submit();
         }
 

@@ -1,22 +1,25 @@
 import json
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Min, Q
+from django.db.models import Min, Q, Avg
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from admin_panel.admin_category.models import Category
-from admin_panel.admin_product.models import Product, ProductVariant, Review, Coupon
+from admin_panel.admin_product.models import Product, ProductVariant, Review
+from admin_panel.admin_coupon.models import Coupon
+from admin_panel.admin_order.models import Order
 
 
 def shop_view(request):
     search_query = request.GET.get("q", "").strip()
-    
-   
+
     category_filters = request.GET.getlist("category")
     category_filters = [c.strip() for c in category_filters if c.strip()]
-    
+
     sort = request.GET.get("sort", "").strip()
     min_price = request.GET.get("min_price", "").strip()
     max_price = request.GET.get("max_price", "").strip()
@@ -38,9 +41,10 @@ def shop_view(request):
     if category_filters:
         products = products.filter(category_id__in=category_filters)
 
-    
     products = products.annotate(
-        computed_min_price=Min( "variants__price",filter=Q(variants__is_active=True, variants__is_deleted=False)
+        computed_min_price=Min(
+            "variants__price",
+            filter=Q(variants__is_active=True, variants__is_deleted=False),
         )
     )
 
@@ -89,12 +93,56 @@ def shop_view(request):
     return render(request, "shop.html", context)
 
 
+def search_suggestions_view(request):
+    from django.http import JsonResponse
+    query = request.GET.get("q", "").strip()
+    if not query:
+        return JsonResponse({"results": []})
+
+    products = Product.objects.filter(
+        is_deleted=False,
+        is_active=True,
+        category__is_deleted=False,
+        category__is_active=True,
+    ).filter(
+        Q(name__icontains=query)
+        | Q(category__name__icontains=query)
+        | Q(material__icontains=query)
+    )[:6]
+
+    results = []
+    for product in products:
+        primary_image = product.get_primary_image()
+        image_url = primary_image.image.url if primary_image else None
+        
+        price = product.get_price()
+        discounted_price = product.get_discounted_price()
+        pct = product.get_active_offer_percentage()
+        
+        results.append({
+            "id": product.id,
+            "name": product.name,
+            "category": product.category.name,
+            "image_url": image_url,
+            "price": float(price) if price else None,
+            "discounted_price": float(discounted_price) if discounted_price else None,
+            "discount_percentage": pct,
+        })
+
+    return JsonResponse({"results": results})
+
+
 def product_detail_view(request, product_id):
-    
-    product = Product.objects.filter(id=product_id, is_deleted=False, is_active=True, category__is_deleted=False, category__is_active=True).first()
+    product = Product.objects.filter(
+        id=product_id,
+        is_deleted=False,
+        is_active=True,
+        category__is_deleted=False,
+        category__is_active=True,
+    ).first()
     if not product:
         messages.error(request, "Sorry, this product is currently unavailable or out of stock.")
-        return redirect('shop')
+        return redirect("shop")
 
     variants = ProductVariant.objects.filter(
         product=product, is_deleted=False, is_active=True
@@ -104,7 +152,6 @@ def product_detail_view(request, product_id):
     if not default_variant:
         default_variant = variants.first()
 
-   
     variants_data = []
     for v in variants:
         parts = v.name.split("/")
@@ -122,24 +169,45 @@ def product_detail_view(request, product_id):
                 "size": size,
                 "sku": v.sku,
                 "price": str(v.price),
+                "discounted_price": str(v.get_discounted_price()),
+                "discount_percentage": v.product.get_active_offer_percentage(),
                 "stock": v.stock,
                 "is_default": v.is_default,
                 "images": images,
             }
         )
 
-    
     related_products = Product.objects.filter(
         category=product.category, is_deleted=False, is_active=True
     ).exclude(id=product.id).order_by("-id")[:4]
 
-  
-    now = timezone.now()
+    today = timezone.now().date()
     active_coupons = Coupon.objects.filter(
-        is_active=True
-    ).filter(Q(valid_until__isnull=True) | Q(valid_until__gt=now))
+        is_active=True,
+        valid_from__lte=today,
+        valid_until__gte=today,
+    )
 
-    reviews = product.reviews.all().order_by("-created_at")
+    reviews = product.reviews.select_related("user").order_by("-created_at")
+
+    # Average rating
+    avg_data = reviews.aggregate(avg=Avg("rating"))
+    avg_rating = round(avg_data["avg"] or 0, 1)
+    avg_rating_int = round(avg_data["avg"] or 0)
+
+    # Review permission for current user
+    user_can_review = False
+    user_review = None
+
+    if request.user.is_authenticated:
+        user_review = reviews.filter(user=request.user).first()
+        if not user_review:
+            has_delivered = Order.objects.filter(
+                user=request.user,
+                status="delivered",
+                items__variant__product=product,
+            ).exists()
+            user_can_review = has_delivered
 
     context = {
         "product": product,
@@ -149,9 +217,59 @@ def product_detail_view(request, product_id):
         "related_products": related_products,
         "active_coupons": active_coupons,
         "reviews": reviews,
+        "avg_rating": avg_rating,
+        "avg_rating_int": avg_rating_int,
+        "user_can_review": user_can_review,
+        "user_review": user_review,
     }
 
     return render(request, "product_detail.html", context)
 
 
+@login_required(login_url="login")
+@require_POST
+def submit_review(request, product_id):
+    """Submit or update a product review. Only for users with a delivered order."""
+    product = get_object_or_404(Product, id=product_id, is_deleted=False, is_active=True)
 
+    # Verify the user has a delivered order containing this product
+    has_delivered = Order.objects.filter(
+        user=request.user,
+        status="delivered",
+        items__variant__product=product,
+    ).exists()
+
+    if not has_delivered:
+        messages.error(request, "You can only review products you have purchased and received.")
+        return redirect("product_detail", product_id=product_id)
+
+    try:
+        rating = int(request.POST.get("rating", 0))
+    except (ValueError, TypeError):
+        rating = 0
+
+    if rating < 1 or rating > 5:
+        messages.error(request, "Please select a valid rating between 1 and 5 stars.")
+        return redirect("product_detail", product_id=product_id)
+
+    comment = request.POST.get("comment", "").strip()
+
+    # Prevent editing an existing review
+    if Review.objects.filter(product=product, user=request.user).exists():
+        messages.error(request, "You have already reviewed this product.")
+        return redirect("product_detail", product_id=product_id)
+
+    Review.objects.create(product=product, user=request.user, rating=rating, comment=comment)
+    messages.success(request, "Thank you! Your review has been posted.")
+
+    return redirect("product_detail", product_id=product_id)
+
+
+@login_required(login_url="login")
+@require_POST
+def delete_review(request, product_id):
+    """Delete the current user's review for a product."""
+    product = get_object_or_404(Product, id=product_id, is_deleted=False, is_active=True)
+    Review.objects.filter(product=product, user=request.user).delete()
+    messages.success(request, "Your review has been deleted.")
+    return redirect("product_detail", product_id=product_id)

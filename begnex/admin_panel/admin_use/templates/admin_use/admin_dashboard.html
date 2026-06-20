@@ -41,13 +41,28 @@
             position: fixed;
             left: 0;
             top: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #D1D5DB;
         }
 
         .logo{
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 40px;
+            margin-bottom: 24px;
         }
 
         .logo-icon{
@@ -79,11 +94,11 @@
         .menu{
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
 
         .menu a{
-            height: 46px;
+            height: 40px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -173,7 +188,7 @@
         /* TOPBAR */
 
         .topbar{
-            height: 78px;
+            height: 72px;
             background: white;
             border-bottom: 1px solid #E5E7EB;
             display: flex;
@@ -472,9 +487,10 @@
                 <a href="{% url 'admin_products' %}">👜 Products</a>
                 <a href="{% url 'admin_categories' %}">🏷 Categories</a>
                 <a href="{% url 'admin_user_list' %}">👥 Users</a>
-                <a href="#">🎟 Coupons</a>
-                <a href="#">🖼 Reviews</a>
-
+                <a href="{% url 'admin_coupons' %}">🎟 Coupons</a>
+                <a href="{% url 'admin_offers' %}">🎁 Offers</a>
+                <a href="{% url 'sales_report' %}">📈 Sales Report</a>
+                <a href="{% url 'admin_reviews' %}">⭐ Reviews</a>
             </div>
 
         </div>
@@ -518,7 +534,7 @@
             </div>
 
             <div class="top-actions">
-                <button class="report-btn">VIEW SALES REPORT</button>
+                <a href="{% url 'sales_report' %}" class="report-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;">📈 VIEW SALES REPORT</a>
             </div>
 
         </div>
@@ -533,19 +549,19 @@
 
                 <div class="stat-card">
                     <span>TOTAL REVENUE</span>
-                    <h2>₹0</h2>
-                    <p>No sales yet</p>
+                    <h2>₹{{ total_revenue|floatformat:2 }}</h2>
+                    <p>Excludes cancelled orders</p>
                 </div>
 
                 <div class="stat-card">
                     <span>TOTAL ORDERS</span>
-                    <h2>0</h2>
-                    <p>No orders yet</p>
+                    <h2>{{ total_orders }}</h2>
+                    <p>Total placed orders</p>
                 </div>
 
                 <div class="stat-card">
                     <span>PENDING ORDERS</span>
-                    <h2>0</h2>
+                    <h2>{{ pending_orders }}</h2>
                     <p class="danger">Awaiting action</p>
                 </div>
 
@@ -563,22 +579,21 @@
 
             <div class="row">
 
-                <!-- CHART (placeholder) -->
+                <!-- CHART -->
 
                 <div class="card">
 
-                    <div class="card-header">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                         <h3>Revenue Overview</h3>
+                        <div style="display:flex; gap:6px;">
+                            <a href="?chart_filter=weekly" class="filter-tab" style="padding:4px 10px; text-decoration:none; font-size:12px; border:1px solid #E5E7EB; border-radius:6px; background:{% if chart_filter == 'weekly' %}black{% else %}white{% endif %}; color:{% if chart_filter == 'weekly' %}white{% else %}#555{% endif %};">Weekly</a>
+                            <a href="?chart_filter=monthly" class="filter-tab" style="padding:4px 10px; text-decoration:none; font-size:12px; border:1px solid #E5E7EB; border-radius:6px; background:{% if chart_filter == 'monthly' %}black{% else %}white{% endif %}; color:{% if chart_filter == 'monthly' %}white{% else %}#555{% endif %};">Monthly</a>
+                            <a href="?chart_filter=yearly" class="filter-tab" style="padding:4px 10px; text-decoration:none; font-size:12px; border:1px solid #E5E7EB; border-radius:6px; background:{% if chart_filter == 'yearly' %}black{% else %}white{% endif %}; color:{% if chart_filter == 'yearly' %}white{% else %}#555{% endif %};">Yearly</a>
+                        </div>
                     </div>
 
-                    <div class="chart">
-
-                        {% for h in "6075958065851009070"|make_list %}
-                        <div class="bar-wrap">
-                            <div class="bar {% if forloop.counter == 7 or forloop.counter == 8 %}dark{% endif %}" style="height:{{ h }}0%;"></div>
-                        </div>
-                        {% endfor %}
-
+                    <div style="position:relative; height:240px; margin-top:14px;">
+                        <canvas id="revenueChart"></canvas>
                     </div>
 
                 </div>
@@ -592,82 +607,58 @@
                     </div>
 
                     <div class="activity">
-
+                        {% for act in recent_activity %}
                         <div class="activity-item">
-                            <div class="dot"></div>
+                            <div class="dot" style="background:{% if act.type == 'order' %}#10B981{% else %}#9CA3AF{% endif %};"></div>
                             <div>
-                                <h4>Admin panel activated</h4>
-                                <p>Just now</p>
+                                <h4>{{ act.title }}</h4>
+                                <p>{{ act.subtitle }} — <span style="font-size:10px; color:#888;">{{ act.time_display }}</span></p>
                             </div>
                         </div>
-
-                        <div class="activity-item">
-                            <div class="dot gray"></div>
-                            <div>
-                                <h4>{{ total_users }} user{{ total_users|pluralize }} registered</h4>
-                                <p>Total customers</p>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="dot gray"></div>
-                            <div>
-                                <h4>Ready for orders</h4>
-                                <p>System operational</p>
-                            </div>
-                        </div>
-
+                        {% empty %}
+                        <div style="text-align:center; padding:20px; color:#9CA3AF;">No recent activity</div>
+                        {% endfor %}
                     </div>
 
                 </div>
 
             </div>
 
-            <!-- TABLE ROW -->
+            <!-- SECOND ROW (Best Selling Products & Categories) -->
 
-            <div class="row">
+            <div class="row" style="margin-top:20px;">
 
-                <!-- TABLE -->
+                <!-- TABLE (Best Selling Products) -->
 
                 <div class="card">
 
                     <div class="card-header">
-                        <h3>Top Selling Bags</h3>
+                        <h3>Top Selling Products</h3>
                     </div>
 
-                    <table>
-
-                        <tr>
-                            <th>PRODUCT</th>
-                            <th>CATEGORY</th>
-                            <th>SALES</th>
-                            <th>REVENUE</th>
-                        </tr>
-
-                        <tr>
-                            <td>
-                                <div class="product">
-                                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=300" alt="bag">
-                                    <span class="product-name">Vantage Leather Tote</span>
-                                </div>
-                            </td>
-                            <td>Tote Bags</td>
-                            <td>—</td>
-                            <td>—</td>
-                        </tr>
-
-                        <tr>
-                            <td>
-                                <div class="product">
-                                    <img src="https://images.unsplash.com/photo-1581605405669-fcdf81165afa?q=80&w=300" alt="bag">
-                                    <span class="product-name">Heritage Briefcase</span>
-                                </div>
-                            </td>
-                            <td>Business</td>
-                            <td>—</td>
-                            <td>—</td>
-                        </tr>
-
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="text-align:left; border-bottom:1px solid #E5E7EB;">
+                                <th style="padding:10px 0; font-size:11px; color:#9CA3AF; letter-spacing:1px; font-weight:600;">PRODUCT</th>
+                                <th style="padding:10px 0; font-size:11px; color:#9CA3AF; letter-spacing:1px; font-weight:600;">CATEGORY</th>
+                                <th style="padding:10px 0; font-size:11px; color:#9CA3AF; letter-spacing:1px; font-weight:600; text-align:center;">UNITS SOLD</th>
+                                <th style="padding:10px 0; font-size:11px; color:#9CA3AF; letter-spacing:1px; font-weight:600; text-align:right;">REVENUE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in best_products %}
+                            <tr style="border-bottom:1px solid #F3F4F6;">
+                                <td style="padding:12px 0; font-size:13px; font-weight:600; color:#111;">{{ p.product_name }}</td>
+                                <td style="padding:12px 0; font-size:13px; color:#555;">{{ p.variant__product__category__name }}</td>
+                                <td style="padding:12px 0; font-size:13px; text-align:center; font-weight:700; color:#111;">{{ p.qty }}</td>
+                                <td style="padding:12px 0; font-size:13px; text-align:right; font-weight:700; color:#059669;">₹{{ p.rev|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" style="text-align:center; padding:24px; color:#9CA3AF;">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
                     </table>
 
                 </div>
@@ -680,19 +671,20 @@
                         <h3>Top Categories</h3>
                     </div>
 
-                    <div class="category-item">
-                        <h4>Tote Bags <span>45%</span></h4>
-                        <div class="progress"><div style="width:45%;"></div></div>
-                    </div>
-
-                    <div class="category-item">
-                        <h4>Business <span>30%</span></h4>
-                        <div class="progress"><div style="width:30%;"></div></div>
-                    </div>
-
-                    <div class="category-item">
-                        <h4>Travel <span>25%</span></h4>
-                        <div class="progress"><div style="width:25%;"></div></div>
+                    <div class="category-list" style="display:flex; flex-direction:column; gap:16px;">
+                        {% for cat in best_categories %}
+                        <div class="category-item" style="margin-bottom:0;">
+                            <h4 style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:6px;">
+                                {{ cat.variant__product__category__name }}
+                                <span style="font-weight:700; color:#555;">{{ cat.qty }} units</span>
+                            </h4>
+                            <div class="progress" style="height:6px; background:#F3F4F6; border-radius:10px; overflow:hidden;">
+                                <div style="height:100%; background:black; width: {% if best_categories.0.qty > 0 %}{% widthratio cat.qty best_categories.0.qty 100 %}{% else %}0{% endif %}%;"></div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div style="text-align:center; padding:20px; color:#9CA3AF;">No categories available</div>
+                        {% endfor %}
                     </div>
 
                 </div>
@@ -703,6 +695,76 @@
 
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function() {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const labels = {{ chart_labels|safe }};
+            const data = {{ chart_values|safe }};
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: data,
+                        borderColor: '#000000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#000000',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ₹' + context.parsed.y.toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#F3F4F6'
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Inter',
+                                    size: 11
+                                },
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString('en-IN');
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Inter',
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>

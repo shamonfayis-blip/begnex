@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Begnex</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #05070D; color: white; overflow-x: hidden; }
+        a { text-decoration: none; }
+
+        /* NAVBAR */
+        .navbar { width: 100%; height: 72px; background: #05070D; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; position: sticky; top: 0; z-index: 1000; }
+        .logo { font-size: 15px; font-weight: 800; letter-spacing: 2px; color: white; }
+        .logo a { color: white; }
+        .nav-links { display: flex; gap: 36px; }
+        .nav-links a { color: #A1A1AA; font-size: 11px; letter-spacing: 2px; transition: .3s; }
+        .nav-links a:hover, .nav-links a.active { color: white; }
+        .nav-icons { display: flex; gap: 16px; color: #D4D4D8; font-size: 14px; align-items: center; }
+        .nav-icons a { position: relative; color: #D4D4D8; transition: .3s; }
+        .nav-icons a:hover, .nav-icons a.active { color: white; }
+        .cart-badge { position: absolute; top: -6px; right: -8px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+
+        /* ABOUT CONTENT */
+        .about-wrapper {
+            max-width: 1200px;
+            margin: 80px auto;
+            padding: 0 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .about-text h1 {
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #FFF, #A1A1AA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .about-text p {
+            color: #A1A1AA;
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        .about-text .highlight {
+            color: #4F7DF3;
+            font-weight: 600;
+        }
+
+        .about-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            transition: .3s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(79, 125, 243, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .feature-card i {
+            font-size: 24px;
+            color: #4F7DF3;
+            margin-bottom: 16px;
+        }
+
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: #71717A;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+
+        .about-image {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .about-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform .5s ease;
+        }
+
+        .about-image:hover img {
+            transform: scale(1.05);
+        }
+
+        /* FOOTER */
+        .footer { background: #0A0C13; border-top: 1px solid rgba(255,255,255,0.04); padding: 80px 48px 30px; margin-top: 80px; position: relative; overflow: hidden; }
+        .footer::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(79,125,243,0.4), transparent); }
+        .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 60px; }
+        .footer-brand h2 { font-size: 24px; font-weight: 900; letter-spacing: 4px; color: #fff; margin-bottom: 16px; }
+        .footer-brand p { color: #9CA3AF; font-size: 14px; line-height: 1.6; max-width: 300px; margin-bottom: 24px; }
+        .social-links { display: flex; gap: 16px; }
+        .social-links a { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: #A1A1AA; font-size: 16px; transition: all 0.3s; }
+        .social-links a:hover { background: #4F7DF3; border-color: #4F7DF3; color: #fff; transform: translateY(-3px); }
+        .footer-links-group h3 { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #fff; margin-bottom: 24px; }
+        .footer-links-group a { display: block; color: #9CA3AF; font-size: 13px; margin-bottom: 12px; transition: color 0.2s; }
+        .footer-links-group a:hover { color: #4F7DF3; }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .footer-bottom p { color: #666; font-size: 13px; }
+        .payment-icons { display: flex; gap: 16px; color: #555; font-size: 24px; }
+
+        @media (max-width: 992px) {
+            .about-wrapper {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+            .about-features {
+                justify-content: center;
+            }
+            .navbar { padding: 0 20px; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo">
+            <a href="{% url 'home' %}">BEGNEX</a>
+        </div>
+        <div class="nav-links">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'shop' %}">PRODUCTS</a>
+            <a href="{% url 'categories' %}">CATEGORIES</a>
+            <a href="{% url 'about' %}" class="active">ABOUT</a>
+        </div>
+        <div class="nav-icons">
+            <a href="{% url 'shop' %}">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </a>
+            <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
+                <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
+            </a>
+            <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
+            </a>
+            <a href="{% url 'profile' %}">
+                <i class="fa-regular fa-user"></i>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ABOUT CONTENT -->
+    <section class="about-wrapper">
+        <div class="about-text">
+            <h1>CRAFTED FOR UTILITY & MODERN MOTION</h1>
+            <p>Welcome to <span class="highlight">BEGNEX</span>, where utility meets minimal elegance. We design premium architectural bags and everyday travel gear built to withstand the demands of modern movement. Every piece is engineered with premium materials, high-density hardware, and refined aesthetics.</p>
+            <p>Our philosophy is simple: eliminate compromise. By sourcing the finest materials and employing meticulous craftsmanship, we build gear that does not just carry your items, but elevates your daily journey.</p>
+            
+            <div class="about-features">
+                <div class="feature-card">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <h3>Premium Materials</h3>
+                    <p>High-grade weather resistant fabrics and full grain genuine leathers.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fa-solid fa-compass"></i>
+                    <h3>Ergonomic Utility</h3>
+                    <p>Meticulously placed pockets and vault compartments for seamless travel.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="about-image">
+            <img src="/media/variant_images/a1.webp" alt="Begnex Luxury Bag">
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="footer-brand">
+                <h2>BEGNEX</h2>
+                <p>Progressive by nature, built for modern utility.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                </div>
+            </div>
+            <div class="footer-links-group">
+                <h3>SHOP</h3>
+                <a href="{% url 'shop' %}">All Products</a>
+                <a href="#">New Arrivals</a>
+                <a href="#">Best Sellers</a>
+            </div>
+            <div class="footer-links-group">
+                <h3>SUPPORT</h3>
+                <a href="#">FAQ</a>
+                <a href="#">Shipping &amp; Returns</a>
+                <a href="#">Contact Us</a>
+            </div>
+            <div class="footer-links-group">
+                <h3>LEGAL</h3>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Begnex. All rights reserved.</p>
+            <div class="payment-icons">
+                <i class="fa-brands fa-cc-visa"></i>
+                <i class="fa-brands fa-cc-mastercard"></i>
+                <i class="fa-brands fa-cc-amex"></i>
+                <i class="fa-brands fa-cc-paypal"></i>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

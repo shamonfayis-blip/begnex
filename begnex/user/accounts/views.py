@@ -50,11 +50,18 @@ def signup_view(request):
     if request.user.is_authenticated:
         return redirect("home")
 
+    ref_code = request.GET.get("ref", "").strip()
+    if not ref_code:
+        ref_code = request.session.get("referrer_code", "")
+    else:
+        request.session["referrer_code"] = ref_code
+
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
         confirm = request.POST.get("confirm_password", "")
+        manual_ref_code = request.POST.get("referral_code", "").strip()
 
         errors = {}
 
@@ -79,11 +86,20 @@ def signup_view(request):
         if email and User.objects.filter(email=email).exists():
             errors["email"] = "Email already exists"
 
+        if manual_ref_code:
+            if not User.objects.filter(referral_code=manual_ref_code).exists():
+                errors["referral_code"] = "Invalid referral code"
+
         if errors:
             return render(
                 request,
                 "signup.html",
-                {"errors": errors, "username": username, "email": email},
+                {
+                    "errors": errors,
+                    "username": username,
+                    "email": email,
+                    "referral_code": manual_ref_code or ref_code,
+                },
             )
 
         otp = random.randint(100000, 999999)
@@ -91,6 +107,7 @@ def signup_view(request):
             "username": username,
             "email": email,
             "password": password,
+            "referral_code": manual_ref_code,
         }
         request.session["otp"] = str(otp)
         request.session["otp_created_time"] = time.time()
@@ -102,7 +119,7 @@ def signup_view(request):
         messages.success(request, "OTP sent successfully")
         return redirect("otp_page")
 
-    return render(request, "signup.html")
+    return render(request, "signup.html", {"referral_code": ref_code})
 
 
 @never_cache
@@ -145,6 +162,45 @@ def otp_page(request):
                 first_name=parts[0],
                 last_name=" ".join(parts[1:]) if len(parts) > 1 else "",
             )
+            
+            # Create user's wallet
+            from user.wallet.utils import get_user_wallet, refund_to_wallet
+            get_user_wallet(user)
+
+            # Check referral code
+            ref_code = signup_data.get("referral_code")
+            if not ref_code:
+                ref_code = request.session.get("referrer_code")
+            if ref_code:
+                try:
+                    referrer = User.objects.get(referral_code=ref_code)
+                    from admin_panel.admin_offer.models import ReferralOffer, ReferralRecord
+                    active_offer = ReferralOffer.objects.filter(is_active=True).first()
+                    
+                    referrer_reward = 100.00
+                    referee_reward = 50.00
+                    if active_offer:
+                        referrer_reward = float(active_offer.referrer_reward)
+                        referee_reward = float(active_offer.referee_reward)
+
+                    # Credit wallets
+                    if referee_reward > 0:
+                        refund_to_wallet(user, referee_reward, f"Referral signup reward (code {ref_code})")
+                    if referrer_reward > 0:
+                        refund_to_wallet(referrer, referrer_reward, f"Referral invite reward (referred {user.username})")
+
+                    # Log record
+                    ReferralRecord.objects.create(
+                        referrer=referrer,
+                        referee=user,
+                        referrer_reward_paid=referrer_reward,
+                        referee_reward_paid=referee_reward
+                    )
+                except User.DoesNotExist:
+                    pass
+                except Exception as ex:
+                    print("Error in referral reward processing:", ex)
+
             login(
                 request,
                 user,
@@ -353,6 +409,7 @@ def reset_password_view(request, uidb64, token):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def home_view(request):
     from admin_panel.admin_product.models import Product
+    from admin_panel.admin_offer.models import ReferralOffer
 
     latest_products = Product.objects.filter(
         is_deleted=False,
@@ -361,7 +418,37 @@ def home_view(request):
         category__is_active=True,
     ).order_by("-id")[:3]
 
-    return render(request, "home.html", {"latest_products": latest_products})
+    # Referral offer for home page banner
+    referral_offer = ReferralOffer.objects.filter(is_active=True).first()
+
+    # Cart & wishlist counts for navbar icons
+    cart_count = 0
+    wishlist_ids = []
+    wishlist_count = 0
+    if request.user.is_authenticated:
+        try:
+            from user.cart.models import Cart
+            cart = Cart.objects.filter(user=request.user).first()
+            if cart:
+                cart_count = cart.items.count()
+        except Exception:
+            pass
+        try:
+            from user.wishlist.models import Wishlist
+            wishlist_qs = Wishlist.objects.filter(user=request.user).values_list("product_id", flat=True)
+            wishlist_ids = list(wishlist_qs)
+            wishlist_count = len(wishlist_ids)
+        except Exception:
+            pass
+
+    context = {
+        "latest_products": latest_products,
+        "referral_offer": referral_offer,
+        "cart_count": cart_count,
+        "wishlist_ids": wishlist_ids,
+        "wishlist_count": wishlist_count,
+    }
+    return render(request, "home.html", context)
 
 
 def logout_view(request):
@@ -396,3 +483,84 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                     raise ImmediateHttpResponse(redirect("login"))
             except User.DoesNotExist:
                 pass
+
+    def save_user(self, request, sociallogin, form=None):
+        user = super().save_user(request, sociallogin, form)
+        
+        # Ensure a wallet is created for the new user
+        from user.wallet.utils import get_user_wallet, refund_to_wallet
+        get_user_wallet(user)
+        
+        # Check if there is a referral code in the session
+        ref_code = request.session.get("referrer_code")
+        if ref_code:
+            try:
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                referrer = User.objects.get(referral_code=ref_code)
+                
+                # Check if this user already has a referral record to prevent duplicates
+                from admin_panel.admin_offer.models import ReferralOffer, ReferralRecord
+                if not ReferralRecord.objects.filter(referee=user).exists():
+                    active_offer = ReferralOffer.objects.filter(is_active=True).first()
+                    
+                    referrer_reward = 100.00
+                    referee_reward = 50.00
+                    if active_offer:
+                        referrer_reward = float(active_offer.referrer_reward)
+                        referee_reward = float(active_offer.referee_reward)
+                    
+                    # Credit wallets
+                    if referee_reward > 0:
+                        refund_to_wallet(user, referee_reward, f"Referral signup reward via Google (code {ref_code})")
+                    if referrer_reward > 0:
+                        refund_to_wallet(referrer, referrer_reward, f"Referral invite reward via Google (referred {user.username})")
+                    
+                    # Log record
+                    ReferralRecord.objects.create(
+                        referrer=referrer,
+                        referee=user,
+                        referrer_reward_paid=referrer_reward,
+                        referee_reward_paid=referee_reward
+                    )
+            except User.DoesNotExist:
+                pass
+            except Exception as ex:
+                print("Error in social login referral reward processing:", ex)
+        return user
+
+
+from django.contrib.auth.decorators import login_required
+
+@never_cache
+@login_required(login_url="login")
+def user_referrals_view(request):
+    user = request.user
+    
+    if not user.referral_code:
+        user.save()
+    
+    from admin_panel.admin_offer.models import ReferralOffer, ReferralRecord
+    active_offer = ReferralOffer.objects.filter(is_active=True).first()
+    
+    referrer_reward = 100.00
+    referee_reward = 50.00
+    if active_offer:
+        referrer_reward = float(active_offer.referrer_reward)
+        referee_reward = float(active_offer.referee_reward)
+
+    # Referral history — all users this person has successfully referred
+    referral_history = ReferralRecord.objects.filter(referrer=user).select_related("referee").order_by("-created_at")
+
+    context = {
+        "user": user,
+        "referrer_reward": referrer_reward,
+        "referee_reward": referee_reward,
+        "is_active": active_offer.is_active if active_offer else True,
+        "referral_history": referral_history,
+    }
+    return render(request, "referrals_page.html", context)
+
+
+def about_view(request):
+    return render(request, "about.html")

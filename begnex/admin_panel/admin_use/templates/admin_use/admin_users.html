@@ -33,9 +33,24 @@
             justify-content: space-between;
             position: fixed;
             left: 0; top: 0;
+            overflow-y: auto;
         }
 
-        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #D1D5DB;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
         .logo-icon {
             width: 32px; height: 32px; background: black; color: white;
             display: flex; align-items: center; justify-content: center;
@@ -44,9 +59,9 @@
         .logo h2 { font-size: 22px; font-weight: 700; }
         .logo p { font-size: 10px; color: #777; letter-spacing: 2px; }
 
-        .menu { display: flex; flex-direction: column; gap: 4px; }
+        .menu { display: flex; flex-direction: column; gap: 3px; }
         .menu a {
-            height: 46px; display: flex; align-items: center; gap: 12px;
+            height: 40px; display: flex; align-items: center; gap: 12px;
             padding: 0 14px; border-radius: 8px; font-size: 14px; color: #555; transition: .2s;
         }
         .menu a:hover, .menu .active {
@@ -310,8 +325,10 @@
                 <a href="{% url 'admin_products' %}">👜 Products</a>
                 <a href="{% url 'admin_categories' %}">🏷 Categories</a>
                 <a href="{% url 'admin_user_list' %}" class="active">👥 Users</a>
-                <a href="#">🎟 Coupons</a>
-                <a href="#">🖼 Reviews</a>
+                <a href="{% url 'admin_coupons' %}">🎟 Coupons</a>
+                <a href="{% url 'admin_offers' %}">🎁 Offers</a>
+                <a href="{% url 'sales_report' %}">📈 Sales Report</a>
+                <a href="{% url 'admin_reviews' %}">⭐ Reviews</a>
             </div>
         </div>
 
@@ -430,6 +447,11 @@
                                     {% endif %}
                                 </td>
                                 <td>
+                                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                    <a href="{% url 'admin_user_detail' user.id %}"
+                                       style="padding:5px 14px; background:#F0F9FF; color:#0369A1; border:1px solid #BAE6FD; border-radius:7px; font-size:12px; font-weight:600;">
+                                        👁 View
+                                    </a>
                                     {% if user.is_blocked %}
                                     <button
                                         class="action-btn btn-unblock"
@@ -443,6 +465,7 @@
                                         Block
                                     </button>
                                     {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}

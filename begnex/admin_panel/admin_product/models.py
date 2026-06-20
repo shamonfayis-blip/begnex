@@ -43,9 +43,42 @@ class Product(models.Model):
         return img
 
     def get_price(self):
-    
+        
         variant = self.get_default_variant()
         return variant.price if variant else None
+
+    def get_discounted_price(self):
+        variant = self.get_default_variant()
+        return variant.get_discounted_price() if variant else None
+
+    def get_active_offer_percentage(self):
+        try:
+            from admin_panel.admin_offer.models import ProductOffer, CategoryOffer
+        except ImportError:
+            return 0
+        from django.utils import timezone
+        
+        today = timezone.now().date()
+        
+        # Product offer
+        prod_offer = ProductOffer.objects.filter(
+            product=self,
+            is_active=True,
+            valid_from__lte=today,
+            valid_until__gte=today
+        ).order_by("-discount_percentage").first()
+        prod_discount = prod_offer.discount_percentage if prod_offer else 0
+        
+        # Category offer
+        cat_offer = CategoryOffer.objects.filter(
+            category=self.category,
+            is_active=True,
+            valid_from__lte=today,
+            valid_until__gte=today
+        ).order_by("-discount_percentage").first()
+        cat_discount = cat_offer.discount_percentage if cat_offer else 0
+        
+        return max(prod_discount, cat_discount)
 
     def get_total_stock(self):
     
@@ -82,6 +115,18 @@ class ProductVariant(models.Model):
     def __str__(self):
         return f"{self.product.name} - {self.name}"
 
+    def get_discounted_price(self):
+        discount_percentage = self.product.get_active_offer_percentage()
+        if discount_percentage > 0:
+            from decimal import Decimal
+            discount_amount = (self.price * Decimal(discount_percentage)) / Decimal(100)
+            return round(self.price - discount_amount, 2)
+        return self.price
+
+    @property
+    def discounted_price(self):
+        return self.get_discounted_price()
+
 
 class VariantImage(models.Model):
     variant = models.ForeignKey(
@@ -113,13 +158,3 @@ class Review(models.Model):
         return f"{self.user} - {self.product.name} ({self.rating}/5)"
 
 
-class Coupon(models.Model):
-    code = models.CharField(max_length=20, unique=True)
-    discount_percentage = models.PositiveIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(100)]
-    )
-    is_active = models.BooleanField(default=True)
-    valid_until = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.code} ({self.discount_percentage}%)"

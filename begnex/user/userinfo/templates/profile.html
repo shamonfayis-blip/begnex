@@ -115,6 +115,11 @@
             font-size: 15px;
             font-weight: 800;
             letter-spacing: 1px;
+            color: white;
+        }
+
+        .logo a {
+            color: white;
         }
 
         .nav-links {
@@ -129,16 +134,9 @@
             transition: .3s;
         }
 
-        .nav-links a:hover {
+        .nav-links a:hover,
+        .nav-links a.active {
             color: white;
-        }
-
-        .nav-icons a:hover { color: white; }
-        .cart-badge {
-            position: absolute; top: -6px; right: -8px;
-            background: #ef4444; color: white; font-size: 9px; font-weight: 800;
-            width: 16px; height: 16px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; pointer-events: none;
         }
 
         .nav-icons {
@@ -146,6 +144,35 @@
             gap: 16px;
             color: #D4D4D8;
             font-size: 14px;
+            align-items: center;
+        }
+
+        .nav-icons a {
+            position: relative;
+            color: #D4D4D8;
+            transition: .3s;
+        }
+
+        .nav-icons a:hover,
+        .nav-icons a.active {
+            color: white;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -6px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            font-weight: 800;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
         }
 
         /* MAIN */
@@ -439,12 +466,10 @@
 
 <body>
 
-    <!-- NAVBAR -->
-
     <nav class="navbar">
 
         <div class="logo">
-            BEGNEX
+            <a href="{% url 'home' %}">BEGNEX</a>
         </div>
 
         <div class="nav-links">
@@ -452,7 +477,7 @@
             <a href="{% url 'home' %}">HOME</a>
             <a href="{% url 'shop' %}">PRODUCTS</a>
             <a href="{% url 'categories' %}">CATEGORIES</a>
-            <a href="#">ABOUT</a>
+            <a href="{% url 'about' %}">ABOUT</a>
 
         </div>
 
@@ -460,7 +485,7 @@
 
         <div class="nav-icons">
 
-            <a href="#">
+            <a href="{% url 'shop' %}">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </a>
 
@@ -473,10 +498,9 @@
                 <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
             </a>
 
-            <a href="{% url 'profile' %}">
+            <a href="{% url 'profile' %}" class="active">
                 <i class="fa-regular fa-user"></i>
             </a>
-
 
         </div>
 
@@ -652,8 +676,6 @@
                 </div>
 
             </div>
-
-        </div>
 
     </section>
     <!-- LOGOUT MODAL -->

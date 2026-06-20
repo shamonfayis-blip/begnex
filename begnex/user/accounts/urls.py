@@ -17,4 +17,6 @@ urlpatterns = [
         name="reset_password",
     ),
     path("logout/", views.logout_view, name="logout_view"),
+    path("referrals/", views.user_referrals_view, name="user_referrals"),
+    path("about/", views.about_view, name="about"),
 ]

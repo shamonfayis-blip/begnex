@@ -232,7 +232,7 @@ def cancel_order_item(request, item_pk):
                     for i in active_items
                 )
                 new_discount = new_subtotal * discount_ratio
-                new_shipping = 0 if new_subtotal >= 1000 else 99
+                new_shipping = 0
 
                 order.subtotal = new_subtotal
                 order.discount = new_discount

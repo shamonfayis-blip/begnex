@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offers Management — Begnex Admin</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #F9FAFB; color: #111827; display: flex; min-height: 100vh; }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            width: 260px; height: 100vh; background: #FAFAFA;
+            border-right: 1px solid #E5E7EB; padding: 20px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            position: fixed; left: 0; top: 0; z-index: 100;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #D1D5DB;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .logo-icon {
+            width: 32px; height: 32px; background: black; color: white;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; font-weight: 700; font-size: 14px;
+        }
+        .logo h2 { font-size: 22px; font-weight: 700; }
+        .logo p { font-size: 10px; color: #777; letter-spacing: 2px; }
+
+        .menu { display: flex; flex-direction: column; gap: 3px; }
+        .menu a {
+            height: 40px; display: flex; align-items: center; gap: 12px;
+            padding: 0 14px; border-radius: 8px; font-size: 14px; color: #555; transition: .2s; text-decoration: none;
+        }
+        .menu a:hover, .menu .active, .menu a.active {
+            background: white; color: black; font-weight: 600;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .sidebar-bottom { border-top: 1px solid #E5E7EB; padding-top: 18px; }
+        .admin-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .admin-avatar {
+            width: 42px; height: 42px; background: #111; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 16px; font-weight: 700; flex-shrink: 0;
+        }
+        .admin-profile h4 { font-size: 14px; font-weight: 600; }
+        .admin-profile p { font-size: 11px; color: #777; }
+        .logout-btn { width: 100%; height: 42px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; color: #DC2626; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logout-btn:hover { background: #FEE2E2; }
+
+        /* ─── MAIN CONTENT ─── */
+        .main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; }
+        .topbar { height: 72px; background: white; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; }
+        .topbar h1 { font-size: 22px; font-weight: 700; }
+        .topbar p { font-size: 12px; color: #777; margin-top: 2px; }
+        .content { padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
+        .btn-group { display: flex; gap: 12px; }
+        
+        .add-btn { height: 42px; padding: 0 20px; background: black; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s; display: inline-flex; align-items: center; gap: 8px; }
+        .add-btn:hover { background: #333; }
+
+        /* ─── TABS ─── */
+        .tabs-header { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 24px; gap: 24px; }
+        .tab-link { font-size: 15px; font-weight: 700; color: #6B7280; padding: 12px 4px; border-bottom: 2px solid transparent; cursor: pointer; transition: .2s; background: none; border: none; outline: none; margin-bottom: -2px; }
+        .tab-link:hover { color: #111; }
+        .tab-link.active { color: #111; border-color: #111; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ─── TABLES ─── */
+        .table-wrap { background: white; border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: #F9FAFB; padding: 16px 24px; font-size: 11px; font-weight: 700; color: #4B5563; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #E5E7EB; }
+        td { padding: 18px 24px; font-size: 14px; border-bottom: 1px solid #F3F4F6; color: #111827; }
+        tr:last-child td { border-bottom: none; }
+        
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
+        .badge-active { background: #D1FAE5; color: #065F46; }
+        .badge-inactive { background: #F3F4F6; color: #374151; }
+        .badge-expired { background: #FEE2E2; color: #991B1B; }
+
+        /* ─── ACTIONS ─── */
+        .actions-cell { display: flex; align-items: center; gap: 8px; }
+        .icon-btn { width: 34px; height: 34px; border-radius: 7px; border: 1px solid #E5E7EB; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: #555; transition: .2s; }
+        .icon-btn:hover { background: #F3F4F6; color: #111; }
+        .icon-btn.primary:hover { background: #EFF6FF; color: #3B82F6; border-color: #BFDBFE; }
+        .icon-btn.danger:hover { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+        
+        .toggle-btn { height: 34px; padding: 0 14px; border-radius: 7px; border: 1px solid #E5E7EB; background: white; font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; color: #555; transition: .2s; }
+        .toggle-btn:hover { background: #F3F4F6; color: #111; }
+
+        /* ─── EMPTY STATE ─── */
+        .empty-state { padding: 80px; text-align: center; }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+        .empty-state p { font-size: 14px; color: #999; }
+
+        /* ─── DRAWER OVERLAYS (RIGHT PANEL SLIDE-IN) ─── */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); z-index: 9000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .modal-overlay.drawer-overlay { justify-content: flex-end; align-items: stretch; }
+        .modal-overlay.drawer-overlay .create-modal {
+            max-width: 500px;
+            width: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            border-radius: 24px 0 0 24px;
+            margin: 0;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            background: white;
+            padding: 36px 40px;
+            overflow-y: auto;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.08);
+        }
+        .modal-overlay.drawer-overlay.active .create-modal { transform: translateX(0); }
+
+        .create-modal { background: white; border-radius: 20px; padding: 36px 40px; max-width: 580px; width: 95%; box-shadow: 0 24px 80px rgba(0,0,0,0.18); max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .modal-title { font-size: 20px; font-weight: 800; }
+        .modal-close { width: 34px; height: 34px; border-radius: 8px; border: 1px solid #E5E7EB; background: white; cursor: pointer; font-size: 18px; color: #888; display: flex; align-items: center; justify-content: center; transition: .2s; }
+        .modal-close:hover { background: #F3F4F6; color: #111; }
+
+        /* ─── FORM ─── */
+        .form-grid { display: flex; flex-direction: column; gap: 18px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 11px; font-weight: 700; color: #4B5563; letter-spacing: 0.5px; text-transform: uppercase; }
+        .form-control { height: 44px; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 0 14px; font-size: 14px; font-family: 'Inter', sans-serif; color: #111; outline: none; transition: border-color .2s; background: #FAFAFA; width: 100%; }
+        .form-control:focus { border-color: #111; background: white; }
+        .hint { font-size: 11px; color: #9CA3AF; margin-top: 2px; }
+
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #F9FAFB; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 12px 16px; }
+        .toggle-row span { font-size: 14px; font-weight: 500; color: #374151; }
+        
+        /* Switch Slider */
+        .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background: #D1D5DB; border-radius: 26px; transition: .3s; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background: #111; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .submit-row { display: flex; gap: 12px; margin-top: 24px; }
+        .btn-primary { flex: 1; height: 48px; background: #111; color: white; border: none; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: .2s; }
+        .btn-primary:hover { background: #374151; }
+        .btn-secondary { height: 48px; padding: 0 24px; background: white; border: 1px solid #E5E7EB; color: #374151; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; transition: .2s; }
+        .btn-secondary:hover { background: #F9FAFB; }
+
+        /* ─── TOASTS ─── */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 300px; padding: 14px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; animation: slideIn .35s ease; box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+        .toast.success { background: #ECFDF5; border: 1px solid #D1FAE5; color: #065F46; }
+        .toast.error   { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+        @keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+
+        /* ─── DELETE MODAL ─── */
+        .delete-modal { background: white; border-radius: 20px; padding: 44px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 24px 80px rgba(0,0,0,0.18); }
+        .delete-icon { font-size: 40px; margin-bottom: 20px; }
+        .delete-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+        .delete-desc { font-size: 13px; color: #777; margin-bottom: 28px; line-height: 1.6; }
+        .delete-actions { display: flex; gap: 12px; }
+        .btn-danger { flex: 1; height: 48px; background: #DC2626; color: white; border: none; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; transition: .2s; }
+        .btn-danger:hover { background: #B91C1C; }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <div class="logo-icon">Bx</div>
+                <div><h2>Begnex</h2><p>ADMIN PANEL</p></div>
+            </div>
+            <div class="menu">
+                <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
+                <a href="{% url 'admin_orders' %}">📦 Orders</a>
+                <a href="{% url 'admin_products' %}">👜 Products</a>
+                <a href="{% url 'admin_categories' %}">🏷 Categories</a>
+                <a href="{% url 'admin_user_list' %}">👥 Users</a>
+                <a href="{% url 'admin_coupons' %}">🎟 Coupons</a>
+                <a href="{% url 'admin_offers' %}" class="active">🎁 Offers</a>
+                <a href="{% url 'sales_report' %}">📈 Sales Report</a>
+                <a href="{% url 'admin_reviews' %}">⭐ Reviews</a>
+            </div>
+        </div>
+        <div class="sidebar-bottom">
+            <div class="admin-profile">
+                <div class="admin-avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</div>
+                <div>
+                    <h4>{{ request.user.first_name|default:request.user.username }}</h4>
+                    <p>{{ request.user.email }}</p>
+                </div>
+            </div>
+            <form action="{% url 'admin_logout' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1>Offers Management</h1>
+                <p>Manage product-specific discounts and category-wide promotional offers</p>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'admin_referrals' %}" class="add-btn" style="background: #4F7DF3; color: white; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;"><i class="fa-solid fa-gift"></i> Referral Offers</a>
+                <button class="add-btn" onclick="openProductOfferCreateModal()"><i class="fa-solid fa-plus"></i> Add Product Offer</button>
+                <button class="add-btn" onclick="openCategoryOfferCreateModal()"><i class="fa-solid fa-plus"></i> Add Category Offer</button>
+            </div>
+        </div>
+
+        <div class="content">
+
+        <!-- TABS -->
+        <div class="tabs-header">
+            <button class="tab-link active" onclick="switchTab(event, 'productOffersTab')">Product Offers</button>
+            <button class="tab-link" onclick="switchTab(event, 'categoryOffersTab')">Category Offers</button>
+        </div>
+
+        <!-- TAB: PRODUCT OFFERS -->
+        <div id="productOffersTab" class="tab-content active">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Discount</th>
+                            <th>Valid Period</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for offer in product_offers %}
+                        <tr>
+                            <td style="font-weight: 600;">{{ offer.product.name }}</td>
+                            <td style="font-weight: 700; color: #059669;">{{ offer.discount_percentage }}% OFF</td>
+                            <td style="font-size: 13px; color: #4B5563;">
+                                {{ offer.valid_from|date:"d M Y" }} to {{ offer.valid_until|date:"d M Y" }}
+                            </td>
+                            <td>
+                                {% if offer.valid_until < today %}
+                                    <span class="badge badge-expired">Expired</span>
+                                {% elif offer.is_active %}
+                                    <span class="badge badge-active">Active</span>
+                                {% else %}
+                                    <span class="badge badge-inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="actions-cell">
+                                    <form method="POST" action="{% url 'admin_product_offer_toggle' offer.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="toggle-btn">
+                                            {% if offer.is_active %}Deactivate{% else %}Activate{% endif %}
+                                        </button>
+                                    </form>
+                                    <button class="icon-btn primary" title="Edit Offer" onclick="openProductOfferEditModal({
+                                        id: {{ offer.id }},
+                                        product_id: {{ offer.product.id }},
+                                        discount_percentage: {{ offer.discount_percentage }},
+                                        valid_from: '{{ offer.valid_from|date:"Y-m-d" }}',
+                                        valid_until: '{{ offer.valid_until|date:"Y-m-d" }}',
+                                        is_active: {% if offer.is_active %}true{% else %}false{% endif %}
+                                    })"><i class="fa-regular fa-pen-to-square"></i></button>
+                                    <button class="icon-btn danger" title="Delete Offer" onclick="openDeleteModal('product', {{ offer.id }}, '{{ offer.product.name|escapejs }}')"><i class="fa-regular fa-trash-can"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🎁</div>
+                                    <p>No product offers created yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: CATEGORY OFFERS -->
+        <div id="categoryOffersTab" class="tab-content">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Discount</th>
+                            <th>Valid Period</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for offer in category_offers %}
+                        <tr>
+                            <td style="font-weight: 600;">{{ offer.category.name }}</td>
+                            <td style="font-weight: 700; color: #059669;">{{ offer.discount_percentage }}% OFF</td>
+                            <td style="font-size: 13px; color: #4B5563;">
+                                {{ offer.valid_from|date:"d M Y" }} to {{ offer.valid_until|date:"d M Y" }}
+                            </td>
+                            <td>
+                                {% if offer.valid_until < today %}
+                                    <span class="badge badge-expired">Expired</span>
+                                {% elif offer.is_active %}
+                                    <span class="badge badge-active">Active</span>
+                                {% else %}
+                                    <span class="badge badge-inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="actions-cell">
+                                    <form method="POST" action="{% url 'admin_category_offer_toggle' offer.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="toggle-btn">
+                                            {% if offer.is_active %}Deactivate{% else %}Activate{% endif %}
+                                        </button>
+                                    </form>
+                                    <button class="icon-btn primary" title="Edit Offer" onclick="openCategoryOfferEditModal({
+                                        id: {{ offer.id }},
+                                        category_id: {{ offer.category.id }},
+                                        discount_percentage: {{ offer.discount_percentage }},
+                                        valid_from: '{{ offer.valid_from|date:"Y-m-d" }}',
+                                        valid_until: '{{ offer.valid_until|date:"Y-m-d" }}',
+                                        is_active: {% if offer.is_active %}true{% else %}false{% endif %}
+                                    })"><i class="fa-regular fa-pen-to-square"></i></button>
+                                    <button class="icon-btn danger" title="Delete Offer" onclick="openDeleteModal('category', {{ offer.id }}, '{{ offer.category.name|escapejs }}')"><i class="fa-regular fa-trash-can"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🏷️</div>
+                                    <p>No category offers created yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+    </main>
+
+    <!-- ─── PRODUCT OFFER CREATE MODAL (DRAWER) ─── -->
+    <div class="modal-overlay drawer-overlay" id="productOfferCreateModal">
+        <div class="create-modal">
+            <div class="modal-header">
+                <div class="modal-title">🎁 Add Product Offer</div>
+                <button class="modal-close" onclick="closeProductOfferCreateModal()">✕</button>
+            </div>
+            <form method="POST" action="{% url 'admin_product_offer_create' %}" id="productOfferCreateForm" novalidate>
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="prod_create_select">Select Product *</label>
+                        <select name="product_id" id="prod_create_select" class="form-control">
+                            <option value="">-- Choose Product --</option>
+                            {% for p in products %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="prod_create_percentage">Discount Percentage *</label>
+                        <input type="number" name="discount_percentage" id="prod_create_percentage" class="form-control" placeholder="e.g. 15" min="1" max="99">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod_create_from">Valid From *</label>
+                        <input type="date" name="valid_from" id="prod_create_from" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod_create_until">Valid Until *</label>
+                        <input type="date" name="valid_until" id="prod_create_until" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <div class="toggle-row">
+                            <span>Activate offer immediately</span>
+                            <label class="switch">
+                                <input type="checkbox" name="is_active" id="prod_create_active" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="submit-row">
+                        <button type="submit" class="btn-primary" id="prodCreateSubmitBtn">Add Offer</button>
+                        <button type="button" class="btn-secondary" onclick="closeProductOfferCreateModal()">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── CATEGORY OFFER CREATE MODAL (DRAWER) ─── -->
+    <div class="modal-overlay drawer-overlay" id="categoryOfferCreateModal">
+        <div class="create-modal">
+            <div class="modal-header">
+                <div class="modal-title">🏷️ Add Category Offer</div>
+                <button class="modal-close" onclick="closeCategoryOfferCreateModal()">✕</button>
+            </div>
+            <form method="POST" action="{% url 'admin_category_offer_create' %}" id="categoryOfferCreateForm" novalidate>
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="cat_create_select">Select Category *</label>
+                        <select name="category_id" id="cat_create_select" class="form-control">
+                            <option value="">-- Choose Category --</option>
+                            {% for c in categories %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cat_create_percentage">Discount Percentage *</label>
+                        <input type="number" name="discount_percentage" id="cat_create_percentage" class="form-control" placeholder="e.g. 20" min="1" max="99">
+                    </div>
+                    <div class="form-group">
+                        <label for="cat_create_from">Valid From *</label>
+                        <input type="date" name="valid_from" id="cat_create_from" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="cat_create_until">Valid Until *</label>
+                        <input type="date" name="valid_until" id="cat_create_until" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <div class="toggle-row">
+                            <span>Activate offer immediately</span>
+                            <label class="switch">
+                                <input type="checkbox" name="is_active" id="cat_create_active" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="submit-row">
+                        <button type="submit" class="btn-primary" id="catCreateSubmitBtn">Add Offer</button>
+                        <button type="button" class="btn-secondary" onclick="closeCategoryOfferCreateModal()">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── PRODUCT OFFER EDIT MODAL (DRAWER) ─── -->
+    <div class="modal-overlay drawer-overlay" id="productOfferEditModal">
+        <div class="create-modal">
+            <div class="modal-header">
+                <div class="modal-title">🎁 Edit Product Offer</div>
+                <button class="modal-close" onclick="closeProductOfferEditModal()">✕</button>
+            </div>
+            <form method="POST" action="" id="productOfferEditForm" novalidate>
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="prod_edit_select">Select Product *</label>
+                        <select name="product_id" id="prod_edit_select" class="form-control">
+                            {% for p in products %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="prod_edit_percentage">Discount Percentage *</label>
+                        <input type="number" name="discount_percentage" id="prod_edit_percentage" class="form-control" min="1" max="99">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod_edit_from">Valid From *</label>
+                        <input type="date" name="valid_from" id="prod_edit_from" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod_edit_until">Valid Until *</label>
+                        <input type="date" name="valid_until" id="prod_edit_until" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <div class="toggle-row">
+                            <span>Activate offer</span>
+                            <label class="switch">
+                                <input type="checkbox" name="is_active" id="prod_edit_active">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="submit-row">
+                        <button type="submit" class="btn-primary" id="prodEditSubmitBtn">Save Changes</button>
+                        <button type="button" class="btn-secondary" onclick="closeProductOfferEditModal()">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── CATEGORY OFFER EDIT MODAL (DRAWER) ─── -->
+    <div class="modal-overlay drawer-overlay" id="categoryOfferEditModal">
+        <div class="create-modal">
+            <div class="modal-header">
+                <div class="modal-title">🏷️ Edit Category Offer</div>
+                <button class="modal-close" onclick="closeCategoryOfferEditModal()">✕</button>
+            </div>
+            <form method="POST" action="" id="categoryOfferEditForm" novalidate>
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="cat_edit_select">Select Category *</label>
+                        <select name="category_id" id="cat_edit_select" class="form-control">
+                            {% for c in categories %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cat_edit_percentage">Discount Percentage *</label>
+                        <input type="number" name="discount_percentage" id="cat_edit_percentage" class="form-control" min="1" max="99">
+                    </div>
+                    <div class="form-group">
+                        <label for="cat_edit_from">Valid From *</label>
+                        <input type="date" name="valid_from" id="cat_edit_from" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="cat_edit_until">Valid Until *</label>
+                        <input type="date" name="valid_until" id="cat_edit_until" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <div class="toggle-row">
+                            <span>Activate offer</span>
+                            <label class="switch">
+                                <input type="checkbox" name="is_active" id="cat_edit_active">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="submit-row">
+                        <button type="submit" class="btn-primary" id="catEditSubmitBtn">Save Changes</button>
+                        <button type="button" class="btn-secondary" onclick="closeCategoryOfferEditModal()">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── DELETE CONFIRM MODAL ─── -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="delete-modal">
+            <div class="delete-icon">🗑️</div>
+            <div class="delete-title">Delete Offer?</div>
+            <div class="delete-desc" id="deleteDesc">
+                Are you sure you want to permanently delete this offer?
+            </div>
+            <form method="POST" id="deleteForm">
+                {% csrf_token %}
+                <div class="delete-actions">
+                    <button type="submit" class="btn-danger">Delete</button>
+                    <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        /* TOAST NOTIFICATION */
+        function showToast(msg, isError = false) {
+            const container = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast ${isError ? 'error' : 'success'}`;
+            t.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-xmark' : 'fa-circle-check'}"></i><span>${msg}</span>`;
+            container.appendChild(t);
+            setTimeout(() => {
+                t.remove();
+            }, 4000);
+        }
+
+        {% if messages %}
+            {% for message in messages %}
+                showToast("{{ message|escapejs }}", {% if 'error' in message.tags %}true{% else %}false{% endif %});
+            {% endfor %}
+        {% endif %}
+
+        /* SWITCH TABS */
+        function switchTab(e, tabId) {
+            document.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            
+            e.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        /* PRODUCT OFFER CREATE DRAWERS */
+        function openProductOfferCreateModal() {
+            document.getElementById('productOfferCreateModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('prod_create_from').min = today;
+            document.getElementById('prod_create_until').min = today;
+        }
+        function closeProductOfferCreateModal() {
+            document.getElementById('productOfferCreateModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        /* CATEGORY OFFER CREATE DRAWERS */
+        function openCategoryOfferCreateModal() {
+            document.getElementById('categoryOfferCreateModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('cat_create_from').min = today;
+            document.getElementById('cat_create_until').min = today;
+        }
+        function closeCategoryOfferCreateModal() {
+            document.getElementById('categoryOfferCreateModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        /* PRODUCT OFFER EDIT DRAWERS */
+        function openProductOfferEditModal(offer) {
+            var actionUrl = "{% url 'admin_product_offer_edit' 0 %}".replace('/0/', '/' + offer.id + '/');
+            document.getElementById('productOfferEditForm').action = actionUrl;
+            document.getElementById('prod_edit_select').value = offer.product_id;
+            document.getElementById('prod_edit_percentage').value = offer.discount_percentage;
+            document.getElementById('prod_edit_from').value = offer.valid_from;
+            document.getElementById('prod_edit_until').value = offer.valid_until;
+            document.getElementById('prod_edit_active').checked = offer.is_active;
+
+            document.getElementById('productOfferEditModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeProductOfferEditModal() {
+            document.getElementById('productOfferEditModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        /* CATEGORY OFFER EDIT DRAWERS */
+        function openCategoryOfferEditModal(offer) {
+            var actionUrl = "{% url 'admin_category_offer_edit' 0 %}".replace('/0/', '/' + offer.id + '/');
+            document.getElementById('categoryOfferEditForm').action = actionUrl;
+            document.getElementById('cat_edit_select').value = offer.category_id;
+            document.getElementById('cat_edit_percentage').value = offer.discount_percentage;
+            document.getElementById('cat_edit_from').value = offer.valid_from;
+            document.getElementById('cat_edit_until').value = offer.valid_until;
+            document.getElementById('cat_edit_active').checked = offer.is_active;
+
+            document.getElementById('categoryOfferEditModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeCategoryOfferEditModal() {
+            document.getElementById('categoryOfferEditModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        /* DELETE CONFIRM MODAL */
+        function openDeleteModal(type, offerId, name) {
+            var deleteUrl = "";
+            if (type === 'product') {
+                deleteUrl = "{% url 'admin_product_offer_delete' 0 %}".replace('/0/', '/' + offerId + '/');
+            } else {
+                deleteUrl = "{% url 'admin_category_offer_delete' 0 %}".replace('/0/', '/' + offerId + '/');
+            }
+            document.getElementById('deleteForm').action = deleteUrl;
+            document.getElementById('deleteDesc').innerHTML = `Are you sure you want to permanently delete the offer for <b>${name}</b>? This action cannot be undone.`;
+            document.getElementById('deleteModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        /* DATE MIN LIMIT UPDATES */
+        document.getElementById('prod_create_from').addEventListener('change', function() {
+            document.getElementById('prod_create_until').min = this.value;
+        });
+        document.getElementById('cat_create_from').addEventListener('change', function() {
+            document.getElementById('cat_create_until').min = this.value;
+        });
+        document.getElementById('prod_edit_from').addEventListener('change', function() {
+            document.getElementById('prod_edit_until').min = this.value;
+        });
+        document.getElementById('cat_edit_from').addEventListener('change', function() {
+            document.getElementById('cat_edit_until').min = this.value;
+        });
+
+        /* CLIENT SIDE VALIDATIONS */
+        function validateOfferForm(productId, pctInput, fromInput, untilInput) {
+            var errors = [];
+            var pct = parseInt(pctInput.value);
+
+            if (!productId.value) errors.push("Product/Category selection is required.");
+            if (!pctInput.value) {
+                errors.push("Discount percentage is required.");
+            } else if (isNaN(pct) || pct < 1 || pct > 99) {
+                errors.push("Discount percentage must be between 1 and 99.");
+            }
+            if (!fromInput.value) errors.push("Valid from date is required.");
+            if (!untilInput.value) errors.push("Valid until date is required.");
+            if (fromInput.value && untilInput.value && untilInput.value < fromInput.value) {
+                errors.push("Valid until date must be after valid from date.");
+            }
+            return errors;
+        }
+
+        document.getElementById('productOfferCreateForm').addEventListener('submit', function(e) {
+            var errors = validateOfferForm(
+                document.getElementById('prod_create_select'),
+                document.getElementById('prod_create_percentage'),
+                document.getElementById('prod_create_from'),
+                document.getElementById('prod_create_until')
+            );
+            if (errors.length > 0) {
+                e.preventDefault();
+                errors.forEach(err => showToast(err, true));
+            }
+        });
+        document.getElementById('categoryOfferCreateForm').addEventListener('submit', function(e) {
+            var errors = validateOfferForm(
+                document.getElementById('cat_create_select'),
+                document.getElementById('cat_create_percentage'),
+                document.getElementById('cat_create_from'),
+                document.getElementById('cat_create_until')
+            );
+            if (errors.length > 0) {
+                e.preventDefault();
+                errors.forEach(err => showToast(err, true));
+            }
+        });
+        document.getElementById('productOfferEditForm').addEventListener('submit', function(e) {
+            var errors = validateOfferForm(
+                document.getElementById('prod_edit_select'),
+                document.getElementById('prod_edit_percentage'),
+                document.getElementById('prod_edit_from'),
+                document.getElementById('prod_edit_until')
+            );
+            if (errors.length > 0) {
+                e.preventDefault();
+                errors.forEach(err => showToast(err, true));
+            }
+        });
+        document.getElementById('categoryOfferEditForm').addEventListener('submit', function(e) {
+            var errors = validateOfferForm(
+                document.getElementById('cat_edit_select'),
+                document.getElementById('cat_edit_percentage'),
+                document.getElementById('cat_edit_from'),
+                document.getElementById('cat_edit_until')
+            );
+            if (errors.length > 0) {
+                e.preventDefault();
+                errors.forEach(err => showToast(err, true));
+            }
+        });
+
+        /* Close Modals on Overlay Clicks */
+        document.getElementById('productOfferCreateModal').addEventListener('click', function(e) { if (e.target === this) closeProductOfferCreateModal(); });
+        document.getElementById('categoryOfferCreateModal').addEventListener('click', function(e) { if (e.target === this) closeCategoryOfferCreateModal(); });
+        document.getElementById('productOfferEditModal').addEventListener('click', function(e) { if (e.target === this) closeProductOfferEditModal(); });
+        document.getElementById('categoryOfferEditModal').addEventListener('click', function(e) { if (e.target === this) closeCategoryOfferEditModal(); });
+        document.getElementById('deleteModal').addEventListener('click', function(e) { if (e.target === this) closeDeleteModal(); });
+
+        /* ESC Key Press */
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeProductOfferCreateModal();
+                closeCategoryOfferCreateModal();
+                closeProductOfferEditModal();
+                closeCategoryOfferEditModal();
+                closeDeleteModal();
+            }
+        });
+    </script>
+</body>
+</html>
