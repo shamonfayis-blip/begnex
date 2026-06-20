@@ -23,7 +23,7 @@ def wallet_details(request):
 
     return render(
         request,
-        "wallet/wallet_details.html",
+        "wallet/wallet_detail.html",
         {"wallet": wallet, "transactions": page_obj}
     )
 
