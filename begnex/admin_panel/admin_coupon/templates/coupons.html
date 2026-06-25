@@ -176,6 +176,32 @@
         .delete-actions { display: flex; gap: 12px; }
         .btn-danger { flex: 1; height: 48px; background: #DC2626; color: white; border: none; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: .2s; }
         .btn-danger:hover { background: #B91C1C; }
+
+        /* ─── TABS ─── */
+        .tab-bar { display: flex; gap: 4px; background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 5px; width: fit-content; margin-bottom: 28px; }
+        .tab-btn { height: 38px; padding: 0 22px; border: none; border-radius: 9px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; color: #777; background: transparent; display: flex; align-items: center; gap: 8px; transition: .2s; }
+        .tab-btn.active { background: #111; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+        .tab-btn .badge-count { background: rgba(255,255,255,0.25); color: inherit; padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .tab-btn:not(.active) .badge-count { background: #F3F4F6; color: #555; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ─── HISTORY TABLE extras ─── */
+        .code-pill-blue { display: inline-flex; align-items: center; gap: 7px; background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 8px; padding: 5px 12px; font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: #1E40AF; letter-spacing: 1px; }
+        .order-id-chip { font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: #111; background: #F3F4F6; border-radius: 6px; padding: 4px 10px; display: inline-block; }
+        .discount-val { font-weight: 700; color: #059669; font-size: 14px; }
+        .pay-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .pay-cod    { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+        .pay-online { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+        .pay-wallet { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+        .user-mini { display: flex; align-items: center; gap: 9px; }
+        .user-mini-avatar { width: 30px; height: 30px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+        .h-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px; }
+        .h-stat-card { background: white; border-radius: 14px; border: 1px solid #ECECEC; padding: 20px 22px; display: flex; align-items: center; gap: 16px; }
+        .h-stat-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .h-stat-info h5 { font-size: 11px; color: #888; letter-spacing: 1.3px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+        .h-stat-info h3 { font-size: 26px; font-weight: 800; }
+        .h-stat-info p  { font-size: 11px; color: #aaa; margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -222,15 +248,32 @@
                 <h1>Coupons</h1>
                 <p>Create and manage discount coupons</p>
             </div>
+            <button class="add-btn" onclick="openCreateModal()" id="topNewCouponBtn" {% if active_tab == 'history' %}style="display:none;"{% endif %}>
+                <i class="fa-solid fa-plus"></i> New Coupon
+            </button>
         </div>
 
         <div class="content">
+
+            <!-- TAB BAR -->
+            <div class="tab-bar">
+                <button class="tab-btn {% if active_tab != 'history' %}active{% endif %}" onclick="switchTab('coupons')" id="tab-coupons">
+                    🎟 Coupons
+                    <span class="badge-count">{{ total_coupons }}</span>
+                </button>
+                <button class="tab-btn {% if active_tab == 'history' %}active{% endif %}" onclick="switchTab('history')" id="tab-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Usage History
+                    <span class="badge-count">{{ history_total_uses }}</span>
+                </button>
+            </div>
+
+            <!-- ══ TAB: COUPONS ══ -->
+            <div class="tab-panel {% if active_tab != 'history' %}active{% endif %}" id="panel-coupons">
 
             <!-- STATS -->
             <div class="stats">
                 <div class="stat-card">
                     <h5>Total Coupons</h5>
-                    <h2>{{ total_coupons }}</h2>
                     <div class="stat-line"><span style="width:100%; background:#111;"></span></div>
                 </div>
                 <div class="stat-card">
@@ -248,11 +291,13 @@
                     <h2>{{ inactive_coupons }}</h2>
                     <div class="stat-line"><span style="width:{% if total_coupons > 0 %}{% widthratio inactive_coupons total_coupons 100 %}{% else %}0{% endif %}%; background:#9CA3AF;"></span></div>
                 </div>
+                
             </div>
 
             <!-- TOOLBAR -->
             <div class="toolbar">
                 <form class="search-form" method="GET" action="{% url 'admin_coupons' %}" id="filterForm">
+                    <input type="hidden" name="tab" value="coupons">
                     <div class="search-input-wrap">
                         <input type="text" name="q" placeholder="Search coupon code..." value="{{ search_query }}">
                     </div>
@@ -267,9 +312,6 @@
                         <a href="{% url 'admin_coupons' %}" class="clear-btn">✕ Clear</a>
                     {% endif %}
                 </form>
-                <button class="add-btn" onclick="openCreateModal()">
-                    <i class="fa-solid fa-plus"></i> New Coupon
-                </button>
             </div>
 
             <!-- TABLE -->
@@ -443,6 +485,133 @@
                 </div>
                 {% endif %}
             </div>
+
+            </div><!-- /panel-coupons -->
+
+            <!-- ══ TAB: USAGE HISTORY ══ -->
+            <div class="tab-panel {% if active_tab == 'history' %}active{% endif %}" id="panel-history">
+
+
+                <!-- History Filters -->
+                <div class="toolbar">
+                    <form class="search-form" method="GET" action="{% url 'admin_coupons' %}" id="historyFilterForm">
+                        <input type="hidden" name="tab" value="history">
+                        <div class="search-input-wrap">
+                            <input type="text" name="hq" placeholder="Search coupon code..." value="{{ history_search }}">
+                        </div>
+                        <button type="submit" class="search-btn">Search</button>
+                        <select name="hcoupon" class="filter-select" onchange="document.getElementById('historyFilterForm').submit()">
+                            <option value="">All Coupons</option>
+                            {% for code in all_used_coupon_codes %}
+                                <option value="{{ code }}" {% if history_coupon_filter == code %}selected{% endif %}>{{ code }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if history_search or history_coupon_filter %}
+                            <a href="{% url 'admin_coupons' %}?tab=history" class="clear-btn">✕ Clear</a>
+                        {% endif %}
+                    </form>
+                </div>
+
+                <!-- History Table -->
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>ORDER ID</th>
+                                <th>CUSTOMER</th>
+                                <th>COUPON CODE</th>
+                                <th>ORDER TOTAL</th>
+                                <th>DISCOUNT GIVEN</th>
+                                <th>PAYMENT</th>
+                                <th>DATE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in history_page_obj %}
+                            <tr>
+                                <td style="color:#999; font-size:12px;">{{ forloop.counter|stringformat:"02d" }}</td>
+                                <td><span class="order-id-chip">#{{ order.order_id }}</span></td>
+                                <td>
+                                    <div class="user-mini">
+                                        <div class="user-mini-avatar">{{ order.user.first_name|default:order.user.username|slice:":1"|upper }}</div>
+                                        <div>
+                                            <div style="font-weight:600; font-size:13px;">{{ order.user.get_full_name|default:order.user.username }}</div>
+                                            <div style="font-size:11px; color:#888;">{{ order.user.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="code-pill-blue">
+                                        <i class="fa-solid fa-ticket" style="font-size:10px;"></i>
+                                        {{ order.coupon_code }}
+                                    </span>
+                                </td>
+                                <td style="font-weight:700;">₹{{ order.total|floatformat:2 }}</td>
+                                <td><span class="discount-val">−₹{{ order.coupon_discount|floatformat:2 }}</span></td>
+                                <td>
+                                    {% if order.payment_method == "cod" %}
+                                        <span class="pay-badge pay-cod">COD</span>
+                                    {% elif order.payment_method == "online" %}
+                                        <span class="pay-badge pay-online">Online</span>
+                                    {% elif order.payment_method == "wallet" %}
+                                        <span class="pay-badge pay-wallet">Wallet</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size:12px; color:#555;">
+                                    <div>{{ order.created_at|date:"d M Y" }}</div>
+                                    <div style="color:#999;">{{ order.created_at|date:"h:i A" }}</div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">🎟</div>
+                                        <p>
+                                            {% if history_search or history_coupon_filter %}
+                                                No records found for the applied filters.
+                                            {% else %}
+                                                No coupons have been used in any orders yet.
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% if history_page_obj.paginator.num_pages > 1 %}
+                    <div class="pagination-wrap">
+                        <div class="page-info">
+                            Showing {{ history_page_obj.start_index }}–{{ history_page_obj.end_index }}
+                            of {{ history_page_obj.paginator.count }} records
+                        </div>
+                        <div class="page-links">
+                            {% if history_page_obj.has_previous %}
+                                <a href="?tab=history&hpage={{ history_page_obj.previous_page_number }}&hq={{ history_search }}&hcoupon={{ history_coupon_filter }}">‹</a>
+                            {% else %}
+                                <span class="disabled">‹</span>
+                            {% endif %}
+                            {% for num in history_page_obj.paginator.page_range %}
+                                {% if num == history_page_obj.number %}
+                                    <span class="current-page">{{ num }}</span>
+                                {% elif num >= history_page_obj.number|add:"-2" and num <= history_page_obj.number|add:"2" %}
+                                    <a href="?tab=history&hpage={{ num }}&hq={{ history_search }}&hcoupon={{ history_coupon_filter }}">{{ num }}</a>
+                                {% endif %}
+                            {% endfor %}
+                            {% if history_page_obj.has_next %}
+                                <a href="?tab=history&hpage={{ history_page_obj.next_page_number }}&hq={{ history_search }}&hcoupon={{ history_coupon_filter }}">›</a>
+                            {% else %}
+                                <span class="disabled">›</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div><!-- /panel-history -->
 
         </div>
     </main>
@@ -680,6 +849,19 @@
         {% for message in messages %}
             showToast("{{ message|escapejs }}", {% if 'error' in message.tags %}true{% else %}false{% endif %});
         {% endfor %}
+
+        /* ─── TAB SWITCHER ─── */
+        function switchTab(tab) {
+            // panels
+            document.getElementById('panel-coupons').classList.toggle('active', tab === 'coupons');
+            document.getElementById('panel-history').classList.toggle('active', tab === 'history');
+            // tab buttons
+            document.getElementById('tab-coupons').classList.toggle('active', tab === 'coupons');
+            document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+            // New Coupon button in topbar
+            var newBtn = document.getElementById('topNewCouponBtn');
+            if (newBtn) newBtn.style.display = tab === 'history' ? 'none' : 'flex';
+        }
 
         /* ─── CREATE MODAL ─── */
         function openCreateModal() {

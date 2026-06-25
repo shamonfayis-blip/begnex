@@ -7,6 +7,11 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.core.paginator import Paginator
 
+from .email_utils import (
+    send_order_cancelled_email,
+    send_item_cancelled_email,
+)
+
 from admin_panel.admin_order.models import Order, OrderItem
 
 
@@ -123,6 +128,7 @@ def cancel_order(request, order_pk):
 
     reason = request.POST.get("cancel_reason", "").strip()
 
+    actual_refund = 0  
     try:
         with transaction.atomic():
             refund_amount = order.total
@@ -147,12 +153,20 @@ def cancel_order(request, order_pk):
                         item.variant.stock += active_qty
                         item.variant.save()
 
-            # Process refund if order is paid
+           
             if order.payment_status == "paid":
                 from user.wallet.utils import refund_to_wallet
                 refund_to_wallet(request.user, refund_amount, f"Refund for cancelled Order #{order.order_id}")
                 order.payment_status = "refunded"
                 order.save()
+                actual_refund = refund_amount
+
+        
+        send_order_cancelled_email(
+            user=request.user,
+            order=order,
+            refund_amount=actual_refund,
+        )
 
         messages.success(
             request,
@@ -187,6 +201,7 @@ def cancel_order_item(request, item_pk):
         cancel_qty = active_qty
     cancel_qty = max(1, min(cancel_qty, active_qty))  #clamp limit
 
+    actual_refund = 0
     try:
         with transaction.atomic():
             old_total = order.total
@@ -241,14 +256,24 @@ def cancel_order_item(request, item_pk):
 
             order.save()
 
-            # Process refund if order is paid and total decreased
+           
             refund_amount = old_total - order.total
             if refund_amount > 0 and order.payment_status == "paid":
                 from user.wallet.utils import refund_to_wallet
                 refund_to_wallet(request.user, refund_amount, f"Refund for cancelled units of {item.product_name} in Order #{order.order_id}")
+                actual_refund = refund_amount
                 if not active_items:
                     order.payment_status = "refunded"
                     order.save()
+
+        
+        send_item_cancelled_email(
+            user=request.user,
+            order=order,
+            item=item,
+            cancel_qty=cancel_qty,
+            refund_amount=actual_refund,
+        )
 
         if cancel_qty == active_qty:
             messages.success(

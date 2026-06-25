@@ -202,7 +202,7 @@ def checkout_apply_coupon_api(request):
                 "message": f"Minimum order amount of \u20b9{coupon.min_order_amount:.0f} required for this coupon."
             })
 
-    # Calculate discount preview
+    
     from decimal import Decimal
     subtotal_dec = Decimal(str(cart_subtotal))
     if coupon.discount_type == "percentage":
@@ -318,6 +318,8 @@ def place_order(request):
                 city=address.city,
                 state=address.state,
                 pincode=address.pincode,
+                coupon_code=coupon_obj.code if coupon_obj else None,
+                coupon_discount=discount if coupon_obj else 0,
                 subtotal=subtotal,
                 discount=discount,
                 shipping_charge=shipping_charge,
@@ -374,7 +376,7 @@ def place_order(request):
 @login_required(login_url="login")
 @require_POST
 def initiate_razorpay_payment(request):
-    """AJAX API to calculate totals and create Razorpay order without creating Django order yet."""
+    
     address_id = request.POST.get("address_id")
     coupon_code = request.POST.get("coupon_code", "").strip()
     
@@ -388,7 +390,7 @@ def initiate_razorpay_payment(request):
         return JsonResponse({"success": False, "message": "Your cart is empty."})
 
     try:
-        # Validate stock and active status first
+       
         cart_items = list(cart.items.select_related('variant', 'variant__product').all())
         for item in cart_items:
             is_active = (
@@ -426,10 +428,9 @@ def initiate_razorpay_payment(request):
         total = subtotal + shipping_charge - discount
         total = max(0, total)
 
-        # Generate unique temporary receipt ID
+       
         receipt_id = f"rcpt_{request.user.id}_{int(timezone.now().timestamp())}"[:40]
 
-        # Initialize Razorpay Client
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
         from decimal import Decimal
         amount_paise = int((total * Decimal('100')).to_integral_value())
@@ -465,7 +466,7 @@ def initiate_razorpay_payment(request):
 @login_required(login_url="login")
 @require_POST
 def verify_razorpay_payment(request):
-    """AJAX API to verify Razorpay signature and only then create Django order & clear cart."""
+    
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -489,7 +490,7 @@ def verify_razorpay_payment(request):
     }
 
     try:
-        # Verify the Razorpay payment signature
+        
         client.utility.verify_payment_signature(params_dict)
     except razorpay.errors.SignatureVerificationError:
         return JsonResponse({"success": False, "message": "Payment signature verification failed."})
@@ -514,7 +515,7 @@ def verify_razorpay_payment(request):
         with transaction.atomic():
             cart_items = list(cart.items.select_related('variant', 'variant__product').all())
             
-            # Re-verify stock and active status inside database transaction
+           
             for item in cart_items:
                 is_active = (
                     item.variant.is_active
@@ -552,14 +553,14 @@ def verify_razorpay_payment(request):
             total = subtotal + shipping_charge - discount
             total = max(0, total)
 
-            # Generate unique order id in Django
+           
             order_id = generate_unique_order_id()
 
             addr_lines = [address.address_line_1]
             if address.address_line_2:
                 addr_lines.append(address.address_line_2)
 
-            # Create Order
+            
             order = Order.objects.create(
                 order_id=order_id,
                 user=request.user,
@@ -572,6 +573,8 @@ def verify_razorpay_payment(request):
                 city=address.city,
                 state=address.state,
                 pincode=address.pincode,
+                coupon_code=coupon_obj.code if coupon_obj else None,
+                coupon_discount=discount if coupon_obj else 0,
                 subtotal=subtotal,
                 discount=discount,
                 shipping_charge=shipping_charge,
@@ -581,7 +584,7 @@ def verify_razorpay_payment(request):
                 razorpay_signature=signature
             )
 
-            # Decrement stock and create OrderItems
+          
             for item in cart_items:
                 variant = item.variant
                 variant.stock -= item.quantity
@@ -598,10 +601,10 @@ def verify_razorpay_payment(request):
                     subtotal=item.get_subtotal()
                 )
 
-            # Clear user's cart
+          
             cart.items.all().delete()
 
-            # Increment coupon usage count
+            
             if coupon_obj:
                 coupon_obj.used_count += 1
                 coupon_obj.save(update_fields=["used_count"])
@@ -638,7 +641,7 @@ def verify_razorpay_payment(request):
 @login_required(login_url="login")
 @require_POST
 def checkout_delete_address_api(request, id):
-    """AJAX API to delete an address during checkout."""
+  
     address = get_object_or_404(Address, id=id, user=request.user)
     try:
         address.delete()

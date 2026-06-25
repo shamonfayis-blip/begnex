@@ -58,7 +58,6 @@ def admin_dashboard_view(request):
     from django.db.models.functions import TruncDate, TruncMonth
 
     total_users = User.objects.filter(is_staff=False).count()
-    
    
     active_orders = Order.objects.exclude(status="cancelled")
     
@@ -67,7 +66,7 @@ def admin_dashboard_view(request):
     pending_orders = Order.objects.filter(status="pending").count()
     
     
-    chart_filter = request.GET.get("chart_filter", "monthly") # yearly, monthly, weekly
+    chart_filter = request.GET.get("chart_filter", "monthly")
     today = timezone.now().date()
     
     labels = []
@@ -86,7 +85,7 @@ def admin_dashboard_view(request):
         daily_map = {row["day"]: row["total"] for row in daily_stats}
         for i in range(7):
             d = start_date + timedelta(days=i)
-            labels.append(d.strftime("%a")) # Mon, Tue, etc.
+            labels.append(d.strftime("%a")) 
             values.append(float(daily_map.get(d, 0) or 0))
             
     elif chart_filter == "monthly":
@@ -392,7 +391,7 @@ def sales_report_view(request):
             fontName='Helvetica-Bold',
             fontSize=18,
             leading=22,
-            textColor=colors.HexColor('#111827'),
+            textColor=colors.HexColor("#000000"),
             alignment=1, 
         )
         subtitle_style = ParagraphStyle(
@@ -447,7 +446,7 @@ def sales_report_view(request):
         summary_table = Table(summary_data, colWidths=[108, 108, 108, 108, 108])
         summary_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#F3F4F6')),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#374151')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#000000")),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
             ('FONTSIZE', (0,0), (-1,0), 9),
             ('BOTTOMPADDING', (0,0), (-1,-1), 8),

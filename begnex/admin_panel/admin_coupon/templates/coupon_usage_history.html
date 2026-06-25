@@ -1,0 +1,341 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Begnex Admin — Coupon Usage History</title>
+    <meta name="description" content="View the full history of coupon usage across all orders.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #F5F5F5; display: flex; }
+        a { text-decoration: none; color: inherit; }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar { width: 260px; height: 100vh; background: #FAFAFA; border-right: 1px solid #E5E7EB; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; position: fixed; left: 0; top: 0; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 4px; }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .logo-icon { width: 32px; height: 32px; background: black; color: white; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 700; font-size: 14px; }
+        .logo h2 { font-size: 22px; font-weight: 700; }
+        .logo p { font-size: 10px; color: #777; letter-spacing: 2px; }
+        .menu { display: flex; flex-direction: column; gap: 3px; }
+        .menu a { height: 40px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-radius: 8px; font-size: 14px; color: #555; transition: .2s; }
+        .menu a:hover, .menu .active { background: white; color: black; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .sidebar-bottom { border-top: 1px solid #E5E7EB; padding-top: 18px; }
+        .admin-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .admin-avatar { width: 42px; height: 42px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+        .admin-profile h4 { font-size: 14px; font-weight: 600; }
+        .admin-profile p { font-size: 11px; color: #777; }
+        .logout-btn { width: 100%; height: 42px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; color: #DC2626; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: .2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logout-btn:hover { background: #FEE2E2; }
+
+        /* ─── MAIN ─── */
+        .main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; }
+        .topbar { height: 72px; background: white; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; }
+        .topbar h1 { font-size: 22px; font-weight: 700; }
+        .topbar p { font-size: 12px; color: #777; margin-top: 2px; }
+        .back-btn { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 13px; font-weight: 600; color: #555; background: white; transition: .2s; cursor: pointer; }
+        .back-btn:hover { background: #F3F4F6; color: #111; }
+        .content { padding: 32px 40px; max-width: 1300px; margin: 0 auto; }
+
+        /* ─── STATS ─── */
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+        .stat-card { background: white; border-radius: 14px; border: 1px solid #ECECEC; padding: 22px 24px; }
+        .stat-card h5 { font-size: 11px; color: #888; letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; }
+        .stat-card h2 { font-size: 36px; font-weight: 800; margin-bottom: 6px; }
+        .stat-card .sub { font-size: 12px; color: #888; }
+        .stat-icon { float: right; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+        /* ─── TOOLBAR ─── */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .search-form { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; }
+        .search-input-wrap { display: flex; align-items: center; background: white; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; flex: 1; min-width: 220px; }
+        .search-input-wrap input { flex: 1; height: 44px; border: none; outline: none; padding: 0 16px; font-size: 14px; font-family: 'Inter', sans-serif; background: transparent; }
+        .search-input-wrap input::placeholder { color: #B0B0B0; }
+        .search-btn { height: 44px; padding: 0 20px; background: black; color: white; border: none; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 8px; font-family: 'Inter', sans-serif; }
+        .search-btn:hover { background: #333; }
+        .filter-select { height: 44px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 0 14px; font-size: 13px; font-family: 'Inter', sans-serif; color: #555; outline: none; background: white; cursor: pointer; min-width: 180px; }
+        .clear-btn { height: 44px; padding: 0 16px; background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; border-radius: 8px; font-family: 'Inter', sans-serif; }
+        .clear-btn:hover { background: #FEE2E2; }
+
+        /* ─── TABLE ─── */
+        .table-wrap { background: white; border-radius: 14px; border: 1px solid #ECECEC; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #F9FAFB; }
+        thead th { text-align: left; font-size: 11px; color: #888; letter-spacing: 1.5px; padding: 14px 20px; font-weight: 600; border-bottom: 1px solid #F3F4F6; }
+        tbody tr:hover { background: #FAFAFA; }
+        tbody td { padding: 14px 20px; border-bottom: 1px solid #F3F4F6; font-size: 14px; color: #222; vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+
+        /* ─── COUPON CODE PILL ─── */
+        .code-pill { display: inline-flex; align-items: center; gap: 8px; background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 8px; padding: 5px 12px; font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: #1E40AF; letter-spacing: 1px; }
+
+        /* ─── ORDER ID ─── */
+        .order-id { font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: #111; background: #F3F4F6; border-radius: 6px; padding: 4px 10px; display: inline-block; }
+
+        /* ─── DISCOUNT BADGE ─── */
+        .discount-val { font-weight: 700; color: #059669; font-size: 15px; }
+
+        /* ─── USER CELL ─── */
+        .user-cell { display: flex; align-items: center; gap: 10px; }
+        .user-avatar { width: 32px; height: 32px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+        .user-name { font-weight: 600; font-size: 13px; }
+        .user-email { font-size: 11px; color: #888; margin-top: 1px; }
+
+        /* ─── PAYMENT METHOD BADGE ─── */
+        .pay-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .pay-cod    { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+        .pay-online { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+        .pay-wallet { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+
+        /* ─── EMPTY STATE ─── */
+        .empty-state { padding: 80px; text-align: center; }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+        .empty-state p { font-size: 14px; color: #999; }
+
+        /* ─── PAGINATION ─── */
+        .pagination-wrap { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-top: 1px solid #F3F4F6; }
+        .page-info { font-size: 13px; color: #777; }
+        .page-links { display: flex; gap: 6px; }
+        .page-links a, .page-links span { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #E5E7EB; font-size: 13px; font-weight: 500; color: #555; background: white; transition: .2s; }
+        .page-links a:hover { background: #F3F4F6; }
+        .page-links .current-page { background: black; color: white; border-color: black; font-weight: 700; }
+        .page-links .disabled { opacity: 0.3; pointer-events: none; }
+
+        /* ─── TOAST ─── */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 300px; padding: 14px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; animation: slideIn .35s ease; box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+        .toast.success { background: #ECFDF5; border: 1px solid #D1FAE5; color: #065F46; }
+        .toast.error   { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+        @keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <div class="logo-icon">Bx</div>
+                <div><h2>Begnex</h2><p>ADMIN PANEL</p></div>
+            </div>
+            <div class="menu">
+                <a href="{% url 'admin_dashboard' %}">📊 Dashboard</a>
+                <a href="{% url 'admin_orders' %}">📦 Orders</a>
+                <a href="{% url 'admin_products' %}">👜 Products</a>
+                <a href="{% url 'admin_categories' %}">🏷 Categories</a>
+                <a href="{% url 'admin_user_list' %}">👥 Users</a>
+                <a href="{% url 'admin_coupons' %}" class="active">🎟 Coupons</a>
+                <a href="{% url 'admin_offers' %}">🎁 Offers</a>
+                <a href="{% url 'sales_report' %}">📈 Sales Report</a>
+                <a href="{% url 'admin_reviews' %}">⭐ Reviews</a>
+            </div>
+        </div>
+        <div class="sidebar-bottom">
+            <div class="admin-profile">
+                <div class="admin-avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</div>
+                <div>
+                    <h4>{{ request.user.first_name|default:request.user.username }}</h4>
+                    <p>{{ request.user.email }}</p>
+                </div>
+            </div>
+            <form action="{% url 'admin_logout' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1>Coupon Usage History</h1>
+                <p>All orders where a discount coupon was applied</p>
+            </div>
+            <a href="{% url 'admin_coupons' %}" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i> Back to Coupons
+            </a>
+        </div>
+
+        <div class="content">
+
+            <!-- STATS -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#EFF6FF; color:#1E40AF;">🎟</div>
+                    <h5>Total Coupon Uses</h5>
+                    <h2>{{ total_uses }}</h2>
+                    <div class="sub">Orders with coupon applied</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#ECFDF5; color:#065F46;">₹</div>
+                    <h5>Total Savings Given</h5>
+                    <h2>₹{{ total_savings|floatformat:0 }}</h2>
+                    <div class="sub">Total discount given to customers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#FEF3C7; color:#92400E;">🏷</div>
+                    <h5>Unique Coupons Used</h5>
+                    <h2>{{ unique_coupons }}</h2>
+                    <div class="sub">Distinct coupon codes redeemed</div>
+                </div>
+            </div>
+
+            <!-- TOOLBAR -->
+            <div class="toolbar">
+                <form class="search-form" method="GET" action="{% url 'admin_coupon_usage_history' %}" id="filterForm">
+                    <div class="search-input-wrap">
+                        <input type="text" name="q" placeholder="Search coupon code or order ID..." value="{{ search_query }}">
+                    </div>
+                    <button type="submit" class="search-btn">Search</button>
+                    <select name="coupon" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                        <option value="">All Coupons</option>
+                        {% for code in all_coupon_codes %}
+                            <option value="{{ code }}" {% if coupon_filter == code %}selected{% endif %}>{{ code }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if search_query or coupon_filter %}
+                        <a href="{% url 'admin_coupon_usage_history' %}" class="clear-btn">✕ Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>ORDER ID</th>
+                            <th>CUSTOMER</th>
+                            <th>COUPON CODE</th>
+                            <th>ORDER TOTAL</th>
+                            <th>DISCOUNT GIVEN</th>
+                            <th>PAYMENT</th>
+                            <th>DATE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in page_obj %}
+                        <tr>
+                            <td style="color:#999; font-size:12px;">{{ forloop.counter|stringformat:"02d" }}</td>
+
+                            <td>
+                                <span class="order-id">#{{ order.order_id }}</span>
+                            </td>
+
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar">{{ order.user.first_name|default:order.user.username|slice:":1"|upper }}</div>
+                                    <div>
+                                        <div class="user-name">{{ order.user.get_full_name|default:order.user.username }}</div>
+                                        <div class="user-email">{{ order.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="code-pill">
+                                    <i class="fa-solid fa-ticket" style="font-size:11px;"></i>
+                                    {{ order.coupon_code }}
+                                </span>
+                            </td>
+
+                            <td style="font-weight:700;">
+                                ₹{{ order.total|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                <span class="discount-val">−₹{{ order.coupon_discount|floatformat:2 }}</span>
+                            </td>
+
+                            <td>
+                                {% if order.payment_method == "cod" %}
+                                    <span class="pay-badge pay-cod">COD</span>
+                                {% elif order.payment_method == "online" %}
+                                    <span class="pay-badge pay-online">Online</span>
+                                {% elif order.payment_method == "wallet" %}
+                                    <span class="pay-badge pay-wallet">Wallet</span>
+                                {% endif %}
+                            </td>
+
+                            <td style="font-size:12px; color:#555;">
+                                <div>{{ order.created_at|date:"d M Y" }}</div>
+                                <div style="color:#999;">{{ order.created_at|date:"h:i A" }}</div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🎟</div>
+                                    <p>
+                                        {% if search_query or coupon_filter %}
+                                            No coupon usage found for the applied filters.
+                                        {% else %}
+                                            No coupons have been used in any orders yet.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- PAGINATION -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <div class="pagination-wrap">
+                    <div class="page-info">
+                        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
+                        of {{ page_obj.paginator.count }} records
+                    </div>
+                    <div class="page-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&coupon={{ coupon_filter }}">‹</a>
+                        {% else %}
+                            <span class="disabled">‹</span>
+                        {% endif %}
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if num == page_obj.number %}
+                                <span class="current-page">{{ num }}</span>
+                            {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                                <a href="?page={{ num }}&q={{ search_query }}&coupon={{ coupon_filter }}">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&coupon={{ coupon_filter }}">›</a>
+                        {% else %}
+                            <span class="disabled">›</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        function showToast(msg, isError) {
+            var c = document.getElementById('toastContainer');
+            var t = document.createElement('div');
+            t.className = 'toast ' + (isError ? 'error' : 'success');
+            t.innerHTML = (isError ? '<i class="fa-solid fa-circle-xmark"></i> ' : '<i class="fa-solid fa-circle-check"></i> ') + msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 4500);
+        }
+        {% for message in messages %}
+            showToast("{{ message|escapejs }}", {% if 'error' in message.tags %}true{% else %}false{% endif %});
+        {% endfor %}
+    </script>
+
+</body>
+</html>

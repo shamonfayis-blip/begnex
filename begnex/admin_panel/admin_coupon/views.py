@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 
 from .models import Coupon
+from admin_panel.admin_order.models import Order
 
 
 @never_cache
@@ -30,19 +31,64 @@ def admin_coupon_list_view(request):
     paginator = Paginator(coupons, 8)
     page_obj = paginator.get_page(request.GET.get("page"))
 
-    total_coupons = Coupon.objects.count()
+    
     active_coupons = Coupon.objects.filter(is_active=True, valid_until__gte=today, valid_from__lte=today).count()
     expired_coupons = Coupon.objects.filter(valid_until__lt=today).count()
     inactive_coupons = Coupon.objects.filter(is_active=False).count()
+    
+    
+
+
+    from django.db.models import Sum
+    history_orders = (
+        Order.objects.exclude(coupon_code__isnull=True)
+        .exclude(coupon_code="")
+        .select_related("user")
+    )
+
+    history_search = request.GET.get("hq", "").strip()
+    history_coupon_filter = request.GET.get("hcoupon", "").strip()
+
+    if history_search:
+        history_orders = history_orders.filter(coupon_code__icontains=history_search)
+    if history_coupon_filter:
+        history_orders = history_orders.filter(coupon_code__iexact=history_coupon_filter)
+
+    history_paginator = Paginator(history_orders, 12)
+    history_page_obj = history_paginator.get_page(request.GET.get("hpage"))
+
+    all_used_coupon_codes = (
+        Order.objects.exclude(coupon_code__isnull=True)
+        .exclude(coupon_code="")
+        .values_list("coupon_code", flat=True)
+        .distinct()
+        .order_by("coupon_code")
+    )
+
+    history_total_uses = Order.objects.exclude(coupon_code__isnull=True).exclude(coupon_code="").count()
+    history_total_savings = Order.objects.exclude(coupon_code__isnull=True).exclude(coupon_code="").aggregate(s=Sum("coupon_discount"))["s"] or 0
+    history_unique_coupons = Order.objects.exclude(coupon_code__isnull=True).exclude(coupon_code="").values("coupon_code").distinct().count()
+
+    
+    active_tab = request.GET.get("tab", "coupons")
+
 
     context = {
         "page_obj": page_obj,
         "search_query": search_query,
         "status_filter": status_filter,
-        "total_coupons": total_coupons,
         "active_coupons": active_coupons,
         "expired_coupons": expired_coupons,
         "inactive_coupons": inactive_coupons,
+        "history_page_obj": history_page_obj,
+        "history_search": history_search,
+        "history_coupon_filter": history_coupon_filter,
+        "all_used_coupon_codes": all_used_coupon_codes,
+        "history_total_uses": history_total_uses,
+        "history_total_savings": history_total_savings,
+        "history_unique_coupons": history_unique_coupons,
+        "active_tab": active_tab,
+        
     }
     return render(request, "coupons.html", context)
 
@@ -277,3 +323,48 @@ def admin_coupon_edit_view(request, coupon_id):
             messages.success(request, f"Coupon '{code}' updated successfully!")
             
     return redirect("admin_coupons")
+
+
+@never_cache
+@staff_member_required(login_url="admin_login")
+def admin_coupon_usage_history_view(request):
+    """Show all orders where a coupon was applied."""
+    orders = Order.objects.exclude(coupon_code__isnull=True).exclude(coupon_code="").select_related("user")
+
+   
+    search_query = request.GET.get("q", "").strip()
+    if search_query:
+        orders = orders.filter(coupon_code__icontains=search_query)
+
+    coupon_filter = request.GET.get("coupon", "").strip()
+    if coupon_filter:
+        orders = orders.filter(coupon_code__iexact=coupon_filter)
+
+    paginator = Paginator(orders, 15)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    
+    total_uses = orders.count()
+    from django.db.models import Sum, Count
+    total_savings = orders.aggregate(s=Sum("coupon_discount"))["s"] or 0
+    unique_coupons = orders.values("coupon_code").distinct().count()
+
+    # All distinct coupon codes (for filter dropdown)
+    all_coupon_codes = (
+        Order.objects.exclude(coupon_code__isnull=True)
+        .exclude(coupon_code="")
+        .values_list("coupon_code", flat=True)
+        .distinct()
+        .order_by("coupon_code")
+    )
+
+    context = {
+        "page_obj": page_obj,
+        "search_query": search_query,
+        "coupon_filter": coupon_filter,
+        "total_uses": total_uses,
+        "total_savings": total_savings,
+        "unique_coupons": unique_coupons,
+        "all_coupon_codes": all_coupon_codes,
+    }
+    return render(request, "coupon_usage_history.html", context)

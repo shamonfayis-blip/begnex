@@ -133,13 +133,13 @@ def admin_order_update_status_view(request, order_id):
                 with transaction.atomic():
                     order.payment_status = "refunded"
                     
-                    # Proportional wallet refund calculation
+                    
                     refund_total = 0
                     all_items = list(order.items.all())
                     active_items = [i for i in all_items if i.quantity - i.cancelled_quantity > 0]
                     returning_items = [i for i in active_items if i.status == "return_requested"]
                     
-                    # Check if all active items are now being returned (or already returned)
+                    
                     all_active_returned = all(i.status in ["return_requested", "returned"] for i in active_items)
                     
                     discount_ratio = order.discount / order.subtotal if order.subtotal > 0 else 0
@@ -162,7 +162,7 @@ def admin_order_update_status_view(request, order_id):
                     
                     refund_total = round(refund_total, 2)
                     
-                    # Refund to user wallet
+                    
                     if refund_total > 0:
                         from user.wallet.utils import refund_to_wallet
                         refund_to_wallet(order.user, refund_total, f"Refund for returned items in Order #{order.order_id}")

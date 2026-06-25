@@ -7,143 +7,149 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{ margin:0; padding:0; box-sizing:border-box; }
-body{ font-family:'Inter',sans-serif; background:#F5F5F5; display:flex; }
+body{ font-family:'Inter',sans-serif; background:#F7F8FA; display:flex; color:#111; }
 a{ text-decoration:none; color:inherit; }
 
 /* ── SIDEBAR ── */
 .sidebar{
-    width:260px; height:100vh; background:#FAFAFA;
-    border-right:1px solid #E5E7EB; padding:20px;
+    width:260px; height:100vh; background:#FFFFFF;
+    border-right:1px solid #E8EAED; padding:20px;
     display:flex; flex-direction:column; justify-content:space-between;
     position:fixed; left:0; top:0;
     overflow-y:auto;
 }
-.sidebar::-webkit-scrollbar {
-    width: 4px;
-}
-.sidebar::-webkit-scrollbar-track {
-    background: transparent;
-}
-.sidebar::-webkit-scrollbar-thumb {
-    background: #E5E7EB;
-    border-radius: 4px;
-}
-.sidebar::-webkit-scrollbar-thumb:hover {
-    background: #D1D5DB;
-}
-.logo{ display:flex; align-items:center; gap:12px; margin-bottom:24px; }
-.logo-icon{ width:32px; height:32px; background:black; color:white; display:flex; align-items:center; justify-content:center; border-radius:6px; font-weight:700; font-size:14px; }
-.logo h2{ font-size:22px; font-weight:700; }
-.logo p{ font-size:10px; color:#777; letter-spacing:2px; }
-.menu{ display:flex; flex-direction:column; gap:3px; }
-.menu a{ height:40px; display:flex; align-items:center; gap:12px; padding:0 14px; border-radius:8px; font-size:14px; color:#555; transition:.2s; }
-.menu a:hover,.menu .active{ background:white; color:black; font-weight:600; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-.sidebar-bottom{ border-top:1px solid #E5E7EB; padding-top:18px; }
-.admin-profile{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
-.admin-avatar{ width:42px; height:42px; background:#111; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; font-weight:700; flex-shrink:0; }
-.admin-profile h4{ font-size:14px; font-weight:600; }
-.admin-profile p{ font-size:11px; color:#777; }
-.logout-btn{ width:100%; height:42px; background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; color:#DC2626; font-size:13px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:.2s; display:flex; align-items:center; justify-content:center; gap:8px; }
-.logout-btn:hover{ background:#FEE2E2; }
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: #E8EAED; border-radius: 4px; }
+.sidebar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+
+.logo{ display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+.logo-icon{ width:34px; height:34px; background:#111; color:white; display:flex; align-items:center; justify-content:center; border-radius:8px; font-weight:800; font-size:15px; }
+.logo h2{ font-size:20px; font-weight:700; letter-spacing:-.3px; }
+.logo p{ font-size:10px; color:#9CA3AF; letter-spacing:2px; font-weight:500; }
+
+.menu{ display:flex; flex-direction:column; gap:2px; }
+.menu a{ height:40px; display:flex; align-items:center; gap:10px; padding:0 12px; border-radius:8px; font-size:13.5px; color:#6B7280; font-weight:500; transition:.15s; }
+.menu a:hover{ background:#F3F4F6; color:#111; }
+.menu .active{ background:#111; color:#fff; font-weight:600; }
+.menu .active:hover{ background:#111; }
+
+.sidebar-bottom{ border-top:1px solid #E8EAED; padding-top:18px; }
+.admin-profile{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.admin-avatar{ width:38px; height:38px; background:#111; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:15px; font-weight:700; flex-shrink:0; }
+.admin-profile h4{ font-size:13px; font-weight:600; }
+.admin-profile p{ font-size:11px; color:#9CA3AF; }
+.logout-btn{ width:100%; height:40px; background:#F9FAFB; border:1px solid #E8EAED; border-radius:8px; color:#6B7280; font-size:13px; font-weight:500; font-family:'Inter',sans-serif; cursor:pointer; transition:.15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.logout-btn:hover{ background:#F3F4F6; color:#111; border-color:#D1D5DB; }
 
 /* ── MAIN ── */
 .main{ margin-left:260px; width:calc(100% - 260px); min-height:100vh; }
 
 /* ── TOPBAR ── */
-.topbar{ height:72px; background:white; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:center; padding:0 32px; }
-.topbar h1{ font-size:24px; font-weight:700; }
-.topbar p{ font-size:13px; color:#777; margin-top:2px; }
-.back-btn{ height:42px; padding:0 20px; background:#F3F4F6; border:1px solid #E5E7EB; border-radius:8px; font-size:13px; font-weight:600; color:#374151; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:.2s; }
-.back-btn:hover{ background:#E5E7EB; }
-.export-btn{ height:42px; padding:0 22px; background:black; color:white; border-radius:8px; border:none; font-size:12px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:.2s; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
-.export-btn:hover{ opacity:.88; }
-.top-actions{ display:flex; align-items:center; gap:12px; }
+.topbar{ height:68px; background:white; border-bottom:1px solid #E8EAED; display:flex; justify-content:space-between; align-items:center; padding:0 32px; }
+.topbar-left h1{ font-size:20px; font-weight:700; letter-spacing:-.3px; }
+.topbar-left p{ font-size:12px; color:#9CA3AF; margin-top:2px; }
+.top-actions{ display:flex; align-items:center; gap:10px; }
+.btn-ghost{ height:38px; padding:0 16px; background:white; border:1px solid #E8EAED; border-radius:8px; font-size:13px; font-weight:500; color:#374151; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:.15s; }
+.btn-ghost:hover{ background:#F3F4F6; border-color:#D1D5DB; }
+.btn-dark{ height:38px; padding:0 18px; background:#111; color:white; border-radius:8px; border:none; font-size:13px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:.15s; text-decoration:none; display:inline-flex; align-items:center; gap:7px; }
+.btn-dark:hover{ background:#333; }
+.btn-outline-red{ height:38px; padding:0 18px; background:white; color:#374151; border:1px solid #E8EAED; border-radius:8px; font-size:13px; font-weight:500; font-family:'Inter',sans-serif; cursor:pointer; transition:.15s; text-decoration:none; display:inline-flex; align-items:center; gap:7px; }
+.btn-outline-red:hover{ background:#F9FAFB; border-color:#D1D5DB; }
 
 /* ── CONTENT ── */
 .content{ padding:28px; }
 
 /* ── FILTER BAR ── */
-.filter-card{ background:white; border-radius:14px; border:1px solid #ECECEC; padding:20px 24px; margin-bottom:24px; }
-.filter-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.filter-label{ font-size:12px; font-weight:600; color:#6B7280; letter-spacing:.5px; margin-right:4px; }
-.filter-tabs{ display:flex; gap:6px; }
-.filter-tab{ height:36px; padding:0 16px; border-radius:8px; border:1px solid #E5E7EB; background:white; font-size:13px; font-weight:500; color:#6B7280; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; transition:.15s; }
+.filter-card{ background:white; border-radius:12px; border:1px solid #E8EAED; padding:18px 22px; margin-bottom:22px; }
+.filter-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.filter-label{ font-size:11px; font-weight:600; color:#9CA3AF; letter-spacing:1px; margin-right:4px; text-transform:uppercase; }
+.filter-tabs{ display:flex; gap:4px; }
+.filter-tab{ height:34px; padding:0 14px; border-radius:8px; border:1px solid #E8EAED; background:white; font-size:13px; font-weight:500; color:#6B7280; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; transition:.15s; }
 .filter-tab:hover{ border-color:#9CA3AF; color:#111; }
-.filter-tab.active{ background:black; color:white; border-color:black; font-weight:600; }
-.filter-sep{ width:1px; height:28px; background:#E5E7EB; margin:0 4px; }
+.filter-tab.active{ background:#111; color:white; border-color:#111; font-weight:600; }
+.filter-sep{ width:1px; height:24px; background:#E8EAED; margin:0 6px; }
 .date-group{ display:flex; align-items:center; gap:8px; }
-.date-input{ height:36px; padding:0 12px; border:1px solid #E5E7EB; border-radius:8px; font-size:13px; font-family:'Inter',sans-serif; color:#374151; outline:none; }
+.date-input{ height:34px; padding:0 12px; border:1px solid #E8EAED; border-radius:8px; font-size:13px; font-family:'Inter',sans-serif; color:#374151; outline:none; background:white; }
 .date-input:focus{ border-color:#9CA3AF; }
-.apply-btn{ height:36px; padding:0 18px; background:#111; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:.2s; }
+.apply-btn{ height:34px; padding:0 16px; background:#111; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:.15s; }
 .apply-btn:hover{ background:#333; }
-.date-range-badge{ font-size:12px; color:#6B7280; background:#F9FAFB; padding:6px 12px; border-radius:8px; border:1px solid #E5E7EB; margin-left:auto; }
+.date-range-badge{ font-size:12px; color:#6B7280; background:#F7F8FA; padding:5px 12px; border-radius:8px; border:1px solid #E8EAED; margin-left:auto; }
+
+/* ── SUMMARY QUICK BAR ── */
+.summary-row{ background:white; border-radius:12px; border:1px solid #E8EAED; padding:16px 22px; margin-bottom:22px; display:flex; gap:0; flex-wrap:wrap; }
+.summary-item{ display:flex; flex-direction:column; gap:3px; flex:1; min-width:120px; padding:0 18px; border-right:1px solid #E8EAED; }
+.summary-item:first-child{ padding-left:0; }
+.summary-item:last-child{ border-right:none; }
+.summary-item .si-label{ font-size:10px; color:#9CA3AF; font-weight:600; letter-spacing:1px; text-transform:uppercase; }
+.summary-item .si-value{ font-size:17px; font-weight:700; color:#111; }
+.si-value.muted{ color:#6B7280; }
 
 /* ── STAT CARDS ── */
-.stats-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:24px; }
-.stat-card{ background:white; border-radius:14px; border:1px solid #ECECEC; padding:22px 24px; }
-.stat-card .s-label{ font-size:11px; color:#9CA3AF; letter-spacing:1.5px; font-weight:600; }
-.stat-card .s-value{ font-size:32px; font-weight:800; margin:12px 0 6px; line-height:1; }
-.stat-card .s-sub{ font-size:12px; color:#6B7280; }
-.stat-card.green .s-value{ color:#059669; }
-.stat-card.red .s-value{ color:#DC2626; }
-.stat-card.blue .s-value{ color:#2563EB; }
+.stats-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px; }
+.stat-card{ background:white; border-radius:12px; border:1px solid #E8EAED; padding:20px 22px; }
+.stat-card .s-label{ font-size:10px; color:#9CA3AF; letter-spacing:1px; font-weight:600; text-transform:uppercase; }
+.stat-card .s-value{ font-size:28px; font-weight:800; margin:10px 0 5px; line-height:1; color:#111; }
+.stat-card .s-sub{ font-size:11px; color:#9CA3AF; }
+.stat-card .s-icon{ width:38px; height:38px; background:#F3F4F6; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:14px; }
 
 /* ── ROW LAYOUT ── */
-.row2{ display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:24px; }
-.row3{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
-.card{ background:white; border-radius:14px; border:1px solid #ECECEC; padding:24px; }
-.card-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-.card-header h3{ font-size:16px; font-weight:700; }
+.row2{ display:grid; grid-template-columns:2fr 1fr; gap:18px; margin-bottom:22px; }
+.row3{ display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:22px; }
+.card{ background:white; border-radius:12px; border:1px solid #E8EAED; padding:22px; }
+.card-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.card-header h3{ font-size:15px; font-weight:700; }
 .card-header .ch-sub{ font-size:12px; color:#9CA3AF; }
 
 /* ── CHART ── */
 .chart-area{ position:relative; height:220px; }
 .chart-canvas{ width:100%; height:100%; }
 
-/* ── BREAKDOWN TABLE ── */
-.breakdown-list{ display:flex; flex-direction:column; gap:14px; }
-.breakdown-item{ display:flex; align-items:center; gap:12px; }
-.bi-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.bi-label{ font-size:13px; font-weight:500; flex:1; }
-.bi-count{ font-size:12px; color:#9CA3AF; }
-.bi-amount{ font-size:13px; font-weight:600; }
-.prog-bar{ width:100%; height:5px; background:#F3F4F6; border-radius:20px; overflow:hidden; margin-top:4px; }
-.prog-fill{ height:100%; border-radius:20px; background:black; }
+/* ── BREAKDOWN ── */
+.breakdown-list{ display:flex; flex-direction:column; gap:16px; }
+.breakdown-item{ display:flex; align-items:center; gap:10px; }
+.bi-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; background:#D1D5DB; }
+.bi-label{ font-size:13px; font-weight:500; flex:1; color:#374151; }
+.bi-count{ font-size:11px; color:#9CA3AF; }
+.bi-amount{ font-size:13px; font-weight:600; color:#111; }
+.prog-bar{ width:100%; height:4px; background:#F3F4F6; border-radius:20px; overflow:hidden; margin-top:5px; }
+.prog-fill{ height:100%; border-radius:20px; background:#9CA3AF; }
+
+/* ── DISCOUNT SUMMARY ── */
+.discount-blocks{ display:flex; flex-direction:column; gap:12px; }
+.discount-block{ padding:16px 18px; border-radius:10px; border:1px solid #E8EAED; background:#FAFAFA; display:flex; justify-content:space-between; align-items:center; }
+.discount-block .db-label{ font-size:10px; color:#9CA3AF; font-weight:600; letter-spacing:.8px; text-transform:uppercase; margin-bottom:5px; }
+.discount-block .db-value{ font-size:20px; font-weight:800; color:#111; }
 
 /* ── ORDERS TABLE ── */
 .table-wrap{ overflow-x:auto; }
 table{ width:100%; border-collapse:collapse; }
-table th{ text-align:left; font-size:11px; color:#9CA3AF; letter-spacing:1px; padding-bottom:14px; font-weight:600; }
-table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical-align:middle; }
+table th{ text-align:left; font-size:10px; color:#9CA3AF; letter-spacing:1px; padding-bottom:12px; font-weight:600; text-transform:uppercase; }
+table td{ padding:13px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical-align:middle; color:#374151; }
 .order-id{ font-weight:700; color:#111; }
-.badge{ display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:100px; font-size:11px; font-weight:700; }
-.badge-pending{ background:#FEF3C7; color:#92400E; }
-.badge-shipped{ background:#DBEAFE; color:#1E40AF; }
-.badge-delivered{ background:#D1FAE5; color:#065F46; }
-.badge-cancelled{ background:#FEE2E2; color:#991B1B; }
-.badge-returned{ background:#F3F4F6; color:#374151; }
-.badge-out_for_delivery{ background:#E0E7FF; color:#3730A3; }
-.badge-return_requested{ background:#FEF3C7; color:#92400E; }
-.badge-return_rejected{ background:#FEE2E2; color:#991B1B; }
-.pay-badge-cod{ background:#FEF3C7; color:#92400E; }
-.pay-badge-online{ background:#DBEAFE; color:#1E40AF; }
-.pay-badge-wallet{ background:#EDE9FE; color:#5B21B6; }
+
+/* ── BADGES ── */
+.badge{ display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:100px; font-size:11px; font-weight:600; letter-spacing:.2px; }
+.badge-pending{ background:#F3F4F6; color:#6B7280; }
+.badge-shipped{ background:#F3F4F6; color:#374151; }
+.badge-delivered{ background:#F0FDF4; color:#16A34A; border:1px solid #BBF7D0; }
+.badge-cancelled{ background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; }
+.badge-returned{ background:#F3F4F6; color:#6B7280; }
+.badge-out_for_delivery{ background:#EFF6FF; color:#2563EB; border:1px solid #BFDBFE; }
+.badge-return_requested{ background:#FFFBEB; color:#D97706; border:1px solid #FDE68A; }
+.badge-return_rejected{ background:#FEF2F2; color:#DC2626; }
+.pay-badge-cod{ background:#F9FAFB; color:#374151; border:1px solid #E8EAED; }
+.pay-badge-online{ background:#EFF6FF; color:#2563EB; border:1px solid #BFDBFE; }
+.pay-badge-wallet{ background:#F5F3FF; color:#7C3AED; border:1px solid #DDD6FE; }
+
 .no-data{ text-align:center; padding:48px 0; color:#9CA3AF; font-size:14px; }
 
 /* ── PAGINATION ── */
-.pagination{ display:flex; justify-content:center; align-items:center; gap:6px; margin-top:24px; }
-.page-btn{ height:36px; min-width:36px; padding:0 12px; border:1px solid #E5E7EB; border-radius:8px; background:white; font-size:13px; font-weight:500; color:#374151; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:.15s; }
-.page-btn:hover{ border-color:#9CA3AF; }
-.page-btn.active{ background:black; color:white; border-color:black; font-weight:700; }
-.page-btn.disabled{ opacity:.4; pointer-events:none; }
-
-/* ── SUMMARY ROW ── */
-.summary-row{ background:#F9FAFB; border-radius:10px; padding:14px 18px; margin-bottom:20px; display:flex; gap:32px; flex-wrap:wrap; }
-.summary-item{ display:flex; flex-direction:column; gap:2px; }
-.summary-item .si-label{ font-size:11px; color:#9CA3AF; font-weight:600; letter-spacing:.5px; }
-.summary-item .si-value{ font-size:16px; font-weight:700; color:#111; }
-.si-value.discount{ color:#DC2626; }
-.si-value.green{ color:#059669; }
+.pagination{ display:flex; justify-content:center; align-items:center; gap:6px; margin-top:22px; }
+.page-btn{ height:34px; min-width:34px; padding:0 12px; border:1px solid #E8EAED; border-radius:8px; background:white; font-size:13px; font-weight:500; color:#374151; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; transition:.15s; }
+.page-btn:hover{ border-color:#9CA3AF; color:#111; }
+.page-btn.active{ background:#111; color:white; border-color:#111; font-weight:700; }
+.page-btn.disabled{ opacity:.35; pointer-events:none; }
 
 @media(max-width:1100px){ .stats-grid{grid-template-columns:repeat(2,1fr);} .row2{grid-template-columns:1fr;} .row3{grid-template-columns:1fr;} }
 @media(max-width:768px){ .sidebar{display:none;} .main{width:100%;margin-left:0;} .stats-grid{grid-template-columns:1fr 1fr;} }
@@ -187,23 +193,23 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
 
     <!-- TOPBAR -->
     <div class="topbar">
-        <div>
-            <h1>📈 Sales Report</h1>
+        <div class="topbar-left">
+            <h1>Sales Report</h1>
             <p>{{ date_from_display }} — {{ date_to_display }}</p>
         </div>
         <div class="top-actions">
-            <a href="{% url 'admin_dashboard' %}" class="back-btn">← Dashboard</a>
-            <a href="?filter={{ filter_type }}&date_from={{ date_from }}&date_to={{ date_to }}&export=csv" class="export-btn">⬇ Export CSV</a>
-            <a href="?filter={{ filter_type }}&date_from={{ date_from }}&date_to={{ date_to }}&export=pdf" class="export-btn" style="background:#EF4444;">📄 Export PDF</a>
+            <a href="{% url 'admin_dashboard' %}" class="btn-ghost">← Dashboard</a>
+            <a href="?filter={{ filter_type }}&date_from={{ date_from }}&date_to={{ date_to }}&export=csv" class="btn-dark">⬇ Export CSV</a>
+            <a href="?filter={{ filter_type }}&date_from={{ date_from }}&date_to={{ date_to }}&export=pdf" class="btn-outline-red">📄 Export PDF</a>
         </div>
     </div>
 
     <div class="content">
 
-        <!-- ── FILTER BAR ── -->
+        <!-- FILTER BAR -->
         <div class="filter-card">
             <div class="filter-row">
-                <span class="filter-label">PERIOD</span>
+                <span class="filter-label">Period</span>
                 <div class="filter-tabs">
                     <a href="?filter=daily"  class="filter-tab {% if filter_type == 'daily'  %}active{% endif %}">Today</a>
                     <a href="?filter=weekly" class="filter-tab {% if filter_type == 'weekly' %}active{% endif %}">Last 7 Days</a>
@@ -217,63 +223,67 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                     <input type="date" name="date_to" class="date-input" value="{{ date_to }}" required>
                     <button type="submit" class="apply-btn">Apply</button>
                 </form>
-                <div class="date-range-badge">📅 {{ date_from_display }} → {{ date_to_display }}</div>
+                <div class="date-range-badge">{{ date_from_display }} → {{ date_to_display }}</div>
             </div>
         </div>
 
-        <!-- ── SUMMARY QUICK BAR ── -->
+        <!-- SUMMARY QUICK BAR -->
         <div class="summary-row">
             <div class="summary-item">
-                <span class="si-label">GROSS SALES</span>
+                <span class="si-label">Gross Sales</span>
                 <span class="si-value">₹{{ total_subtotal|floatformat:2 }}</span>
             </div>
             <div class="summary-item">
-                <span class="si-label">COUPON / DISCOUNT</span>
-                <span class="si-value discount">− ₹{{ total_discount|floatformat:2 }}</span>
+                <span class="si-label">Coupon / Discount</span>
+                <span class="si-value muted">−₹{{ total_discount|floatformat:2 }}</span>
             </div>
             <div class="summary-item">
-                <span class="si-label">SHIPPING</span>
+                <span class="si-label">Shipping</span>
                 <span class="si-value">₹{{ total_shipping|floatformat:2 }}</span>
             </div>
             <div class="summary-item">
-                <span class="si-label">NET REVENUE</span>
-                <span class="si-value green">₹{{ total_sales|floatformat:2 }}</span>
+                <span class="si-label">Net Revenue</span>
+                <span class="si-value">₹{{ total_sales|floatformat:2 }}</span>
             </div>
             <div class="summary-item">
-                <span class="si-label">TOTAL ORDERS</span>
+                <span class="si-label">Total Orders</span>
                 <span class="si-value">{{ order_count }}</span>
             </div>
             <div class="summary-item">
-                <span class="si-label">AVG ORDER VALUE</span>
+                <span class="si-label">Avg Order Value</span>
                 <span class="si-value">₹{{ avg_order_value|floatformat:2 }}</span>
             </div>
         </div>
 
-        <!-- ── STAT CARDS ── -->
+        <!-- STAT CARDS -->
         <div class="stats-grid">
-            <div class="stat-card green">
+            <div class="stat-card">
+                <div class="s-icon">💰</div>
                 <div class="s-label">NET REVENUE</div>
                 <div class="s-value">₹{{ total_sales|floatformat:0 }}</div>
                 <div class="s-sub">After discounts &amp; coupons</div>
             </div>
             <div class="stat-card">
+                <div class="s-icon">📦</div>
                 <div class="s-label">TOTAL ORDERS</div>
                 <div class="s-value">{{ order_count }}</div>
                 <div class="s-sub">Excluding cancelled</div>
             </div>
-            <div class="stat-card red">
+            <div class="stat-card">
+                <div class="s-icon">🎟</div>
                 <div class="s-label">TOTAL DISCOUNTS</div>
                 <div class="s-value">₹{{ total_discount|floatformat:0 }}</div>
                 <div class="s-sub">Coupon deductions applied</div>
             </div>
-            <div class="stat-card blue">
+            <div class="stat-card">
+                <div class="s-icon">📊</div>
                 <div class="s-label">AVG ORDER VALUE</div>
                 <div class="s-value">₹{{ avg_order_value|floatformat:0 }}</div>
                 <div class="s-sub">Per confirmed order</div>
             </div>
         </div>
 
-        <!-- ── CHART + PAYMENT BREAKDOWN ── -->
+        <!-- CHART + PAYMENT BREAKDOWN -->
         <div class="row2">
 
             <!-- Bar Chart -->
@@ -300,7 +310,7 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                         <div class="breakdown-item" style="flex-direction:column;align-items:stretch;gap:6px;">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
                                 <div style="display:flex;align-items:center;gap:8px;">
-                                    <div class="bi-dot" style="background:{% if pm.payment_method == 'cod' %}#F59E0B{% elif pm.payment_method == 'online' %}#3B82F6{% else %}#8B5CF6{% endif %};"></div>
+                                    <div class="bi-dot" style="background:{% if pm.payment_method == 'cod' %}#9CA3AF{% elif pm.payment_method == 'online' %}#374151{% else %}#6B7280{% endif %};"></div>
                                     <span class="bi-label">
                                         {% if pm.payment_method == 'cod' %}Cash on Delivery
                                         {% elif pm.payment_method == 'online' %}Razorpay (Online)
@@ -311,7 +321,7 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                                 <span class="bi-amount">₹{{ pm.revenue|floatformat:0 }}</span>
                             </div>
                             <div class="prog-bar">
-                                <div class="prog-fill" style="width:{% if max_rev and max_rev > 0 %}{% widthratio pm.revenue max_rev 100 %}{% else %}0{% endif %}%;background:{% if pm.payment_method == 'cod' %}#F59E0B{% elif pm.payment_method == 'online' %}#3B82F6{% else %}#8B5CF6{% endif %};"></div>
+                                <div class="prog-fill" style="width:{% if max_rev and max_rev > 0 %}{% widthratio pm.revenue max_rev 100 %}{% else %}0{% endif %}%;background:{% if pm.payment_method == 'cod' %}#9CA3AF{% elif pm.payment_method == 'online' %}#374151{% else %}#6B7280{% endif %};"></div>
                             </div>
                         </div>
                         {% endfor %}
@@ -324,7 +334,7 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
 
         </div>
 
-        <!-- ── ORDER STATUS BREAKDOWN ── -->
+        <!-- ORDER STATUS BREAKDOWN -->
         <div class="row3">
             <div class="card">
                 <div class="card-header">
@@ -334,7 +344,7 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                 <div class="breakdown-list">
                     {% for s in status_breakdown %}
                     <div class="breakdown-item">
-                        <div class="bi-dot" style="background:{% if s.status == 'delivered' %}#10B981{% elif s.status == 'pending' %}#F59E0B{% elif s.status == 'cancelled' %}#EF4444{% elif s.status == 'shipped' %}#3B82F6{% else %}#6B7280{% endif %};"></div>
+                        <div class="bi-dot" style="background:{% if s.status == 'delivered' %}#374151{% elif s.status == 'pending' %}#9CA3AF{% elif s.status == 'cancelled' %}#6B7280{% elif s.status == 'shipped' %}#4B5563{% else %}#D1D5DB{% endif %};"></div>
                         <span class="bi-label">{{ s.status|title|cut:"_" }}</span>
                         <span class="bi-amount">{{ s.count }}</span>
                     </div>
@@ -350,33 +360,33 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                 <div class="card-header">
                     <h3>Discount Summary</h3>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:18px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#FEF9F0;border-radius:10px;border:1px solid #FDE68A;">
+                <div class="discount-blocks">
+                    <div class="discount-block">
                         <div>
-                            <div style="font-size:11px;color:#92400E;font-weight:600;letter-spacing:.5px;">GROSS SALES (SUBTOTAL)</div>
-                            <div style="font-size:22px;font-weight:800;color:#92400E;margin-top:4px;">₹{{ total_subtotal|floatformat:2 }}</div>
+                            <div class="db-label">Gross Sales (Subtotal)</div>
+                            <div class="db-value">₹{{ total_subtotal|floatformat:2 }}</div>
                         </div>
-                        <span style="font-size:28px;">🏷</span>
+                        <span style="font-size:26px;">🏷</span>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#FEF2F2;border-radius:10px;border:1px solid #FECACA;">
+                    <div class="discount-block">
                         <div>
-                            <div style="font-size:11px;color:#991B1B;font-weight:600;letter-spacing:.5px;">TOTAL COUPON / DISCOUNT</div>
-                            <div style="font-size:22px;font-weight:800;color:#DC2626;margin-top:4px;">− ₹{{ total_discount|floatformat:2 }}</div>
+                            <div class="db-label">Total Coupon / Discount</div>
+                            <div class="db-value" style="color:#6B7280;">−₹{{ total_discount|floatformat:2 }}</div>
                         </div>
-                        <span style="font-size:28px;">🎟</span>
+                        <span style="font-size:26px;">🎟</span>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#F0FDF4;border-radius:10px;border:1px solid #A7F3D0;">
+                    <div class="discount-block">
                         <div>
-                            <div style="font-size:11px;color:#065F46;font-weight:600;letter-spacing:.5px;">NET REVENUE COLLECTED</div>
-                            <div style="font-size:22px;font-weight:800;color:#059669;margin-top:4px;">₹{{ total_sales|floatformat:2 }}</div>
+                            <div class="db-label">Net Revenue Collected</div>
+                            <div class="db-value">₹{{ total_sales|floatformat:2 }}</div>
                         </div>
-                        <span style="font-size:28px;">💰</span>
+                        <span style="font-size:26px;">💰</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ── ORDERS TABLE ── -->
+        <!-- ORDERS TABLE -->
         <div class="card">
             <div class="card-header">
                 <h3>Order Details</h3>
@@ -387,30 +397,30 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                 <table>
                     <thead>
                         <tr>
-                            <th>ORDER ID</th>
-                            <th>DATE</th>
-                            <th>CUSTOMER</th>
-                            <th>PAYMENT</th>
-                            <th>STATUS</th>
-                            <th>SUBTOTAL</th>
-                            <th>DISCOUNT</th>
-                            <th>TOTAL</th>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                            <th>Subtotal</th>
+                            <th>Discount</th>
+                            <th>Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for order in page_obj %}
                         <tr>
                             <td><span class="order-id">#{{ order.order_id }}</span></td>
-                            <td style="color:#6B7280;">{{ order.created_at|date:"d M Y" }}</td>
+                            <td style="color:#9CA3AF;">{{ order.created_at|date:"d M Y" }}</td>
                             <td>
-                                <div style="font-weight:600;font-size:13px;">{{ order.full_name|default:order.user.username }}</div>
+                                <div style="font-weight:600;font-size:13px;color:#111;">{{ order.full_name|default:order.user.username }}</div>
                                 <div style="font-size:11px;color:#9CA3AF;">{{ order.user.email }}</div>
                             </td>
                             <td>
                                 <span class="badge pay-badge-{{ order.payment_method }}">
-                                    {% if order.payment_method == 'cod' %}💵 COD
-                                    {% elif order.payment_method == 'online' %}💳 Online
-                                    {% else %}👛 Wallet{% endif %}
+                                    {% if order.payment_method == 'cod' %}COD
+                                    {% elif order.payment_method == 'online' %}Online
+                                    {% else %}Wallet{% endif %}
                                 </span>
                             </td>
                             <td>
@@ -419,10 +429,10 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                                 </span>
                             </td>
                             <td>₹{{ order.subtotal|floatformat:2 }}</td>
-                            <td style="color:#DC2626;">
-                                {% if order.discount > 0 %}− ₹{{ order.discount|floatformat:2 }}{% else %}—{% endif %}
+                            <td style="color:#6B7280;">
+                                {% if order.discount > 0 %}−₹{{ order.discount|floatformat:2 }}{% else %}—{% endif %}
                             </td>
-                            <td style="font-weight:700;">₹{{ order.total|floatformat:2 }}</td>
+                            <td style="font-weight:700;color:#111;">₹{{ order.total|floatformat:2 }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -456,9 +466,9 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
 
             {% else %}
             <div class="no-data">
-                <div style="font-size:40px;margin-bottom:12px;">📭</div>
+                <div style="font-size:38px;margin-bottom:12px;">📭</div>
                 <div style="font-size:15px;font-weight:600;color:#374151;margin-bottom:6px;">No orders found</div>
-                <div style="font-size:13px;">Try adjusting the date range filter above.</div>
+                <div style="font-size:13px;color:#9CA3AF;">Try adjusting the date range filter above.</div>
             </div>
             {% endif %}
         </div>
@@ -466,7 +476,7 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
     </div><!-- /content -->
 </main>
 
-<!-- ── CHART.JS ── -->
+<!-- CHART.JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 (function(){
@@ -485,8 +495,8 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                 {
                     label: 'Net Revenue (₹)',
                     data: totals,
-                    backgroundColor: 'rgba(17,17,17,0.85)',
-                    borderRadius: 6,
+                    backgroundColor: 'rgba(17,17,17,0.80)',
+                    borderRadius: 5,
                     borderSkipped: false,
                     yAxisID: 'y',
                     order: 2,
@@ -494,8 +504,8 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                 {
                     label: 'Discount (₹)',
                     data: discounts,
-                    backgroundColor: 'rgba(220,38,38,0.18)',
-                    borderColor: 'rgba(220,38,38,0.6)',
+                    backgroundColor: 'rgba(156,163,175,0.25)',
+                    borderColor: 'rgba(156,163,175,0.7)',
                     borderWidth: 1.5,
                     borderRadius: 4,
                     borderSkipped: false,
@@ -506,11 +516,11 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                     label: 'Orders',
                     data: orders,
                     type: 'line',
-                    borderColor: '#3B82F6',
-                    backgroundColor: 'rgba(59,130,246,0.08)',
-                    borderWidth: 2.5,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#3B82F6',
+                    borderColor: '#6B7280',
+                    backgroundColor: 'rgba(107,114,128,0.07)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#6B7280',
                     tension: 0.4,
                     fill: true,
                     yAxisID: 'y1',
@@ -525,9 +535,14 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
             plugins: {
                 legend: {
                     position: 'top',
-                    labels: { font: { family: 'Inter', size: 12 }, usePointStyle: true, boxWidth: 8 }
+                    labels: { font: { family: 'Inter', size: 12 }, usePointStyle: true, boxWidth: 8, color: '#6B7280' }
                 },
                 tooltip: {
+                    backgroundColor: '#fff',
+                    titleColor: '#111',
+                    bodyColor: '#6B7280',
+                    borderColor: '#E8EAED',
+                    borderWidth: 1,
                     callbacks: {
                         label: function(ctx) {
                             if (ctx.dataset.label === 'Orders') return ` Orders: ${ctx.parsed.y}`;
@@ -550,14 +565,12 @@ table td{ padding:14px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                 y1: {
                     position: 'right',
                     grid: { drawOnChartArea: false },
-                    ticks: { font: { family: 'Inter', size: 11 }, color: '#3B82F6', stepSize: 1 }
+                    ticks: { font: { family: 'Inter', size: 11 }, color: '#9CA3AF', stepSize: 1 }
                 }
             }
         }
     });
 })();
-
-// Exports are now handled fully by the backend to support full-range reporting.
 </script>
 </body>
 </html>

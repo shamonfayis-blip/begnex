@@ -60,6 +60,10 @@ class Order(models.Model):
     state          = models.CharField(max_length=100, blank=True)
     pincode        = models.CharField(max_length=10, blank=True)
 
+    # Coupon
+    coupon_code     = models.CharField(max_length=20, blank=True, null=True)
+    coupon_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     # Pricing
     subtotal        = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount        = models.DecimalField(max_digits=10, decimal_places=2, default=0)
