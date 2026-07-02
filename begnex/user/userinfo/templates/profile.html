@@ -428,37 +428,42 @@
         }
 
         /* RESPONSIVE */
+        /* Hamburger */
+        .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 6px; background: none; border: none; z-index: 1100; }
+        .hamburger span { display: block; width: 22px; height: 2px; background: #D4D4D8; border-radius: 2px; transition: all 0.3s ease; }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+        .mobile-nav { display: none; position: fixed; top: 72px; left: 0; right: 0; background: #05070D; border-bottom: 1px solid rgba(255,255,255,0.07); z-index: 999; flex-direction: column; padding: 20px 24px; gap: 0; box-shadow: 0 16px 40px rgba(0,0,0,0.6); }
+        .mobile-nav.open { display: flex; }
+        .mobile-nav a { color: #A1A1AA; font-size: 12px; letter-spacing: 2px; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); transition: color 0.2s; }
+        .mobile-nav a:last-child { border-bottom: none; }
+        .mobile-nav a:hover { color: white; }
 
         @media(max-width: 992px) {
-
-            .profile-wrapper {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-            }
-
-            .profile-content {
-                padding: 30px 20px;
-            }
-
-            .profile-title {
-                font-size: 40px;
-            }
-
-            .profile-card {
-                padding: 30px 20px;
-            }
-
-            .details-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
+            .profile-wrapper { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .sidebar-title { display: none; }
+            .sidebar-links { flex-direction: row; overflow-x: auto; padding: 0 16px; gap: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+            .sidebar-links::-webkit-scrollbar { display: none; }
+            .sidebar-links a { height: 50px; white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; padding: 0 20px; flex-shrink: 0; border-radius: 0; }
+            .sidebar-links a.active,
+            .sidebar-links a:hover { border-bottom-color: #4F78FF; border-left-color: transparent; background: transparent; }
+            .profile-content { padding: 30px 20px; }
+            .profile-title { font-size: 40px; }
+            .profile-card { padding: 30px 20px; }
+            .details-grid { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            .hamburger { display: flex; }
+        }
+        @media(max-width: 768px) {
+            .profile-title { font-size: 32px; }
+            .profile-buttons { flex-direction: column; gap: 10px; }
+            .profile-buttons button, .profile-buttons a { width: 100%; }
+        }
+        @media(max-width: 480px) {
+            .profile-content { padding: 20px 14px; }
+            .profile-title { font-size: 26px; }
         }
     </style>
 
@@ -467,44 +472,43 @@
 <body>
 
     <nav class="navbar">
-
         <div class="logo">
             <a href="{% url 'home' %}">BEGNEX</a>
         </div>
-
         <div class="nav-links">
-
             <a href="{% url 'home' %}">HOME</a>
             <a href="{% url 'shop' %}">PRODUCTS</a>
             <a href="{% url 'categories' %}">CATEGORIES</a>
             <a href="{% url 'about' %}">ABOUT</a>
-
         </div>
-
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
         <div class="nav-icons">
-
             <a href="{% url 'shop' %}?focus=search" title="Search">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </a>
-
             <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
                 <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
             </a>
-
             <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
                 <i class="fa-solid fa-bag-shopping"></i>
                 <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
             </a>
-
             <a href="{% url 'profile' %}" class="active">
                 <i class="fa-regular fa-user"></i>
             </a>
-
+            <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
         </div>
-
     </nav>
+
+    <!-- MOBILE NAV -->
+    <div class="mobile-nav" id="mobileNav">
+        <a href="{% url 'home' %}">HOME</a>
+        <a href="{% url 'shop' %}">PRODUCTS</a>
+        <a href="{% url 'categories' %}">CATEGORIES</a>
+        <a href="{% url 'about' %}">ABOUT</a>
+    </div>
 
     <!-- PROFILE -->
 
@@ -733,6 +737,22 @@ function closeLogoutModal(){
 
     {% include 'includes/footer.html' %}
 
+<script>
+    // Hamburger menu
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileNav = document.getElementById('mobileNav');
+    if (hamburgerBtn && mobileNav) {
+        hamburgerBtn.addEventListener('click', () => {
+            hamburgerBtn.classList.toggle('open');
+            mobileNav.classList.toggle('open');
+        });
+        mobileNav.querySelectorAll('a').forEach(a => {
+            a.addEventListener('click', () => {
+                hamburgerBtn.classList.remove('open');
+                mobileNav.classList.remove('open');
+            });
+        });
+    }
+</script>
 </body>
-
 </html>

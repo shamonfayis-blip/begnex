@@ -540,64 +540,80 @@
             font-size: 10px;
         }
 
+        /* HAMBURGER */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 6px;
+            background: none;
+            border: none;
+            z-index: 1100;
+        }
+        .hamburger span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: #D4D4D8;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* MOBILE NAV DRAWER */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 72px;
+            left: 0; right: 0;
+            background: #05070D;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            z-index: 999;
+            flex-direction: column;
+            padding: 20px 24px;
+            gap: 0;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+        }
+        .mobile-nav.open { display: flex; }
+        .mobile-nav a {
+            color: #A1A1AA;
+            font-size: 12px;
+            letter-spacing: 2px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: color 0.2s;
+        }
+        .mobile-nav a:last-child { border-bottom: none; }
+        .mobile-nav a:hover { color: white; }
+
         /* RESPONSIVE */
 
         @media(max-width: 992px){
+            .navbar{ padding: 0 20px; }
+            .nav-links{ display: none; }
+            .hamburger{ display: flex; }
 
-            .navbar{
-                padding: 0 20px;
-            }
-
-            .nav-links{
-                display: none;
-            }
-
-            .hero{
-                flex-direction: column;
-            }
-
+            .hero{ flex-direction: column; }
             .hero-left,
-            .hero-right{
-                width: 100%;
-            }
+            .hero-right{ width: 100%; }
+            .hero-left{ min-height: 340px; }
+            .hero-right{ padding: 50px 24px; }
+            .hero-content h1{ font-size: 42px; line-height: 48px; }
 
-            .hero-right{
-                padding: 60px 24px;
-            }
+            .section{ padding: 70px 24px; }
+            .section-title{ font-size: 34px; }
+            .product-grid{ grid-template-columns: repeat(2, 1fr); }
 
-            .hero-content h1{
-                font-size: 42px;
-                line-height: 48px;
-            }
-
-            .section{
-                padding: 70px 24px;
-            }
-
-            .product-grid{
-                grid-template-columns: 1fr;
-            }
-
-            .premium-section{
-                flex-direction: column;
-                padding: 70px 24px;
-            }
-
+            .premium-section{ flex-direction: column; padding: 70px 24px; }
             .premium-left,
-            .premium-right{
-                width: 100%;
-            }
+            .premium-right{ width: 100%; }
+            .premium-left h2{ font-size: 38px; line-height: 44px; }
 
-            .footer{
-                flex-direction: column;
-                gap: 30px;
-                align-items: flex-start;
-                padding: 40px 24px;
-            }
-
-            .footer-links{
-                flex-wrap: wrap;
-            }
+            .footer{ flex-direction: column; gap: 30px; align-items: flex-start; padding: 40px 24px; }
+            .footer-links{ flex-wrap: wrap; }
 
             .referral-banner { padding: 70px 24px; }
             .referral-inner { flex-direction: column; padding: 48px 32px; gap: 40px; text-align: center; }
@@ -606,7 +622,21 @@
             .referral-badge { justify-content: center; }
             .referral-cta { width: 100%; }
             .referral-pill-group { justify-content: center; }
+        }
 
+        @media(max-width: 600px){
+            .product-grid{ grid-template-columns: 1fr; }
+            .hero-content h1{ font-size: 34px; line-height: 40px; }
+            .section-title{ font-size: 28px; }
+        }
+
+        @media(max-width: 480px){
+            .hero-right{ padding: 36px 16px; }
+            .section{ padding: 50px 16px; }
+            .referral-inner{ padding: 36px 20px; }
+            .referral-text h2{ font-size: 28px; line-height: 34px; }
+            .referral-pill-group{ flex-direction: column; align-items: center; }
+            .stats{ gap: 28px; }
         }
 
     </style>
@@ -620,43 +650,46 @@
     <nav class="navbar">
 
         <div class="logo">
-            BEGNEX
+            <a href="#" style="color:white;">BEGNEX</a>
         </div>
 
         <div class="nav-links">
-
             <a href="#">HOME</a>
             <a href="{% url 'shop' %}">PRODUCTS</a>
             <a href="{% url 'categories' %}">CATEGORIES</a>
             <a href="{% url 'about' %}">ABOUT</a>
-
         </div>
 
-<link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<div class="nav-icons">
-
-    <a href="{% url 'shop' %}?focus=search" title="Search">
-        <i class="fa-solid fa-magnifying-glass"></i>
-    </a>
-
-    <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
-        <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
-    </a>
-
-    <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
-        <i class="fa-solid fa-bag-shopping"></i>
-        <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
-    </a>
-
-    <a href="{% url 'profile' %}">
-        <i class="fa-regular fa-user"></i>
-    </a>
-
-</div>
+        <div class="nav-icons">
+            <a href="{% url 'shop' %}?focus=search" title="Search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </a>
+            <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
+                <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
+            </a>
+            <a href="{% url 'cart' %}" class="cart-icon" style="position: relative;">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="cart-badge" id="nav-cart-count" style="{% if not cart_count %}display: none;{% endif %}">{{ cart_count }}</span>
+            </a>
+            <a href="{% url 'profile' %}">
+                <i class="fa-regular fa-user"></i>
+            </a>
+            <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
 
     </nav>
+
+    <!-- MOBILE NAV -->
+    <div class="mobile-nav" id="mobileNav">
+        <a href="#">HOME</a>
+        <a href="{% url 'shop' %}">PRODUCTS</a>
+        <a href="{% url 'categories' %}">CATEGORIES</a>
+        <a href="{% url 'about' %}">ABOUT</a>
+    </div>
 
     <!-- HERO -->
 
@@ -947,15 +980,27 @@
     </script>
 
 <script>
-
     history.pushState(null, null, location.href);
+    window.onpopstate = function () { history.go(1); };
+</script>
 
-    window.onpopstate = function () {
-
-        history.go(1);
-
-    };
-
+<script>
+    // Hamburger menu
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileNav = document.getElementById('mobileNav');
+    if (hamburgerBtn && mobileNav) {
+        hamburgerBtn.addEventListener('click', () => {
+            hamburgerBtn.classList.toggle('open');
+            mobileNav.classList.toggle('open');
+        });
+        // Close on link click
+        mobileNav.querySelectorAll('a').forEach(a => {
+            a.addEventListener('click', () => {
+                hamburgerBtn.classList.remove('open');
+                mobileNav.classList.remove('open');
+            });
+        });
+    }
 </script>
 </body>
 </html>
