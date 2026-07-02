@@ -1,7 +1,7 @@
 import json
-import razorpay
 from decimal import Decimal
 
+import razorpay
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -24,7 +24,7 @@ def wallet_details(request):
     return render(
         request,
         "wallet/wallet_details.html",
-        {"wallet": wallet, "transactions": page_obj}
+        {"wallet": wallet, "transactions": page_obj},
     )
 
 
@@ -38,28 +38,32 @@ def create_razorpay_order(request):
         amount = Decimal(request.POST.get("amount", 0))
 
     if amount <= 0:
-        return JsonResponse({"success": False, "message": "Amount must be greater than zero."})
+        return JsonResponse(
+            {"success": False, "message": "Amount must be greater than zero."}
+        )
 
-    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    client = razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
     amount_in_paise = int(amount * 100)
 
-    order_data = {
-        "amount": amount_in_paise,
-        "currency": "INR",
-        "payment_capture": 1
-    }
+    order_data = {"amount": amount_in_paise, "currency": "INR", "payment_capture": 1}
 
     try:
         order = client.order.create(data=order_data)
-        return JsonResponse({
-            "success": True,
-            "order_id": order["id"],
-            "amount": order["amount"],
-            "currency": order["currency"],
-            "key_id": settings.RAZORPAY_KEY_ID
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "order_id": order["id"],
+                "amount": order["amount"],
+                "currency": order["currency"],
+                "key_id": settings.RAZORPAY_KEY_ID,
+            }
+        )
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Failed to create order: {str(e)}"})
+        return JsonResponse(
+            {"success": False, "message": f"Failed to create order: {str(e)}"}
+        )
 
 
 @login_required(login_url="login")
@@ -78,22 +82,32 @@ def verify_razorpay_payment(request):
         amount = Decimal(request.POST.get("amount", 0))
 
     if not all([payment_id, order_id, signature, amount]):
-        return JsonResponse({"success": False, "message": "Missing payment parameters."})
+        return JsonResponse(
+            {"success": False, "message": "Missing payment parameters."}
+        )
 
-    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    client = razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
     params_dict = {
         "razorpay_order_id": order_id,
         "razorpay_payment_id": payment_id,
-        "razorpay_signature": signature
+        "razorpay_signature": signature,
     }
 
     try:
         client.utility.verify_payment_signature(params_dict)
-        refund_to_wallet(request.user, amount, f"Added money to wallet via Razorpay (Ref: {payment_id})")
+        refund_to_wallet(
+            request.user,
+            amount,
+            f"Added money to wallet via Razorpay (Ref: {payment_id})",
+        )
         return JsonResponse({"success": True})
     except razorpay.errors.SignatureVerificationError:
-        return JsonResponse({"success": False, "message": "Signature verification failed."})
+        return JsonResponse(
+            {"success": False, "message": "Signature verification failed."}
+        )
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Verification error: {str(e)}"})
-
-
+        return JsonResponse(
+            {"success": False, "message": f"Verification error: {str(e)}"}
+        )

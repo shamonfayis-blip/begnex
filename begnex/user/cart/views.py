@@ -1,19 +1,19 @@
 import json
 
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
-from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_POST
 
 from admin_panel.admin_product.models import ProductVariant
 from user.wishlist.models import Wishlist
+
 from .models import Cart, CartItem
 
 MAX_CART_QUANTITY = 5
 
 
 def get_or_create_cart(request):
-  
 
     if request.user.is_authenticated:
         cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -28,7 +28,13 @@ def get_or_create_cart(request):
 @ensure_csrf_cookie
 def cart_view(request):
     cart = get_or_create_cart(request)
-    items = cart.items.select_related("variant", "variant__product", "variant__product__category").prefetch_related("variant__images").order_by("created_at")
+    items = (
+        cart.items.select_related(
+            "variant", "variant__product", "variant__product__category"
+        )
+        .prefetch_related("variant__images")
+        .order_by("created_at")
+    )
 
     has_out_of_stock = False
     valid_items = []
@@ -36,7 +42,6 @@ def cart_view(request):
     for item in items:
         v = item.variant
 
-      
         is_blocked = (
             v.is_deleted
             or not v.is_active
@@ -46,11 +51,11 @@ def cart_view(request):
             or not v.product.category.is_active
         )
 
-    
         is_out_of_stock = (not is_blocked) and (v.stock == 0)
 
-       
-        is_low_stock = (not is_blocked) and (not is_out_of_stock) and (v.stock < item.quantity)
+        is_low_stock = (
+            (not is_blocked) and (not is_out_of_stock) and (v.stock < item.quantity)
+        )
 
         item.is_blocked = is_blocked
         item.is_out_of_stock = is_out_of_stock
@@ -89,11 +94,12 @@ def add_to_cart_api(request):
         if quantity < 1:
             raise ValueError
     except (ValueError, TypeError, json.JSONDecodeError):
-        return JsonResponse({"success": False, "message": "Invalid request data."}, status=400)
+        return JsonResponse(
+            {"success": False, "message": "Invalid request data."}, status=400
+        )
 
     variant = get_object_or_404(ProductVariant, id=variant_id)
 
-  
     if (
         variant.is_deleted
         or not variant.is_active
@@ -107,7 +113,6 @@ def add_to_cart_api(request):
             status=400,
         )
 
-
     if variant.stock == 0:
         return JsonResponse(
             {"success": False, "message": "This product is out of stock."},
@@ -116,7 +121,10 @@ def add_to_cart_api(request):
 
     if variant.stock < quantity:
         return JsonResponse(
-            {"success": False, "message": f"Only {variant.stock} item(s) available in stock."},
+            {
+                "success": False,
+                "message": f"Only {variant.stock} item(s) available in stock.",
+            },
             status=400,
         )
 
@@ -132,13 +140,19 @@ def add_to_cart_api(request):
             # Brand new item exceeds max — delete it and return error
             item.delete()
             return JsonResponse(
-                {"success": False, "message": f"Maximum allowed quantity ({max_allowed}) reached."},
+                {
+                    "success": False,
+                    "message": f"Maximum allowed quantity ({max_allowed}) reached.",
+                },
                 status=400,
             )
         # Existing item — cap at max if room exists, otherwise error
         if item.quantity >= max_allowed:
             return JsonResponse(
-                {"success": False, "message": f"Maximum allowed quantity ({max_allowed}) reached."},
+                {
+                    "success": False,
+                    "message": f"Maximum allowed quantity ({max_allowed}) reached.",
+                },
                 status=400,
             )
         new_quantity = max_allowed
@@ -146,8 +160,6 @@ def add_to_cart_api(request):
     item.quantity = new_quantity
     item.save()
 
-
-  
     wishlist_removed = False
     wishlist_count = 0
     if request.user.is_authenticated:
@@ -157,41 +169,48 @@ def add_to_cart_api(request):
         wishlist_removed = deleted_count > 0
         wishlist_count = Wishlist.objects.filter(user=request.user).count()
 
-    return JsonResponse({
-        "success": True,
-        "message": "Added to cart!",
-        "cart_item_count": cart.items.count(),
-        "wishlist_removed": wishlist_removed,
-        "wishlist_count": wishlist_count,
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "Added to cart!",
+            "cart_item_count": cart.items.count(),
+            "wishlist_removed": wishlist_removed,
+            "wishlist_count": wishlist_count,
+        }
+    )
 
 
 @require_POST
 def update_cart_api(request):
-  
+
     try:
         data = json.loads(request.body)
         item_id = data.get("item_id")
-        action = data.get("action")  
+        action = data.get("action")
     except (ValueError, TypeError, json.JSONDecodeError):
-        return JsonResponse({"success": False, "message": "Invalid request data."}, status=400)
+        return JsonResponse(
+            {"success": False, "message": "Invalid request data."}, status=400
+        )
 
     cart = get_or_create_cart(request)
     item = get_object_or_404(CartItem, id=item_id, cart=cart)
     variant = item.variant
 
     if action == "increment":
-        
+
         if variant.stock == 0:
             return JsonResponse(
                 {"success": False, "message": "This item is out of stock."},
                 status=400,
             )
-        
+
         max_allowed = min(MAX_CART_QUANTITY, variant.stock)
         if item.quantity >= max_allowed:
             return JsonResponse(
-                {"success": False, "message": f"Maximum of {max_allowed} units allowed."},
+                {
+                    "success": False,
+                    "message": f"Maximum of {max_allowed} units allowed.",
+                },
                 status=400,
             )
         item.quantity += 1
@@ -200,41 +219,52 @@ def update_cart_api(request):
     elif action == "decrement":
         if item.quantity <= 1:
             return JsonResponse(
-                {"success": False, "message": "Minimum quantity is 1. Use ✕ to remove."},
+                {
+                    "success": False,
+                    "message": "Minimum quantity is 1. Use ✕ to remove.",
+                },
                 status=400,
             )
         item.quantity -= 1
         item.save()
 
     else:
-        return JsonResponse({"success": False, "message": "Invalid action."}, status=400)
+        return JsonResponse(
+            {"success": False, "message": "Invalid action."}, status=400
+        )
 
-    return JsonResponse({
-        "success": True,
-        "new_quantity": item.quantity,
-        "item_subtotal": str(item.get_subtotal()),
-        "cart_total_price": str(cart.get_total_price()),
-        "cart_item_count": cart.items.count(),
-        "max_allowed": min(MAX_CART_QUANTITY, variant.stock),
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "new_quantity": item.quantity,
+            "item_subtotal": str(item.get_subtotal()),
+            "cart_total_price": str(cart.get_total_price()),
+            "cart_item_count": cart.items.count(),
+            "max_allowed": min(MAX_CART_QUANTITY, variant.stock),
+        }
+    )
 
 
 @require_POST
 def remove_cart_api(request):
-  
+
     try:
         data = json.loads(request.body)
         item_id = data.get("item_id")
     except (ValueError, TypeError, json.JSONDecodeError):
-        return JsonResponse({"success": False, "message": "Invalid request data."}, status=400)
+        return JsonResponse(
+            {"success": False, "message": "Invalid request data."}, status=400
+        )
 
     cart = get_or_create_cart(request)
     item = get_object_or_404(CartItem, id=item_id, cart=cart)
     item.delete()
 
-    return JsonResponse({
-        "success": True,
-        "message": "Item removed from cart.",
-        "cart_total_price": str(cart.get_total_price()),
-        "cart_item_count": cart.items.count(),
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "Item removed from cart.",
+            "cart_total_price": str(cart.get_total_price()),
+            "cart_item_count": cart.items.count(),
+        }
+    )

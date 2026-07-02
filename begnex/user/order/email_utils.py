@@ -3,10 +3,11 @@ Email notification helpers for order cancellation & refund events.
 Only fires when the USER cancels an order and a refund is credited to their wallet.
 """
 
-import traceback
 import os
-from django.core.mail import send_mail
+import traceback
+
 from django.conf import settings
+from django.core.mail import send_mail
 
 
 def _from_email():
@@ -18,7 +19,9 @@ def _user_display(user):
     return full.strip() if full.strip() else user.username
 
 
-def _log_email_status(event_name, recipient, subject, body, success, error_msg=None, tb=None):
+def _log_email_status(
+    event_name, recipient, subject, body, success, error_msg=None, tb=None
+):
     try:
         log_path = os.path.join(settings.BASE_DIR, "email_debug.log")
         with open(log_path, "a", encoding="utf-8") as f:
@@ -42,15 +45,22 @@ def _log_email_status(event_name, recipient, subject, body, success, error_msg=N
 
 
 def send_order_cancelled_email(user, order, refund_amount):
- 
+
     recipient = user.email
     if not recipient:
-        _log_email_status("FULL ORDER CANCEL", "None", f"Order #{order.order_id} Cancelled", "", False, "User has no email address")
+        _log_email_status(
+            "FULL ORDER CANCEL",
+            "None",
+            f"Order #{order.order_id} Cancelled",
+            "",
+            False,
+            "User has no email address",
+        )
         return
 
-    name     = _user_display(user)
+    name = _user_display(user)
     order_no = order.order_id
-    is_paid  = refund_amount > 0
+    is_paid = refund_amount > 0
 
     subject = f"Order #{order_no} Cancelled — Begnex"
 
@@ -98,19 +108,34 @@ def send_order_cancelled_email(user, order, refund_amount):
         )
         _log_email_status("FULL ORDER CANCEL", recipient, subject, body, True)
     except Exception as e:
-        _log_email_status("FULL ORDER CANCEL", recipient, subject, body, False, str(e), traceback.format_exc())
+        _log_email_status(
+            "FULL ORDER CANCEL",
+            recipient,
+            subject,
+            body,
+            False,
+            str(e),
+            traceback.format_exc(),
+        )
 
 
 def send_item_cancelled_email(user, order, item, cancel_qty, refund_amount):
-   
+
     recipient = user.email
     if not recipient:
-        _log_email_status("ITEM CANCEL", "None", f"Item Cancelled — Order #{order.order_id}", "", False, "User has no email address")
+        _log_email_status(
+            "ITEM CANCEL",
+            "None",
+            f"Item Cancelled — Order #{order.order_id}",
+            "",
+            False,
+            "User has no email address",
+        )
         return
 
-    name       = _user_display(user)
-    order_no   = order.order_id
-    is_paid    = refund_amount > 0
+    name = _user_display(user)
+    order_no = order.order_id
+    is_paid = refund_amount > 0
     unit_label = "unit" if cancel_qty == 1 else "units"
 
     subject = f"Item Cancellation Confirmed — Order #{order_no} | Begnex"
@@ -163,4 +188,12 @@ def send_item_cancelled_email(user, order, item, cancel_qty, refund_amount):
         )
         _log_email_status("ITEM CANCEL", recipient, subject, body, True)
     except Exception as e:
-        _log_email_status("ITEM CANCEL", recipient, subject, body, False, str(e), traceback.format_exc())
+        _log_email_status(
+            "ITEM CANCEL",
+            recipient,
+            subject,
+            body,
+            False,
+            str(e),
+            traceback.format_exc(),
+        )

@@ -6,18 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('admin_order', '0006_order_razorpay_order_id_order_razorpay_payment_id_and_more'),
+        (
+            "admin_order",
+            "0006_order_razorpay_order_id_order_razorpay_payment_id_and_more",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='order',
-            name='coupon_code',
+            model_name="order",
+            name="coupon_code",
             field=models.CharField(blank=True, max_length=20, null=True),
         ),
         migrations.AddField(
-            model_name='order',
-            name='coupon_discount',
+            model_name="order",
+            name="coupon_discount",
             field=models.DecimalField(decimal_places=2, default=0, max_digits=10),
         ),
     ]

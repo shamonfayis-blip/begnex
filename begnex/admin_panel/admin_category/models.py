@@ -9,9 +9,7 @@ class Category(models.Model):
 
     description = models.TextField(blank=True, default="")
 
-    image = models.ImageField(
-        upload_to="category_images/", blank=True, null=True
-    )
+    image = models.ImageField(upload_to="category_images/", blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
 

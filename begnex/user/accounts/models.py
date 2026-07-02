@@ -24,8 +24,11 @@ class User(AbstractUser):
         if not self.referral_code:
             import random
             import string
+
             while True:
-                code = "BNX-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+                code = "BNX-" + "".join(
+                    random.choices(string.ascii_uppercase + string.digits, k=6)
+                )
                 # Avoid circular import or direct queries if model is not ready
                 if not User.objects.filter(referral_code=code).exists():
                     self.referral_code = code

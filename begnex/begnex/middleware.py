@@ -21,8 +21,7 @@ class BlockedUserMiddleware:
         if request.user.is_authenticated:
             try:
                 is_blocked = (
-                    request.user.__class__.objects
-                    .filter(pk=request.user.pk)
+                    request.user.__class__.objects.filter(pk=request.user.pk)
                     .values_list("is_blocked", flat=True)
                     .first()
                 )
@@ -36,9 +35,8 @@ class BlockedUserMiddleware:
                 messages.error(
                     request,
                     "Your account has been blocked by the administrator. "
-                    "Please contact support for assistance."
+                    "Please contact support for assistance.",
                 )
                 return redirect(reverse("login"))
 
         return self.get_response(request)
-

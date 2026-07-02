@@ -1,26 +1,27 @@
 import json
 import random
 import string
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.utils import timezone
-from django.db import transaction
 
-from admin_panel.admin_order.models import Order, OrderItem
+import razorpay
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+
 from admin_panel.admin_coupon.models import Coupon
+from admin_panel.admin_order.models import Order, OrderItem
 from user.address.models import Address
 from user.cart.models import Cart
 from user.wallet.utils import get_user_wallet
-from django.urls import reverse
-from django.conf import settings
-import razorpay
 
 
 def generate_unique_order_id():
- 
+
     while True:
         code = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
         order_id = f"ORD-{code}"
@@ -29,37 +30,38 @@ def generate_unique_order_id():
 
 
 def serialize_addresses(user):
-   
+
     addresses = Address.objects.filter(user=user).order_by("-is_default", "-created_at")
     data = []
     for addr in addresses:
-        data.append({
-            "id": addr.id,
-            "name": addr.name,
-            "phone_number": addr.phone_number,
-            "address_line_1": addr.address_line_1,
-            "address_line_2": addr.address_line_2 or "",
-            "city": addr.city,
-            "state": addr.state,
-            "pincode": addr.pincode,
-            "country": addr.country,
-            "address_type": addr.address_type,
-            "is_default": addr.is_default
-        })
+        data.append(
+            {
+                "id": addr.id,
+                "name": addr.name,
+                "phone_number": addr.phone_number,
+                "address_line_1": addr.address_line_1,
+                "address_line_2": addr.address_line_2 or "",
+                "city": addr.city,
+                "state": addr.state,
+                "pincode": addr.pincode,
+                "country": addr.country,
+                "address_type": addr.address_type,
+                "is_default": addr.is_default,
+            }
+        )
     return data
 
 
 @login_required(login_url="login")
 def checkout_page(request):
-   
+
     cart = Cart.objects.filter(user=request.user).first()
     if not cart or not cart.items.exists():
         messages.warning(request, "Your cart is empty.")
         return redirect("cart")
 
-    
     blocked_items = []
-    for item in cart.items.select_related('variant__product__category').all():
+    for item in cart.items.select_related("variant__product__category").all():
         is_inactive = (
             not item.variant.is_active
             or item.variant.is_deleted
@@ -73,16 +75,23 @@ def checkout_page(request):
             blocked_items.append(item)
 
     if blocked_items:
-        messages.error(request, "Some items in your cart are currently unavailable. Please modify your cart.")
+        messages.error(
+            request,
+            "Some items in your cart are currently unavailable. Please modify your cart.",
+        )
         return redirect("cart")
 
     subtotal = cart.get_total_price()
     shipping_charge = 0
     total = subtotal + shipping_charge
 
-    addresses = Address.objects.filter(user=request.user).order_by("-is_default", "-created_at")
+    addresses = Address.objects.filter(user=request.user).order_by(
+        "-is_default", "-created_at"
+    )
     today = timezone.now().date()
-    active_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=today, valid_until__gte=today)
+    active_coupons = Coupon.objects.filter(
+        is_active=True, valid_from__lte=today, valid_until__gte=today
+    )
     wallet = get_user_wallet(request.user)
 
     context = {
@@ -114,7 +123,9 @@ def checkout_add_address_api(request):
     is_default = request.POST.get("is_default") in ["on", "true", True]
 
     if not all([name, phone_number, address_line_1, city, state, pincode]):
-        return JsonResponse({"success": False, "message": "All required fields must be filled."})
+        return JsonResponse(
+            {"success": False, "message": "All required fields must be filled."}
+        )
 
     try:
         address = Address(
@@ -128,10 +139,12 @@ def checkout_add_address_api(request):
             pincode=pincode,
             country=country,
             address_type=address_type,
-            is_default=is_default
+            is_default=is_default,
         )
         address.save()
-        return JsonResponse({"success": True, "addresses": serialize_addresses(request.user)})
+        return JsonResponse(
+            {"success": True, "addresses": serialize_addresses(request.user)}
+        )
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)})
 
@@ -139,7 +152,7 @@ def checkout_add_address_api(request):
 @login_required(login_url="login")
 @require_POST
 def checkout_edit_address_api(request, id):
-   
+
     address = get_object_or_404(Address, id=id, user=request.user)
     name = request.POST.get("name", "").strip()
     phone_number = request.POST.get("phone_number", "").strip()
@@ -153,7 +166,9 @@ def checkout_edit_address_api(request, id):
     is_default = request.POST.get("is_default") in ["on", "true", True]
 
     if not all([name, phone_number, address_line_1, city, state, pincode]):
-        return JsonResponse({"success": False, "message": "All required fields must be filled."})
+        return JsonResponse(
+            {"success": False, "message": "All required fields must be filled."}
+        )
 
     try:
         address.name = name
@@ -167,7 +182,9 @@ def checkout_edit_address_api(request, id):
         address.address_type = address_type
         address.is_default = is_default
         address.save()
-        return JsonResponse({"success": True, "addresses": serialize_addresses(request.user)})
+        return JsonResponse(
+            {"success": True, "addresses": serialize_addresses(request.user)}
+        )
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)})
 
@@ -184,28 +201,41 @@ def checkout_apply_coupon_api(request):
         cart_subtotal = 0
 
     if not code:
-        return JsonResponse({"success": False, "message": "Please enter a coupon code."})
+        return JsonResponse(
+            {"success": False, "message": "Please enter a coupon code."}
+        )
 
     today = timezone.now().date()
     coupon = Coupon.objects.filter(code__iexact=code, is_active=True).first()
     if not coupon:
-        return JsonResponse({"success": False, "message": "Invalid or inactive coupon code."})
+        return JsonResponse(
+            {"success": False, "message": "Invalid or inactive coupon code."}
+        )
 
     if today < coupon.valid_from or today > coupon.valid_until:
-        return JsonResponse({"success": False, "message": "This coupon has expired or is not yet active."})
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "This coupon has expired or is not yet active.",
+            }
+        )
 
     if coupon.usage_limit is not None and coupon.used_count >= coupon.usage_limit:
-        return JsonResponse({"success": False, "message": "This coupon has reached its usage limit."})
+        return JsonResponse(
+            {"success": False, "message": "This coupon has reached its usage limit."}
+        )
 
     if cart_subtotal > 0 and coupon.min_order_amount > 0:
         if float(coupon.min_order_amount) > cart_subtotal:
-            return JsonResponse({
-                "success": False,
-                "message": f"Minimum order amount of \u20b9{coupon.min_order_amount:.0f} required for this coupon."
-            })
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"Minimum order amount of \u20b9{coupon.min_order_amount:.0f} required for this coupon.",
+                }
+            )
 
-    
     from decimal import Decimal
+
     subtotal_dec = Decimal(str(cart_subtotal))
     if coupon.discount_type == "percentage":
         discount = (subtotal_dec * coupon.discount_value) / 100
@@ -214,15 +244,17 @@ def checkout_apply_coupon_api(request):
     else:
         discount = min(coupon.discount_value, subtotal_dec)
 
-    return JsonResponse({
-        "success": True,
-        "code": coupon.code,
-        "discount_type": coupon.discount_type,
-        "discount_value": float(coupon.discount_value),
-        "discount_amount": float(discount),
-        "min_order_amount": float(coupon.min_order_amount),
-        "message": f"Coupon applied! You save \u20b9{discount:.2f}"
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "code": coupon.code,
+            "discount_type": coupon.discount_type,
+            "discount_value": float(coupon.discount_value),
+            "discount_amount": float(discount),
+            "min_order_amount": float(coupon.min_order_amount),
+            "message": f"Coupon applied! You save \u20b9{discount:.2f}",
+        }
+    )
 
 
 @login_required(login_url="login")
@@ -232,18 +264,34 @@ def place_order(request):
     coupon_code = request.POST.get("coupon_code", "").strip()
     payment_method = request.POST.get("payment_method", "cod").strip().lower()
 
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+    is_ajax = (
+        request.headers.get("x-requested-with") == "XMLHttpRequest"
+        or request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
+    )
 
     if not address_id:
         if is_ajax:
-            return JsonResponse({"success": False, "message": "Please select or add a shipping address."})
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Please select or add a shipping address.",
+                }
+            )
         messages.error(request, "Please select or add a shipping address.")
         return redirect("checkout_page")
 
     if payment_method not in ["cod", "wallet"]:
         if is_ajax:
-            return JsonResponse({"success": False, "message": "Please complete the payment via the checkout page for online orders."})
-        messages.error(request, "Please complete the payment via the checkout page for online orders.")
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Please complete the payment via the checkout page for online orders.",
+                }
+            )
+        messages.error(
+            request,
+            "Please complete the payment via the checkout page for online orders.",
+        )
         return redirect("checkout_page")
 
     address = get_object_or_404(Address, id=address_id, user=request.user)
@@ -257,7 +305,11 @@ def place_order(request):
 
     try:
         with transaction.atomic():
-            cart_items = list(cart.items.select_related('variant', 'variant__product', 'variant__product__category').all())
+            cart_items = list(
+                cart.items.select_related(
+                    "variant", "variant__product", "variant__product__category"
+                ).all()
+            )
             for item in cart_items:
                 is_active = (
                     item.variant.is_active
@@ -268,10 +320,14 @@ def place_order(request):
                     and item.variant.product.category.is_active
                 )
                 if not is_active:
-                    raise ValueError(f"Product '{item.variant.product.name}' is no longer available.")
-                
+                    raise ValueError(
+                        f"Product '{item.variant.product.name}' is no longer available."
+                    )
+
                 if item.variant.stock < item.quantity:
-                    raise ValueError(f"Insufficient stock for '{item.variant.product.name} ({item.variant.name})'. Only {item.variant.stock} left.")
+                    raise ValueError(
+                        f"Insufficient stock for '{item.variant.product.name} ({item.variant.name})'. Only {item.variant.stock} left."
+                    )
 
             subtotal = cart.get_total_price()
             shipping_charge = 0
@@ -284,7 +340,7 @@ def place_order(request):
                     code__iexact=coupon_code,
                     is_active=True,
                     valid_from__lte=today,
-                    valid_until__gte=today
+                    valid_until__gte=today,
                 ).first()
                 if coupon_obj:
                     if coupon_obj.discount_type == "percentage":
@@ -301,8 +357,11 @@ def place_order(request):
 
             if payment_method == "wallet":
                 from user.wallet.utils import pay_using_wallet
+
                 try:
-                    pay_using_wallet(request.user, total, f"Payment for Order #{order_id}")
+                    pay_using_wallet(
+                        request.user, total, f"Payment for Order #{order_id}"
+                    )
                 except ValueError as e:
                     raise ValueError(f"Wallet payment failed: {str(e)}")
 
@@ -327,7 +386,7 @@ def place_order(request):
                 subtotal=subtotal,
                 discount=discount,
                 shipping_charge=shipping_charge,
-                total=total
+                total=total,
             )
 
             for item in cart_items:
@@ -343,7 +402,7 @@ def place_order(request):
                     sku=variant.sku,
                     quantity=item.quantity,
                     unit_price=variant.get_discounted_price(),
-                    subtotal=item.get_subtotal()
+                    subtotal=item.get_subtotal(),
                 )
 
             cart.items.all().delete()
@@ -354,13 +413,18 @@ def place_order(request):
 
             if is_ajax:
                 from django.urls import reverse
-                return JsonResponse({
-                    "success": True,
-                    "order_id": order.order_id,
-                    "amount_display": f"{total:,.2f}",
-                    "payment_method": payment_method,
-                    "redirect_url": reverse("user_order_detail", kwargs={"order_pk": order.pk})
-                })
+
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "order_id": order.order_id,
+                        "amount_display": f"{total:,.2f}",
+                        "payment_method": payment_method,
+                        "redirect_url": reverse(
+                            "user_order_detail", kwargs={"order_pk": order.pk}
+                        ),
+                    }
+                )
 
             messages.success(request, f"Order #{order.order_id} placed successfully!")
             return redirect("user_order_detail", order_pk=order.pk)
@@ -372,7 +436,12 @@ def place_order(request):
         return redirect("checkout_page")
     except Exception as e:
         if is_ajax:
-            return JsonResponse({"success": False, "message": f"An error occurred while placing the order: {str(e)}"})
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"An error occurred while placing the order: {str(e)}",
+                }
+            )
         messages.error(request, f"An error occurred while placing the order: {str(e)}")
         return redirect("checkout_page")
 
@@ -380,12 +449,14 @@ def place_order(request):
 @login_required(login_url="login")
 @require_POST
 def initiate_razorpay_payment(request):
-    
+
     address_id = request.POST.get("address_id")
     coupon_code = request.POST.get("coupon_code", "").strip()
-    
+
     if not address_id:
-        return JsonResponse({"success": False, "message": "Please select or add a shipping address."})
+        return JsonResponse(
+            {"success": False, "message": "Please select or add a shipping address."}
+        )
 
     address = get_object_or_404(Address, id=address_id, user=request.user)
     cart = Cart.objects.filter(user=request.user).first()
@@ -394,8 +465,12 @@ def initiate_razorpay_payment(request):
         return JsonResponse({"success": False, "message": "Your cart is empty."})
 
     try:
-       
-        cart_items = list(cart.items.select_related('variant', 'variant__product', 'variant__product__category').all())
+
+        cart_items = list(
+            cart.items.select_related(
+                "variant", "variant__product", "variant__product__category"
+            ).all()
+        )
         for item in cart_items:
             is_active = (
                 item.variant.is_active
@@ -406,10 +481,20 @@ def initiate_razorpay_payment(request):
                 and item.variant.product.category.is_active
             )
             if not is_active:
-                return JsonResponse({"success": False, "message": f"Product '{item.variant.product.name}' is no longer available."})
-            
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": f"Product '{item.variant.product.name}' is no longer available.",
+                    }
+                )
+
             if item.variant.stock < item.quantity:
-                return JsonResponse({"success": False, "message": f"Insufficient stock for '{item.variant.product.name} ({item.variant.name})'. Only {item.variant.stock} left."})
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": f"Insufficient stock for '{item.variant.product.name} ({item.variant.name})'. Only {item.variant.stock} left.",
+                    }
+                )
 
         subtotal = cart.get_total_price()
         shipping_charge = 0
@@ -421,7 +506,7 @@ def initiate_razorpay_payment(request):
                 code__iexact=coupon_code,
                 is_active=True,
                 valid_from__lte=today,
-                valid_until__gte=today
+                valid_until__gte=today,
             ).first()
             if coupon:
                 if coupon.discount_type == "percentage":
@@ -434,45 +519,56 @@ def initiate_razorpay_payment(request):
         total = subtotal + shipping_charge - discount
         total = max(0, total)
 
-       
         receipt_id = f"rcpt_{request.user.id}_{int(timezone.now().timestamp())}"[:40]
 
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        client = razorpay.Client(
+            auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+        )
         from decimal import Decimal
-        amount_paise = int((total * Decimal('100')).to_integral_value())
-        
-        razorpay_order = client.order.create({
-            "amount": amount_paise,
-            "currency": "INR",
-            "receipt": receipt_id,
-            "payment_capture": 1,
-            "notes": {
-                "user_id": request.user.id,
-                "address_id": address_id,
-                "coupon_code": coupon_code
-            }
-        })
 
-        return JsonResponse({
-            "success": True,
-            "razorpay_key_id": settings.RAZORPAY_KEY_ID,
-            "razorpay_order_id": razorpay_order['id'],
-            "amount": amount_paise,
-            "user_name": request.user.username,
-            "user_email": request.user.email,
-            "user_phone": address.phone_number,
-            "address_id": address_id,
-            "coupon_code": coupon_code
-        })
+        amount_paise = int((total * Decimal("100")).to_integral_value())
+
+        razorpay_order = client.order.create(
+            {
+                "amount": amount_paise,
+                "currency": "INR",
+                "receipt": receipt_id,
+                "payment_capture": 1,
+                "notes": {
+                    "user_id": request.user.id,
+                    "address_id": address_id,
+                    "coupon_code": coupon_code,
+                },
+            }
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "razorpay_key_id": settings.RAZORPAY_KEY_ID,
+                "razorpay_order_id": razorpay_order["id"],
+                "amount": amount_paise,
+                "user_name": request.user.username,
+                "user_email": request.user.email,
+                "user_phone": address.phone_number,
+                "address_id": address_id,
+                "coupon_code": coupon_code,
+            }
+        )
 
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"An error occurred while creating payment: {str(e)}"})
+        return JsonResponse(
+            {
+                "success": False,
+                "message": f"An error occurred while creating payment: {str(e)}",
+            }
+        )
 
 
 @login_required(login_url="login")
 @require_POST
 def verify_razorpay_payment(request):
-    
+
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -485,23 +581,31 @@ def verify_razorpay_payment(request):
     coupon_code = data.get("coupon_code", "").strip()
 
     if not all([payment_id, razorpay_order_id, signature, address_id]):
-        return JsonResponse({"success": False, "message": "Missing payment parameters."})
+        return JsonResponse(
+            {"success": False, "message": "Missing payment parameters."}
+        )
 
-    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    client = razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
 
     params_dict = {
-        'razorpay_order_id': razorpay_order_id,
-        'razorpay_payment_id': payment_id,
-        'razorpay_signature': signature
+        "razorpay_order_id": razorpay_order_id,
+        "razorpay_payment_id": payment_id,
+        "razorpay_signature": signature,
     }
 
     try:
-        
+
         client.utility.verify_payment_signature(params_dict)
     except razorpay.errors.SignatureVerificationError:
-        return JsonResponse({"success": False, "message": "Payment signature verification failed."})
+        return JsonResponse(
+            {"success": False, "message": "Payment signature verification failed."}
+        )
     except Exception as e:
-        return JsonResponse({"success": False, "message": f"Verification error: {str(e)}"})
+        return JsonResponse(
+            {"success": False, "message": f"Verification error: {str(e)}"}
+        )
 
     address = get_object_or_404(Address, id=address_id, user=request.user)
     cart = Cart.objects.filter(user=request.user).first()
@@ -509,19 +613,38 @@ def verify_razorpay_payment(request):
     if not cart or not cart.items.exists():
         try:
             rz_order = client.order.fetch(razorpay_order_id)
-            amount_paid = rz_order['amount'] / 100
+            amount_paid = rz_order["amount"] / 100
             from decimal import Decimal
+
             from user.wallet.utils import refund_to_wallet
-            refund_to_wallet(request.user, Decimal(str(amount_paid)), f"Refund for empty cart payment (Ref: {razorpay_order_id})")
-            return JsonResponse({"success": False, "message": "Your cart is empty. Payment has been refunded to your wallet."})
+
+            refund_to_wallet(
+                request.user,
+                Decimal(str(amount_paid)),
+                f"Refund for empty cart payment (Ref: {razorpay_order_id})",
+            )
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Your cart is empty. Payment has been refunded to your wallet.",
+                }
+            )
         except Exception:
-            return JsonResponse({"success": False, "message": "Your cart is empty. Order could not be created. Please contact support."})
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Your cart is empty. Order could not be created. Please contact support.",
+                }
+            )
 
     try:
         with transaction.atomic():
-            cart_items = list(cart.items.select_related('variant', 'variant__product', 'variant__product__category').all())
+            cart_items = list(
+                cart.items.select_related(
+                    "variant", "variant__product", "variant__product__category"
+                ).all()
+            )
 
-           
             for item in cart_items:
                 is_active = (
                     item.variant.is_active
@@ -532,10 +655,14 @@ def verify_razorpay_payment(request):
                     and item.variant.product.category.is_active
                 )
                 if not is_active:
-                    raise ValueError(f"Product '{item.variant.product.name}' is no longer available.")
-                
+                    raise ValueError(
+                        f"Product '{item.variant.product.name}' is no longer available."
+                    )
+
                 if item.variant.stock < item.quantity:
-                    raise ValueError(f"Insufficient stock for '{item.variant.product.name} ({item.variant.name})'. Only {item.variant.stock} left.")
+                    raise ValueError(
+                        f"Insufficient stock for '{item.variant.product.name} ({item.variant.name})'. Only {item.variant.stock} left."
+                    )
 
             subtotal = cart.get_total_price()
             shipping_charge = 0
@@ -548,7 +675,7 @@ def verify_razorpay_payment(request):
                     code__iexact=coupon_code,
                     is_active=True,
                     valid_from__lte=today,
-                    valid_until__gte=today
+                    valid_until__gte=today,
                 ).first()
                 if coupon_obj:
                     if coupon_obj.discount_type == "percentage":
@@ -561,14 +688,12 @@ def verify_razorpay_payment(request):
             total = subtotal + shipping_charge - discount
             total = max(0, total)
 
-           
             order_id = generate_unique_order_id()
 
             addr_lines = [address.address_line_1]
             if address.address_line_2:
                 addr_lines.append(address.address_line_2)
 
-            
             order = Order.objects.create(
                 order_id=order_id,
                 user=request.user,
@@ -589,10 +714,9 @@ def verify_razorpay_payment(request):
                 total=total,
                 razorpay_order_id=razorpay_order_id,
                 razorpay_payment_id=payment_id,
-                razorpay_signature=signature
+                razorpay_signature=signature,
             )
 
-          
             for item in cart_items:
                 variant = item.variant
                 variant.stock -= item.quantity
@@ -606,54 +730,89 @@ def verify_razorpay_payment(request):
                     sku=variant.sku,
                     quantity=item.quantity,
                     unit_price=variant.get_discounted_price(),
-                    subtotal=item.get_subtotal()
+                    subtotal=item.get_subtotal(),
                 )
 
-          
             cart.items.all().delete()
 
-            
             if coupon_obj:
                 coupon_obj.used_count += 1
                 coupon_obj.save(update_fields=["used_count"])
 
             messages.success(request, f"Order #{order.order_id} placed successfully!")
-            return JsonResponse({
-                "success": True,
-                "order_id": order.order_id,
-                "redirect_url": reverse("user_order_detail", kwargs={"order_pk": order.pk})
-            })
+            return JsonResponse(
+                {
+                    "success": True,
+                    "order_id": order.order_id,
+                    "redirect_url": reverse(
+                        "user_order_detail", kwargs={"order_pk": order.pk}
+                    ),
+                }
+            )
 
     except ValueError as e:
         try:
             rz_order = client.order.fetch(razorpay_order_id)
-            amount_paid = rz_order['amount'] / 100
+            amount_paid = rz_order["amount"] / 100
             from decimal import Decimal
+
             from user.wallet.utils import refund_to_wallet
-            refund_to_wallet(request.user, Decimal(str(amount_paid)), f"Refund for failed order: {str(e)}")
-            return JsonResponse({"success": False, "message": f"Order failed: {str(e)}. Payment has been refunded to your wallet."})
+
+            refund_to_wallet(
+                request.user,
+                Decimal(str(amount_paid)),
+                f"Refund for failed order: {str(e)}",
+            )
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"Order failed: {str(e)}. Payment has been refunded to your wallet.",
+                }
+            )
         except Exception:
-            return JsonResponse({"success": False, "message": f"Order failed: {str(e)}. Please contact support with Payment ID: {payment_id}."})
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"Order failed: {str(e)}. Please contact support with Payment ID: {payment_id}.",
+                }
+            )
     except Exception as e:
         try:
             rz_order = client.order.fetch(razorpay_order_id)
-            amount_paid = rz_order['amount'] / 100
+            amount_paid = rz_order["amount"] / 100
             from decimal import Decimal
+
             from user.wallet.utils import refund_to_wallet
-            refund_to_wallet(request.user, Decimal(str(amount_paid)), f"Refund for failed order: {str(e)}")
-            return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}. Payment has been refunded to your wallet."})
+
+            refund_to_wallet(
+                request.user,
+                Decimal(str(amount_paid)),
+                f"Refund for failed order: {str(e)}",
+            )
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"An error occurred: {str(e)}. Payment has been refunded to your wallet.",
+                }
+            )
         except Exception:
-            return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}. Please contact support with Payment ID: {payment_id}."})
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"An error occurred: {str(e)}. Please contact support with Payment ID: {payment_id}.",
+                }
+            )
 
 
 @login_required(login_url="login")
 @require_POST
 def checkout_delete_address_api(request, id):
-  
+
     address = get_object_or_404(Address, id=id, user=request.user)
     try:
         address.delete()
-        return JsonResponse({"success": True, "addresses": serialize_addresses(request.user)})
+        return JsonResponse(
+            {"success": True, "addresses": serialize_addresses(request.user)}
+        )
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)})
-

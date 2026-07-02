@@ -8,31 +8,73 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('admin_offer', '0001_initial'),
+        ("admin_offer", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ReferralOffer',
+            name="ReferralOffer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('referrer_reward', models.DecimalField(decimal_places=2, default=0.0, max_digits=10)),
-                ('referee_reward', models.DecimalField(decimal_places=2, default=0.0, max_digits=10)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "referrer_reward",
+                    models.DecimalField(decimal_places=2, default=0.0, max_digits=10),
+                ),
+                (
+                    "referee_reward",
+                    models.DecimalField(decimal_places=2, default=0.0, max_digits=10),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
         ),
         migrations.CreateModel(
-            name='ReferralRecord',
+            name="ReferralRecord",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('referrer_reward_paid', models.DecimalField(decimal_places=2, default=0.0, max_digits=10)),
-                ('referee_reward_paid', models.DecimalField(decimal_places=2, default=0.0, max_digits=10)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('referee', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='referral_received', to=settings.AUTH_USER_MODEL)),
-                ('referrer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='referrals_made', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "referrer_reward_paid",
+                    models.DecimalField(decimal_places=2, default=0.0, max_digits=10),
+                ),
+                (
+                    "referee_reward_paid",
+                    models.DecimalField(decimal_places=2, default=0.0, max_digits=10),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "referee",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="referral_received",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "referrer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="referrals_made",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

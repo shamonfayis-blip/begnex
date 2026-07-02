@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('admin_order', '0005_alter_order_status_alter_orderitem_status'),
+        ("admin_order", "0005_alter_order_status_alter_orderitem_status"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='order',
-            name='razorpay_order_id',
+            model_name="order",
+            name="razorpay_order_id",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
         migrations.AddField(
-            model_name='order',
-            name='razorpay_payment_id',
+            model_name="order",
+            name="razorpay_payment_id",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
         migrations.AddField(
-            model_name='order',
-            name='razorpay_signature',
+            model_name="order",
+            name="razorpay_signature",
             field=models.CharField(blank=True, max_length=200, null=True),
         ),
     ]

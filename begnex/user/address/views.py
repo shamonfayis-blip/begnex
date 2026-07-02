@@ -10,9 +10,7 @@ def address_list(request):
     addresses = Address.objects.filter(user=request.user).order_by(
         "-is_default", "-created_at"
     )
-    return render(
-        request, "address/address_list.html", {"addresses": addresses}
-    )
+    return render(request, "address/address_list.html", {"addresses": addresses})
 
 
 @login_required(login_url="login")

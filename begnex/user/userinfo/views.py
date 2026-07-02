@@ -50,9 +50,7 @@ def edit_profile_view(request):
         phone = request.POST.get("phone", "").strip()
         if phone and (not phone.isdigit() or len(phone) != 10):
 
-            messages.error(
-                request, "Phone number must contain exactly 10 digits."
-            )
+            messages.error(request, "Phone number must contain exactly 10 digits.")
 
             return redirect("edit_profile")
         profile_photo = request.FILES.get("profile_image")
@@ -203,5 +201,3 @@ def change_password_view(request):
         return redirect("profile")
 
     return render(request, "change_password.html")
-
-

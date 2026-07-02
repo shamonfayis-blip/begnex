@@ -6,18 +6,41 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('admin_order', '0004_orderitem_cancelled_quantity_and_more'),
+        ("admin_order", "0004_orderitem_cancelled_quantity_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='order',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('shipped', 'Shipped'), ('out_for_delivery', 'Out for Delivery'), ('delivered', 'Delivered'), ('cancelled', 'Cancelled'), ('return_requested', 'Return Requested'), ('returned', 'Returned'), ('return_rejected', 'Return Rejected')], default='pending', max_length=20),
+            model_name="order",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("pending", "Pending"),
+                    ("shipped", "Shipped"),
+                    ("out_for_delivery", "Out for Delivery"),
+                    ("delivered", "Delivered"),
+                    ("cancelled", "Cancelled"),
+                    ("return_requested", "Return Requested"),
+                    ("returned", "Returned"),
+                    ("return_rejected", "Return Rejected"),
+                ],
+                default="pending",
+                max_length=20,
+            ),
         ),
         migrations.AlterField(
-            model_name='orderitem',
-            name='status',
-            field=models.CharField(choices=[('ordered', 'Ordered'), ('cancelled', 'Cancelled'), ('return_requested', 'Return Requested'), ('returned', 'Returned'), ('return_rejected', 'Return Rejected')], default='ordered', max_length=20),
+            model_name="orderitem",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("ordered", "Ordered"),
+                    ("cancelled", "Cancelled"),
+                    ("return_requested", "Return Requested"),
+                    ("returned", "Returned"),
+                    ("return_rejected", "Return Rejected"),
+                ],
+                default="ordered",
+                max_length=20,
+            ),
         ),
     ]

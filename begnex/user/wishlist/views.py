@@ -7,23 +7,25 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
 from admin_panel.admin_product.models import Product
+
 from .models import Wishlist
 
 
 @login_required(login_url="login")
 def wishlist_view(request):
-   
-    wishlist_items = Wishlist.objects.filter(
-        user=request.user,
-        product__is_active=True,
-        product__is_deleted=False,
-        product__category__is_active=True,
-        product__category__is_deleted=False,
-    ).select_related(
-        "product", "product__category"
-    ).prefetch_related("product__variants")
 
-    
+    wishlist_items = (
+        Wishlist.objects.filter(
+            user=request.user,
+            product__is_active=True,
+            product__is_deleted=False,
+            product__category__is_active=True,
+            product__category__is_deleted=False,
+        )
+        .select_related("product", "product__category")
+        .prefetch_related("product__variants")
+    )
+
     product_ids = wishlist_items.values_list("product_id", flat=True)
     products_with_price = Product.objects.filter(id__in=product_ids).annotate(
         computed_min_price=Min(
@@ -33,16 +35,19 @@ def wishlist_view(request):
     )
     price_map = {p.id: p.computed_min_price for p in products_with_price}
 
-   
     items = []
     for wi in wishlist_items:
         wi.product.min_price = price_map.get(wi.product.id)
-        
-       
-        active_variants = [v for v in wi.product.variants.all() if v.is_active and not v.is_deleted]
-        default_variant = next((v for v in active_variants if v.is_default), active_variants[0] if active_variants else None)
+
+        active_variants = [
+            v for v in wi.product.variants.all() if v.is_active and not v.is_deleted
+        ]
+        default_variant = next(
+            (v for v in active_variants if v.is_default),
+            active_variants[0] if active_variants else None,
+        )
         wi.product.default_variant_id = default_variant.id if default_variant else None
-        
+
         items.append(wi)
 
     context = {
@@ -60,21 +65,38 @@ def toggle_wishlist_api(request):
         data = json.loads(request.body)
         product_id = data.get("product_id")
     except (ValueError, TypeError, json.JSONDecodeError):
-        return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
+        return JsonResponse(
+            {"success": False, "message": "Invalid request."}, status=400
+        )
 
     try:
         product = Product.objects.get(id=product_id, is_deleted=False, is_active=True)
     except Product.DoesNotExist:
-        return JsonResponse({"success": False, "message": "Product not found."}, status=404)
+        return JsonResponse(
+            {"success": False, "message": "Product not found."}, status=404
+        )
 
     obj, created = Wishlist.objects.get_or_create(user=request.user, product=product)
 
     if not created:
-     
+
         obj.delete()
         count = Wishlist.objects.filter(user=request.user).count()
-        return JsonResponse({"success": True, "action": "removed", "wishlist_count": count, "message": "Removed from wishlist."})
+        return JsonResponse(
+            {
+                "success": True,
+                "action": "removed",
+                "wishlist_count": count,
+                "message": "Removed from wishlist.",
+            }
+        )
 
     count = Wishlist.objects.filter(user=request.user).count()
-    return JsonResponse({"success": True, "action": "added", "wishlist_count": count, "message": "Added to wishlist."})
-
+    return JsonResponse(
+        {
+            "success": True,
+            "action": "added",
+            "wishlist_count": count,
+            "message": "Added to wishlist.",
+        }
+    )

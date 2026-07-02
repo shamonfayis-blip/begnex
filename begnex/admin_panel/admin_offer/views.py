@@ -1,24 +1,25 @@
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import never_cache
-from django.utils import timezone
 from django.db import models
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.cache import never_cache
 
-from admin_panel.admin_product.models import Product
 from admin_panel.admin_category.models import Category
-from .models import ProductOffer, CategoryOffer
+from admin_panel.admin_product.models import Product
+
+from .models import CategoryOffer, ProductOffer
+
 
 @never_cache
 @staff_member_required(login_url="admin_login")
 def admin_offer_list_view(request):
     product_offers = ProductOffer.objects.select_related("product").all()
     category_offers = CategoryOffer.objects.select_related("category").all()
-    
-    
+
     products = Product.objects.filter(is_deleted=False, is_active=True)
     categories = Category.objects.filter(is_deleted=False, is_active=True)
-    
+
     context = {
         "product_offers": product_offers,
         "category_offers": category_offers,
@@ -63,6 +64,7 @@ def admin_product_offer_create_view(request):
 
         if valid_from and valid_until:
             from datetime import date
+
             try:
                 vf = date.fromisoformat(valid_from)
                 vu = date.fromisoformat(valid_until)
@@ -71,16 +73,18 @@ def admin_product_offer_create_view(request):
             except ValueError:
                 errors.append("Invalid date format.")
 
-       
         if not errors:
-            overlapping = ProductOffer.objects.filter(
-                product=product,
-                is_active=True
-            ).filter(
-                models.Q(valid_from__lte=valid_until, valid_until__gte=valid_from)
-            ).exists()
+            overlapping = (
+                ProductOffer.objects.filter(product=product, is_active=True)
+                .filter(
+                    models.Q(valid_from__lte=valid_until, valid_until__gte=valid_from)
+                )
+                .exists()
+            )
             if overlapping:
-                errors.append(f"An active offer already overlaps with this date range for product '{product.name}'.")
+                errors.append(
+                    f"An active offer already overlaps with this date range for product '{product.name}'."
+                )
 
         if errors:
             for err in errors:
@@ -94,7 +98,7 @@ def admin_product_offer_create_view(request):
                 valid_until=valid_until,
             )
             messages.success(request, "Product offer created successfully!")
-            
+
     return redirect("admin_offers")
 
 
@@ -132,6 +136,7 @@ def admin_category_offer_create_view(request):
 
         if valid_from and valid_until:
             from datetime import date
+
             try:
                 vf = date.fromisoformat(valid_from)
                 vu = date.fromisoformat(valid_until)
@@ -140,16 +145,18 @@ def admin_category_offer_create_view(request):
             except ValueError:
                 errors.append("Invalid date format.")
 
-       
         if not errors:
-            overlapping = CategoryOffer.objects.filter(
-                category=category,
-                is_active=True
-            ).filter(
-                models.Q(valid_from__lte=valid_until, valid_until__gte=valid_from)
-            ).exists()
+            overlapping = (
+                CategoryOffer.objects.filter(category=category, is_active=True)
+                .filter(
+                    models.Q(valid_from__lte=valid_until, valid_until__gte=valid_from)
+                )
+                .exists()
+            )
             if overlapping:
-                errors.append(f"An active offer already overlaps with this date range for category '{category.name}'.")
+                errors.append(
+                    f"An active offer already overlaps with this date range for category '{category.name}'."
+                )
 
         if errors:
             for err in errors:
@@ -163,7 +170,7 @@ def admin_category_offer_create_view(request):
                 valid_until=valid_until,
             )
             messages.success(request, "Category offer created successfully!")
-            
+
     return redirect("admin_offers")
 
 
@@ -202,6 +209,7 @@ def admin_product_offer_edit_view(request, offer_id):
 
         if valid_from and valid_until:
             from datetime import date
+
             try:
                 vf = date.fromisoformat(valid_from)
                 vu = date.fromisoformat(valid_until)
@@ -210,16 +218,19 @@ def admin_product_offer_edit_view(request, offer_id):
             except ValueError:
                 errors.append("Invalid date format.")
 
-      
         if not errors:
-            overlapping = ProductOffer.objects.filter(
-                product=product,
-                is_active=True
-            ).exclude(id=offer_id).filter(
-                models.Q(valid_from__lte=valid_until, valid_until__gte=valid_from)
-            ).exists()
+            overlapping = (
+                ProductOffer.objects.filter(product=product, is_active=True)
+                .exclude(id=offer_id)
+                .filter(
+                    models.Q(valid_from__lte=valid_until, valid_until__gte=valid_from)
+                )
+                .exists()
+            )
             if overlapping:
-                errors.append(f"An active offer already overlaps with this date range for product '{product.name}'.")
+                errors.append(
+                    f"An active offer already overlaps with this date range for product '{product.name}'."
+                )
 
         if errors:
             for err in errors:
@@ -271,6 +282,7 @@ def admin_category_offer_edit_view(request, offer_id):
 
         if valid_from and valid_until:
             from datetime import date
+
             try:
                 vf = date.fromisoformat(valid_from)
                 vu = date.fromisoformat(valid_until)
@@ -280,14 +292,18 @@ def admin_category_offer_edit_view(request, offer_id):
                 errors.append("Invalid date format.")
 
         if not errors:
-            overlapping = CategoryOffer.objects.filter(
-                category=category,
-                is_active=True
-            ).exclude(id=offer_id).filter(
-                models.Q(valid_from__lte=valid_until, valid_until__gte=valid_from)
-            ).exists()
+            overlapping = (
+                CategoryOffer.objects.filter(category=category, is_active=True)
+                .exclude(id=offer_id)
+                .filter(
+                    models.Q(valid_from__lte=valid_until, valid_until__gte=valid_from)
+                )
+                .exists()
+            )
             if overlapping:
-                errors.append(f"An active offer already overlaps with this date range for category '{category.name}'.")
+                errors.append(
+                    f"An active offer already overlaps with this date range for category '{category.name}'."
+                )
 
         if errors:
             for err in errors:
@@ -322,7 +338,9 @@ def admin_category_offer_delete_view(request, offer_id):
         offer = get_object_or_404(CategoryOffer, id=offer_id)
         cat_name = offer.category.name
         offer.delete()
-        messages.success(request, f"Offer for category '{cat_name}' deleted successfully.")
+        messages.success(
+            request, f"Offer for category '{cat_name}' deleted successfully."
+        )
     return redirect("admin_offers")
 
 
@@ -346,26 +364,37 @@ def admin_category_offer_toggle_view(request, offer_id):
         offer.is_active = not offer.is_active
         offer.save()
         status = "activated" if offer.is_active else "deactivated"
-        messages.success(request, f"Offer for category '{offer.category.name}' {status}.")
+        messages.success(
+            request, f"Offer for category '{offer.category.name}' {status}."
+        )
     return redirect("admin_offers")
 
 
 from decimal import Decimal
+
 from .models import ReferralOffer, ReferralRecord
+
 
 @never_cache
 @staff_member_required(login_url="admin_login")
 def admin_referrals_view(request):
-    config, _ = ReferralOffer.objects.get_or_create(id=1, defaults={
-        'referrer_reward': Decimal('100.00'),
-        'referee_reward': Decimal('50.00'),
-        'is_active': True
-    })
-    records = ReferralRecord.objects.select_related('referrer', 'referee').all().order_by('-created_at')
-    
+    config, _ = ReferralOffer.objects.get_or_create(
+        id=1,
+        defaults={
+            "referrer_reward": Decimal("100.00"),
+            "referee_reward": Decimal("50.00"),
+            "is_active": True,
+        },
+    )
+    records = (
+        ReferralRecord.objects.select_related("referrer", "referee")
+        .all()
+        .order_by("-created_at")
+    )
+
     total_referrals = records.count()
     total_payout = sum(r.referrer_reward_paid + r.referee_reward_paid for r in records)
-    
+
     context = {
         "config": config,
         "records": records,
@@ -382,7 +411,7 @@ def admin_referral_offer_save_view(request):
         referrer_reward = request.POST.get("referrer_reward", "").strip()
         referee_reward = request.POST.get("referee_reward", "").strip()
         is_active = request.POST.get("is_active") == "on"
-        
+
         errors = []
         try:
             ref_amt = Decimal(referrer_reward)
@@ -390,14 +419,14 @@ def admin_referral_offer_save_view(request):
                 errors.append("Referrer reward amount must be 0 or greater.")
         except (ValueError, TypeError, ArithmeticError):
             errors.append("Invalid Referrer reward amount.")
-            
+
         try:
             refee_amt = Decimal(referee_reward)
             if refee_amt < 0:
                 errors.append("Referee reward amount must be 0 or greater.")
         except (ValueError, TypeError, ArithmeticError):
             errors.append("Invalid Referee reward amount.")
-            
+
         if errors:
             for err in errors:
                 messages.error(request, err)
@@ -408,5 +437,5 @@ def admin_referral_offer_save_view(request):
             config.is_active = is_active
             config.save()
             messages.success(request, "Referral settings updated successfully!")
-            
+
     return redirect("admin_referrals")

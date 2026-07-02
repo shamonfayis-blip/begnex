@@ -43,22 +43,19 @@ def resize_image(image_path):
 
 
 def handle_base64_image(base64_string, product, is_primary):
-   
+
     if base64_string and ";base64," in base64_string:
         format, imgstr = base64_string.split(";base64,")
-
 
         ext = format.split("/")[-1]
         filename = f"{product.product_id}_{uuid.uuid4().hex[:6]}.{ext}"
         data = ContentFile(base64.b64decode(imgstr), name=filename)
 
-        ProductImage.objects.create(
-            product=product, image=data, is_primary=is_primary
-        )
+        ProductImage.objects.create(product=product, image=data, is_primary=is_primary)
 
 
 def _save_base64_image(b64_string, prefix="var"):
-   
+
     if not b64_string or ";base64," not in b64_string:
         return None
     _, imgstr = b64_string.split(";base64,", 1)
@@ -79,9 +76,7 @@ def admin_product_list_view(request):
     status_filter = request.GET.get("status", "").strip()
     filter_option = request.GET.get("filter_option", "").strip()
 
-    products = Product.objects.filter(
-        is_deleted=False, category__is_deleted=False
-    )
+    products = Product.objects.filter(is_deleted=False, category__is_deleted=False)
 
     if search_query:
         products = products.filter(
@@ -98,8 +93,6 @@ def admin_product_list_view(request):
     elif status_filter == "inactive":
         products = products.filter(is_active=False)
 
-
-
     if filter_option == "newest":
         products = products.order_by("-id")
     elif filter_option == "oldest":
@@ -109,29 +102,26 @@ def admin_product_list_view(request):
     elif filter_option == "z_a":
         products = products.order_by("-name")
     else:
-        products = products.order_by("-id") 
+        products = products.order_by("-id")
 
-
-
-
-    total_products = Product.objects.filter(is_deleted=False, category__is_deleted=False).count()
-
+    total_products = Product.objects.filter(
+        is_deleted=False, category__is_deleted=False
+    ).count()
 
     active_products = Product.objects.filter(
-        is_deleted=False, is_active=True, category__is_deleted=False).count()
-
+        is_deleted=False, is_active=True, category__is_deleted=False
+    ).count()
 
     out_of_stock = ProductVariant.objects.filter(
         product__is_deleted=False, is_deleted=False, stock=0
     ).count()
 
-  
     seven_days_ago = timezone.now() - timedelta(days=7)
     new_products = Product.objects.filter(
         is_deleted=False,
         category__is_deleted=False,
-        created_at__gte=seven_days_ago,).count()
-
+        created_at__gte=seven_days_ago,
+    ).count()
 
     paginator = Paginator(products, 5)
     page_number = request.GET.get("page")
@@ -266,12 +256,11 @@ def admin_product_edit_view(request, product_id):
     product.is_active = is_active
     product.save()
 
-   
     if not product.is_active:
         from user.wishlist.models import Wishlist
+
         Wishlist.objects.filter(product=product).delete()
 
-    
     delete_images = request.POST.getlist("delete_images")
     if delete_images:
         for img_id in delete_images:
@@ -283,13 +272,11 @@ def admin_product_edit_view(request, product_id):
             except ProductImage.DoesNotExist:
                 pass
 
- 
     first_remaining = product.images.first()
     if first_remaining and not product.images.filter(is_primary=True).exists():
         first_remaining.is_primary = True
         first_remaining.save()
 
-    
     has_primary = product.images.filter(is_primary=True).exists()
     handle_base64_image(
         request.POST.get("image1_base64"), product, is_primary=not has_primary
@@ -317,9 +304,9 @@ def admin_product_toggle_view(request, product_id):
     product.is_active = not product.is_active
     product.save()
 
-   
     if not product.is_active:
         from user.wishlist.models import Wishlist
+
         Wishlist.objects.filter(product=product).delete()
     status = "activated" if product.is_active else "deactivated"
     messages.success(request, f'Product "{product.name}" has been {status}.')
@@ -336,20 +323,15 @@ def admin_product_delete_view(request, product_id):
     product.is_deleted = True
     product.save()
 
-   
     from user.wishlist.models import Wishlist
+
     Wishlist.objects.filter(product=product).delete()
 
     ProductVariant.objects.filter(product=product).update(is_deleted=True)
 
-    messages.success(
-        request, f'Product "{product.name}" and related variants deleted.'
-    )
+    messages.success(request, f'Product "{product.name}" and related variants deleted.')
 
     return redirect("admin_products")
-
-
-
 
 
 @never_cache
@@ -414,9 +396,9 @@ def admin_variant_add_view(request, product_id):
 
     product = get_object_or_404(Product, id=product_id, is_deleted=False)
 
-    color    = request.POST.get("color", "").strip()
-    size     = request.POST.get("size", "").strip()
-    sku      = request.POST.get("sku", "").strip()
+    color = request.POST.get("color", "").strip()
+    size = request.POST.get("size", "").strip()
+    sku = request.POST.get("sku", "").strip()
     price_str = request.POST.get("price", "0").strip()
     stock_str = request.POST.get("stock", "0").strip()
     is_active = request.POST.get("is_active", "true") == "true"
@@ -427,10 +409,12 @@ def admin_variant_add_view(request, product_id):
         messages.error(request, "Color and Size are required.")
         return redirect("admin_variants", product_id=product.id)
     if len(color) < 2 or not any(c.isalpha() for c in color):
-        messages.error(request, "Color must be at least 2 characters and contain at least one letter.")
+        messages.error(
+            request,
+            "Color must be at least 2 characters and contain at least one letter.",
+        )
         return redirect("admin_variants", product_id=product.id)
 
-    
     if not sku:
         messages.error(request, "SKU is required.")
         return redirect("admin_variants", product_id=product.id)
@@ -450,7 +434,6 @@ def admin_variant_add_view(request, product_id):
         messages.error(request, "Invalid price value entered.")
         return redirect("admin_variants", product_id=product.id)
 
-   
     try:
         stock_val = int(stock_str)
         if stock_val < 0:
@@ -499,8 +482,9 @@ def admin_variant_add_view(request, product_id):
             )
             return redirect("admin_variants", product_id=product.id)
 
-
-    is_default = not ProductVariant.objects.filter(product=product, is_deleted=False).exists()
+    is_default = not ProductVariant.objects.filter(
+        product=product, is_deleted=False
+    ).exists()
 
     variant = ProductVariant.objects.create(
         product=product,
@@ -512,15 +496,21 @@ def admin_variant_add_view(request, product_id):
         is_default=is_default,
     )
 
-    variant_image_1 = VariantImage.objects.create(variant=variant, image=image1, is_primary=True)
+    variant_image_1 = VariantImage.objects.create(
+        variant=variant, image=image1, is_primary=True
+    )
     if hasattr(image1, "content_type"):
         resize_image(variant_image_1.image.path)
 
-    variant_image_2 = VariantImage.objects.create(variant=variant, image=image2, is_primary=False)
+    variant_image_2 = VariantImage.objects.create(
+        variant=variant, image=image2, is_primary=False
+    )
     if hasattr(image2, "content_type"):
         resize_image(variant_image_2.image.path)
 
-    variant_image_3 = VariantImage.objects.create(variant=variant, image=image3, is_primary=False)
+    variant_image_3 = VariantImage.objects.create(
+        variant=variant, image=image3, is_primary=False
+    )
     if hasattr(image3, "content_type"):
         resize_image(variant_image_3.image.path)
 
@@ -536,24 +526,25 @@ def admin_variant_edit_view(request, variant_id):
     variant = get_object_or_404(ProductVariant, id=variant_id, is_deleted=False)
     product_id = variant.product.id
 
-    color    = request.POST.get("color", "").strip()
-    size     = request.POST.get("size", "").strip()
-    sku      = request.POST.get("sku", "").strip()
+    color = request.POST.get("color", "").strip()
+    size = request.POST.get("size", "").strip()
+    sku = request.POST.get("sku", "").strip()
     price_str = request.POST.get("price", "0").strip()
     stock_str = request.POST.get("stock", "0").strip()
     is_active = request.POST.get("is_active", "true") == "true"
 
     name = f"{color} / {size}"
 
-    
     if not color or not size:
         messages.error(request, "Color and Size are required.")
         return redirect("admin_variants", product_id=product_id)
     if len(color) < 2 or not any(c.isalpha() for c in color):
-        messages.error(request, "Color must be at least 2 characters and contain at least one letter.")
+        messages.error(
+            request,
+            "Color must be at least 2 characters and contain at least one letter.",
+        )
         return redirect("admin_variants", product_id=product_id)
 
-   
     if not sku:
         messages.error(request, "SKU is required.")
         return redirect("admin_variants", product_id=product_id)
@@ -577,7 +568,6 @@ def admin_variant_edit_view(request, variant_id):
         messages.error(request, "Invalid price value entered.")
         return redirect("admin_variants", product_id=product_id)
 
-    
     try:
         stock_val = int(stock_str)
         if stock_val < 0:
@@ -600,7 +590,6 @@ def admin_variant_edit_view(request, variant_id):
             )
             return redirect("admin_variants", product_id=product_id)
 
-    
     variant.name = name
     variant.sku = sku
     variant.price = price_val
@@ -608,7 +597,6 @@ def admin_variant_edit_view(request, variant_id):
     variant.is_active = is_active
     variant.save()
 
-    
     for i in range(1, 4):
         clear_value = request.POST.get(f"clear_image_{i}")
         if clear_value and clear_value.isdigit():
@@ -620,7 +608,6 @@ def admin_variant_edit_view(request, variant_id):
             except VariantImage.DoesNotExist:
                 pass
 
-    
     for i in range(1, 4):
         b64_data = request.POST.get(f"image_{i}_base64")
         if b64_data:
@@ -639,7 +626,6 @@ def admin_variant_edit_view(request, variant_id):
                 )
                 resize_image(variant_image.image.path)
 
-   
     first_image = variant.images.first()
     if first_image and not variant.images.filter(is_primary=True).exists():
         first_image.is_primary = True
@@ -654,9 +640,7 @@ def admin_variant_edit_view(request, variant_id):
 @require_POST
 def admin_variant_delete_view(request, variant_id):
 
-    variant = get_object_or_404(
-        ProductVariant, id=variant_id, is_deleted=False
-    )
+    variant = get_object_or_404(ProductVariant, id=variant_id, is_deleted=False)
 
     product_id = variant.product.id
 
@@ -665,14 +649,10 @@ def admin_variant_delete_view(request, variant_id):
     variant.is_deleted = True
     variant.save()
 
-    
-
     if was_default:
 
         next_variant = (
-            ProductVariant.objects.filter(
-                product=variant.product, is_deleted=False
-            )
+            ProductVariant.objects.filter(product=variant.product, is_deleted=False)
             .exclude(id=variant.id)
             .first()
         )
@@ -691,17 +671,14 @@ def admin_variant_delete_view(request, variant_id):
 @staff_member_required(login_url="admin_login")
 @require_POST
 def admin_variant_set_default_view(request, variant_id):
-    variant = get_object_or_404(
-        ProductVariant, id=variant_id, is_deleted=False
-    )
+    variant = get_object_or_404(ProductVariant, id=variant_id, is_deleted=False)
     product_id = variant.product.id
 
-    ProductVariant.objects.filter(
-        product=variant.product, is_deleted=False
-    ).update(is_default=False)
+    ProductVariant.objects.filter(product=variant.product, is_deleted=False).update(
+        is_default=False
+    )
     variant.is_default = True
     variant.save()
 
     messages.success(request, f'Variant "{variant.name}" set as default.')
     return redirect("admin_variants", product_id=product_id)
-

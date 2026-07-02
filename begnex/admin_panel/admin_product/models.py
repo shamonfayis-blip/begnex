@@ -24,16 +24,14 @@ class Product(models.Model):
         return self.name
 
     def get_default_variant(self):
-        
-        variant = self.variants.filter(
-            is_deleted=False, is_default=True
-        ).first()
+
+        variant = self.variants.filter(is_deleted=False, is_default=True).first()
         if not variant:
             variant = self.variants.filter(is_deleted=False).first()
         return variant
 
     def get_primary_image(self):
-        
+
         variant = self.get_default_variant()
         if not variant:
             return None
@@ -43,7 +41,7 @@ class Product(models.Model):
         return img
 
     def get_price(self):
-        
+
         variant = self.get_default_variant()
         return variant.price if variant else None
 
@@ -53,35 +51,44 @@ class Product(models.Model):
 
     def get_active_offer_percentage(self):
         try:
-            from admin_panel.admin_offer.models import ProductOffer, CategoryOffer
+            from admin_panel.admin_offer.models import (CategoryOffer,
+                                                        ProductOffer)
         except ImportError:
             return 0
         from django.utils import timezone
-        
+
         today = timezone.now().date()
-        
+
         # Product offer
-        prod_offer = ProductOffer.objects.filter(
-            product=self,
-            is_active=True,
-            valid_from__lte=today,
-            valid_until__gte=today
-        ).order_by("-discount_percentage").first()
+        prod_offer = (
+            ProductOffer.objects.filter(
+                product=self,
+                is_active=True,
+                valid_from__lte=today,
+                valid_until__gte=today,
+            )
+            .order_by("-discount_percentage")
+            .first()
+        )
         prod_discount = prod_offer.discount_percentage if prod_offer else 0
-        
+
         # Category offer
-        cat_offer = CategoryOffer.objects.filter(
-            category=self.category,
-            is_active=True,
-            valid_from__lte=today,
-            valid_until__gte=today
-        ).order_by("-discount_percentage").first()
+        cat_offer = (
+            CategoryOffer.objects.filter(
+                category=self.category,
+                is_active=True,
+                valid_from__lte=today,
+                valid_until__gte=today,
+            )
+            .order_by("-discount_percentage")
+            .first()
+        )
         cat_discount = cat_offer.discount_percentage if cat_offer else 0
-        
+
         return max(prod_discount, cat_discount)
 
     def get_total_stock(self):
-    
+
         return sum(variant.stock for variant in self.variants.filter(is_deleted=False))
 
 
@@ -119,6 +126,7 @@ class ProductVariant(models.Model):
         discount_percentage = self.product.get_active_offer_percentage()
         if discount_percentage > 0:
             from decimal import Decimal
+
             discount_amount = (self.price * Decimal(discount_percentage)) / Decimal(100)
             return round(self.price - discount_amount, 2)
         return self.price
@@ -156,5 +164,3 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.product.name} ({self.rating}/5)"
-
-

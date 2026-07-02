@@ -18,6 +18,7 @@ from .models import Category
 def _save_base64_image(b64_string):
     """Decode a base64 data-URL and return a Django ContentFile."""
     from django.core.files.base import ContentFile
+
     if not b64_string or ";base64," not in b64_string:
         return None
     _, imgstr = b64_string.split(";base64,", 1)
@@ -31,11 +32,8 @@ def generate_category_id():
         try:
             num = int(last.category_id.split("-")[-1]) + 1
 
-
-
         except (ValueError, IndexError):
             num = Category.objects.count() + 1
-
 
     else:
         num = 1
@@ -51,23 +49,21 @@ def admin_category_list_view(request):
 
     if search_query:
         categories = categories.filter(
-            Q(name__icontains=search_query)|Q(category_id__icontains=search_query))
+            Q(name__icontains=search_query) | Q(category_id__icontains=search_query)
+        )
 
     total_categories = Category.objects.filter(is_deleted=False).count()
 
-
     active_categories = Category.objects.filter(
-        is_deleted=False, is_active=True).count()
-    inactive_categories = Category.objects.filter(is_deleted=False, is_active=False).count()
-
-
-
+        is_deleted=False, is_active=True
+    ).count()
+    inactive_categories = Category.objects.filter(
+        is_deleted=False, is_active=False
+    ).count()
 
     paginator = Paginator(categories, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
-
-
 
     context = {
         "page_obj": page_obj,
@@ -105,16 +101,20 @@ def admin_category_add_view(request):
             messages.error(request, "Category name must contain at least one letter.")
             return redirect("admin_categories")
 
-        if Category.objects.filter(
-            name__iexact=name, is_deleted=False
-        ).exists():
-            
+        if Category.objects.filter(name__iexact=name, is_deleted=False).exists():
+
             messages.error(request, f'Category "{name}" already exists.')
             return redirect("admin_categories")
 
         ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
-        if image and hasattr(image, 'content_type') and image.content_type not in ALLOWED_IMAGE_TYPES:
-            messages.error(request, "Invalid image format. Only JPG, PNG, and WEBP are allowed.")
+        if (
+            image
+            and hasattr(image, "content_type")
+            and image.content_type not in ALLOWED_IMAGE_TYPES
+        ):
+            messages.error(
+                request, "Invalid image format. Only JPG, PNG, and WEBP are allowed."
+            )
             return redirect("admin_categories")
 
         category_id = generate_category_id()
@@ -169,8 +169,14 @@ def admin_category_edit_view(request, category_id):
             return redirect("admin_categories")
 
         ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
-        if image and hasattr(image, 'content_type') and image.content_type not in ALLOWED_IMAGE_TYPES:
-            messages.error(request, "Invalid image format. Only JPG, PNG, and WEBP are allowed.")
+        if (
+            image
+            and hasattr(image, "content_type")
+            and image.content_type not in ALLOWED_IMAGE_TYPES
+        ):
+            messages.error(
+                request, "Invalid image format. Only JPG, PNG, and WEBP are allowed."
+            )
             return redirect("admin_categories")
 
         category.name = name

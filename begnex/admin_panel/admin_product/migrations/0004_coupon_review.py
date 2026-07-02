@@ -9,30 +9,76 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('admin_product', '0003_productvariant_variantimage'),
+        ("admin_product", "0003_productvariant_variantimage"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Coupon',
+            name="Coupon",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('code', models.CharField(max_length=20, unique=True)),
-                ('discount_percentage', models.PositiveIntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(100)])),
-                ('is_active', models.BooleanField(default=True)),
-                ('valid_until', models.DateTimeField(blank=True, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("code", models.CharField(max_length=20, unique=True)),
+                (
+                    "discount_percentage",
+                    models.PositiveIntegerField(
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(100),
+                        ]
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("valid_until", models.DateTimeField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Review',
+            name="Review",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('rating', models.PositiveIntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(5)])),
-                ('comment', models.TextField(blank=True, default='')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reviews', to='admin_product.product')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reviews', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "rating",
+                    models.PositiveIntegerField(
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(5),
+                        ]
+                    ),
+                ),
+                ("comment", models.TextField(blank=True, default="")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "product",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reviews",
+                        to="admin_product.product",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reviews",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

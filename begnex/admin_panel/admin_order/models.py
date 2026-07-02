@@ -6,25 +6,25 @@ from admin_panel.admin_product.models import ProductVariant
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ("pending",          "Pending"),
-        ("shipped",          "Shipped"),
+        ("pending", "Pending"),
+        ("shipped", "Shipped"),
         ("out_for_delivery", "Out for Delivery"),
-        ("delivered",        "Delivered"),
-        ("cancelled",        "Cancelled"),
+        ("delivered", "Delivered"),
+        ("cancelled", "Cancelled"),
         ("return_requested", "Return Requested"),
-        ("returned",         "Returned"),
-        ("return_rejected",  "Return Rejected"),
+        ("returned", "Returned"),
+        ("return_rejected", "Return Rejected"),
     ]
 
     PAYMENT_METHOD_CHOICES = [
-        ("cod",    "Cash on Delivery"),
+        ("cod", "Cash on Delivery"),
         ("online", "Online Payment"),
         ("wallet", "Wallet"),
     ]
 
     PAYMENT_STATUS_CHOICES = [
-        ("paid",     "Paid"),
-        ("unpaid",   "Unpaid"),
+        ("paid", "Paid"),
+        ("unpaid", "Unpaid"),
         ("refunded", "Refunded"),
     ]
 
@@ -34,9 +34,7 @@ class Order(models.Model):
         on_delete=models.CASCADE,
         related_name="orders",
     )
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="pending"
-    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     payment_method = models.CharField(
         max_length=20, choices=PAYMENT_METHOD_CHOICES, default="cod"
     )
@@ -49,26 +47,26 @@ class Order(models.Model):
     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_signature = models.CharField(max_length=200, blank=True, null=True)
 
-    cancel_reason  = models.TextField(blank=True, null=True)
-    return_reason  = models.TextField(blank=True, null=True)
+    cancel_reason = models.TextField(blank=True, null=True)
+    return_reason = models.TextField(blank=True, null=True)
 
     # Address snapshot
-    full_name      = models.CharField(max_length=200, blank=True)
-    phone          = models.CharField(max_length=20, blank=True)
-    address_line   = models.TextField(blank=True)
-    city           = models.CharField(max_length=100, blank=True)
-    state          = models.CharField(max_length=100, blank=True)
-    pincode        = models.CharField(max_length=10, blank=True)
+    full_name = models.CharField(max_length=200, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    address_line = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    pincode = models.CharField(max_length=10, blank=True)
 
     # Coupon
-    coupon_code     = models.CharField(max_length=20, blank=True, null=True)
+    coupon_code = models.CharField(max_length=20, blank=True, null=True)
     coupon_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     # Pricing
-    subtotal        = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    discount        = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total           = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -84,34 +82,33 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order        = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    variant      = models.ForeignKey(
-        ProductVariant, on_delete=models.SET_NULL,
-        null=True, related_name="order_items"
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    variant = models.ForeignKey(
+        ProductVariant, on_delete=models.SET_NULL, null=True, related_name="order_items"
     )
     product_name = models.CharField(max_length=200)
     variant_name = models.CharField(max_length=200)
-    sku          = models.CharField(max_length=50, blank=True)
-    quantity     = models.PositiveIntegerField(default=1)
-    unit_price   = models.DecimalField(max_digits=10, decimal_places=2)
-    subtotal     = models.DecimalField(max_digits=10, decimal_places=2)
+    sku = models.CharField(max_length=50, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
 
-    status         = models.CharField(
+    status = models.CharField(
         max_length=20,
         choices=[
-            ("ordered",          "Ordered"),
-            ("cancelled",        "Cancelled"),
+            ("ordered", "Ordered"),
+            ("cancelled", "Cancelled"),
             ("return_requested", "Return Requested"),
-            ("returned",         "Returned"),
-            ("return_rejected",  "Return Rejected"),
+            ("returned", "Returned"),
+            ("return_rejected", "Return Rejected"),
         ],
-        default="ordered"
+        default="ordered",
     )
-    cancel_reason  = models.TextField(blank=True, null=True)
-    return_reason  = models.TextField(blank=True, null=True)
+    cancel_reason = models.TextField(blank=True, null=True)
+    return_reason = models.TextField(blank=True, null=True)
 
     # Partial quantity tracking
-    cancelled_quantity        = models.PositiveIntegerField(default=0)
+    cancelled_quantity = models.PositiveIntegerField(default=0)
     return_requested_quantity = models.PositiveIntegerField(default=0)
 
     def get_image_url(self):

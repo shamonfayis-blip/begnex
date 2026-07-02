@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, render
 from admin_panel.admin_category.models import Category
 from admin_panel.admin_product.models import Product
 
+
 def category_list_view(request):
     """User-facing categories page — shows all active, non-deleted categories."""
     categories = Category.objects.filter(
@@ -18,7 +19,7 @@ def category_list_view(request):
             filter=Q(
                 products__is_deleted=False,
                 products__is_active=True,
-            )
+            ),
         )
     )
 
@@ -32,16 +33,20 @@ def category_detail_view(request, category_id):
         Category, id=category_id, is_deleted=False, is_active=True
     )
 
-    products = Product.objects.filter(
-        category=category,
-        is_deleted=False,
-        is_active=True,
-    ).annotate(
-        computed_min_price=Min(
-            "variants__price",
-            filter=Q(variants__is_active=True, variants__is_deleted=False),
+    products = (
+        Product.objects.filter(
+            category=category,
+            is_deleted=False,
+            is_active=True,
         )
-    ).order_by("-id")
+        .annotate(
+            computed_min_price=Min(
+                "variants__price",
+                filter=Q(variants__is_active=True, variants__is_deleted=False),
+            )
+        )
+        .order_by("-id")
+    )
 
     paginator = Paginator(products, 9)
     page_obj = paginator.get_page(request.GET.get("page"))

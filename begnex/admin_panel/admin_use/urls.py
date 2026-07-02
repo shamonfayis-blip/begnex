@@ -13,7 +13,13 @@ urlpatterns = [
         name="toggle_block_user",
     ),
     path("sales-report/", views.sales_report_view, name="sales_report"),
-    path("users/<int:user_id>/", views.admin_user_detail_view, name="admin_user_detail"),
+    path(
+        "users/<int:user_id>/", views.admin_user_detail_view, name="admin_user_detail"
+    ),
     path("reviews/", views.admin_reviews_view, name="admin_reviews"),
-    path("reviews/<int:review_id>/delete/", views.admin_review_delete_view, name="admin_review_delete"),
+    path(
+        "reviews/<int:review_id>/delete/",
+        views.admin_review_delete_view,
+        name="admin_review_delete",
+    ),
 ]

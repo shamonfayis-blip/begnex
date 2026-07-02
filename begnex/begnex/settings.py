@@ -1,6 +1,6 @@
-
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -59,7 +59,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "begnex.middleware.BlockedUserMiddleware",   # must be after MessageMiddleware
+    "begnex.middleware.BlockedUserMiddleware",  # must be after MessageMiddleware
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 ]

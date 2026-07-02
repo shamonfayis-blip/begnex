@@ -5,8 +5,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 
-from .models import Coupon
 from admin_panel.admin_order.models import Order
+
+from .models import Coupon
 
 
 @never_cache
@@ -22,7 +23,9 @@ def admin_coupon_list_view(request):
 
     today = timezone.now().date()
     if status_filter == "active":
-        coupons = coupons.filter(is_active=True, valid_until__gte=today, valid_from__lte=today)
+        coupons = coupons.filter(
+            is_active=True, valid_until__gte=today, valid_from__lte=today
+        )
     elif status_filter == "inactive":
         coupons = coupons.filter(is_active=False)
     elif status_filter == "expired":
@@ -32,14 +35,14 @@ def admin_coupon_list_view(request):
     page_obj = paginator.get_page(request.GET.get("page"))
 
     total_c = Coupon.objects.count()
-    active_coupons = Coupon.objects.filter(is_active=True, valid_until__gte=today, valid_from__lte=today).count()
+    active_coupons = Coupon.objects.filter(
+        is_active=True, valid_until__gte=today, valid_from__lte=today
+    ).count()
     expired_coupons = Coupon.objects.filter(valid_until__lt=today).count()
     inactive_coupons = Coupon.objects.filter(is_active=False).count()
-    
-    
-
 
     from django.db.models import Sum
+
     history_orders = (
         Order.objects.exclude(coupon_code__isnull=True)
         .exclude(coupon_code="")
@@ -52,7 +55,9 @@ def admin_coupon_list_view(request):
     if history_search:
         history_orders = history_orders.filter(coupon_code__icontains=history_search)
     if history_coupon_filter:
-        history_orders = history_orders.filter(coupon_code__iexact=history_coupon_filter)
+        history_orders = history_orders.filter(
+            coupon_code__iexact=history_coupon_filter
+        )
 
     history_paginator = Paginator(history_orders, 12)
     history_page_obj = history_paginator.get_page(request.GET.get("hpage"))
@@ -65,18 +70,29 @@ def admin_coupon_list_view(request):
         .order_by("coupon_code")
     )
 
-    history_total_uses = Order.objects.exclude(coupon_code__isnull=True).exclude(coupon_code="").count()
-    history_total_savings = Order.objects.exclude(coupon_code__isnull=True).exclude(coupon_code="").aggregate(s=Sum("coupon_discount"))["s"] or 0
-    history_unique_coupons = Order.objects.exclude(coupon_code__isnull=True).exclude(coupon_code="").values("coupon_code").distinct().count()
+    history_total_uses = (
+        Order.objects.exclude(coupon_code__isnull=True).exclude(coupon_code="").count()
+    )
+    history_total_savings = (
+        Order.objects.exclude(coupon_code__isnull=True)
+        .exclude(coupon_code="")
+        .aggregate(s=Sum("coupon_discount"))["s"]
+        or 0
+    )
+    history_unique_coupons = (
+        Order.objects.exclude(coupon_code__isnull=True)
+        .exclude(coupon_code="")
+        .values("coupon_code")
+        .distinct()
+        .count()
+    )
 
-    
     active_tab = request.GET.get("tab", "coupons")
-
 
     context = {
         "page_obj": page_obj,
         "search_query": search_query,
-        "total_c":total_c,
+        "total_c": total_c,
         "status_filter": status_filter,
         "active_coupons": active_coupons,
         "expired_coupons": expired_coupons,
@@ -89,7 +105,6 @@ def admin_coupon_list_view(request):
         "history_total_savings": history_total_savings,
         "history_unique_coupons": history_unique_coupons,
         "active_tab": active_tab,
-        
     }
     return render(request, "coupons.html", context)
 
@@ -111,7 +126,6 @@ def admin_coupon_create_view(request):
 
         errors = []
 
-       
         if not code:
             errors.append("Coupon code is required.")
         elif len(code) < 3:
@@ -119,7 +133,9 @@ def admin_coupon_create_view(request):
         elif len(code) > 20:
             errors.append("Coupon code cannot exceed 20 characters.")
         elif not code.replace("_", "").replace("-", "").isalnum():
-            errors.append("Coupon code can only contain letters, numbers, hyphens, and underscores.")
+            errors.append(
+                "Coupon code can only contain letters, numbers, hyphens, and underscores."
+            )
         elif Coupon.objects.filter(code=code).exists():
             errors.append(f"Coupon code '{code}' already exists.")
 
@@ -169,6 +185,7 @@ def admin_coupon_create_view(request):
 
         if valid_from and valid_until:
             from datetime import date
+
             try:
                 vf = date.fromisoformat(valid_from)
                 vu = date.fromisoformat(valid_until)
@@ -240,7 +257,6 @@ def admin_coupon_edit_view(request, coupon_id):
 
         errors = []
 
-        
         if not code:
             errors.append("Coupon code is required.")
         elif len(code) < 3:
@@ -248,7 +264,9 @@ def admin_coupon_edit_view(request, coupon_id):
         elif len(code) > 20:
             errors.append("Coupon code cannot exceed 20 characters.")
         elif not code.replace("_", "").replace("-", "").isalnum():
-            errors.append("Coupon code can only contain letters, numbers, hyphens, and underscores.")
+            errors.append(
+                "Coupon code can only contain letters, numbers, hyphens, and underscores."
+            )
         elif Coupon.objects.filter(code=code).exclude(id=coupon_id).exists():
             errors.append(f"Coupon code '{code}' already exists.")
 
@@ -298,6 +316,7 @@ def admin_coupon_edit_view(request, coupon_id):
 
         if valid_from and valid_until:
             from datetime import date
+
             try:
                 vf = date.fromisoformat(valid_from)
                 vu = date.fromisoformat(valid_until)
@@ -322,7 +341,7 @@ def admin_coupon_edit_view(request, coupon_id):
             coupon.is_active = is_active
             coupon.save()
             messages.success(request, f"Coupon '{code}' updated successfully!")
-            
+
     return redirect("admin_coupons")
 
 
@@ -330,9 +349,12 @@ def admin_coupon_edit_view(request, coupon_id):
 @staff_member_required(login_url="admin_login")
 def admin_coupon_usage_history_view(request):
     """Show all orders where a coupon was applied."""
-    orders = Order.objects.exclude(coupon_code__isnull=True).exclude(coupon_code="").select_related("user")
+    orders = (
+        Order.objects.exclude(coupon_code__isnull=True)
+        .exclude(coupon_code="")
+        .select_related("user")
+    )
 
-   
     search_query = request.GET.get("q", "").strip()
     if search_query:
         orders = orders.filter(coupon_code__icontains=search_query)
@@ -344,9 +366,9 @@ def admin_coupon_usage_history_view(request):
     paginator = Paginator(orders, 15)
     page_obj = paginator.get_page(request.GET.get("page"))
 
-    
     total_uses = orders.count()
-    from django.db.models import Sum, Count
+    from django.db.models import Count, Sum
+
     total_savings = orders.aggregate(s=Sum("coupon_discount"))["s"] or 0
     unique_coupons = orders.values("coupon_code").distinct().count()
 

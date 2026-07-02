@@ -1,11 +1,15 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
-from admin_panel.admin_product.models import Product
-from admin_panel.admin_category.models import Category
 from django.utils import timezone
 
+from admin_panel.admin_category.models import Category
+from admin_panel.admin_product.models import Product
+
+
 class ProductOffer(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="offers")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="offers"
+    )
     discount_percentage = models.PositiveIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(99)]
     )
@@ -27,7 +31,9 @@ class ProductOffer(models.Model):
 
 
 class CategoryOffer(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="offers")
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name="offers"
+    )
     discount_percentage = models.PositiveIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(99)]
     )
@@ -50,6 +56,7 @@ class CategoryOffer(models.Model):
 
 from django.conf import settings
 
+
 class ReferralOffer(models.Model):
     referrer_reward = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     referee_reward = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -62,10 +69,22 @@ class ReferralOffer(models.Model):
 
 
 class ReferralRecord(models.Model):
-    referrer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="referrals_made")
-    referee = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="referral_received")
-    referrer_reward_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    referee_reward_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    referrer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="referrals_made",
+    )
+    referee = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="referral_received",
+    )
+    referrer_reward_paid = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.00
+    )
+    referee_reward_paid = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.00
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

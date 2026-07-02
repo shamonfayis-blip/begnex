@@ -10,39 +10,85 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('admin_category', '0003_category_is_deleted'),
-        ('admin_product', '0005_remove_product_fit_type'),
+        ("admin_category", "0003_category_is_deleted"),
+        ("admin_product", "0005_remove_product_fit_type"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CategoryOffer',
+            name="CategoryOffer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('discount_percentage', models.PositiveIntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(99)])),
-                ('is_active', models.BooleanField(default=True)),
-                ('valid_from', models.DateField()),
-                ('valid_until', models.DateField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offers', to='admin_category.category')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "discount_percentage",
+                    models.PositiveIntegerField(
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(99),
+                        ]
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("valid_from", models.DateField()),
+                ("valid_until", models.DateField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "category",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="offers",
+                        to="admin_category.category",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ProductOffer',
+            name="ProductOffer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('discount_percentage', models.PositiveIntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(99)])),
-                ('is_active', models.BooleanField(default=True)),
-                ('valid_from', models.DateField()),
-                ('valid_until', models.DateField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offers', to='admin_product.product')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "discount_percentage",
+                    models.PositiveIntegerField(
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(99),
+                        ]
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("valid_from", models.DateField()),
+                ("valid_until", models.DateField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "product",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="offers",
+                        to="admin_product.product",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]
