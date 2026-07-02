@@ -352,7 +352,7 @@
             <a href="{% url 'about' %}">ABOUT</a>
         </div>
         <div class="nav-icons">
-            <a href="{% url 'shop' %}"><i class="fa-solid fa-magnifying-glass"></i></a>
+            <a href="{% url 'shop' %}?focus=search" title="Search"><i class="fa-solid fa-magnifying-glass"></i></a>
             <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
                 <i class="{% if wishlist_count %}fa-solid{% else %}fa-regular{% endif %} fa-heart {% if wishlist_count %}" style="color:#ef4444;{% endif %}"></i>
             </a>
@@ -544,5 +544,8 @@
             setTimeout(() => toast.classList.remove('show'), 2500);
         }
     </script>
+
+    {% include 'includes/footer.html' %}
+
 </body>
 </html>

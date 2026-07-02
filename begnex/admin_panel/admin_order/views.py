@@ -106,7 +106,7 @@ def admin_order_update_status_view(request, order_id):
             if new_status == "cancelled":
                 reason = request.POST.get("reason", "").strip() or "Cancelled by Admin"
                 order.cancel_reason = reason
-                
+
                 with transaction.atomic():
                     for item in order.items.all():
                         active_qty = item.quantity - item.cancelled_quantity
@@ -119,10 +119,11 @@ def admin_order_update_status_view(request, order_id):
                                 item.variant.stock += active_qty
                                 item.variant.save()
 
-                if order.payment_status == "paid":
-                    from user.wallet.utils import refund_to_wallet
-                    refund_to_wallet(order.user, order.total, f"Refund for cancelled Order #{order.order_id} (Admin)")
-                    order.payment_status = "refunded"
+                    if order.payment_status == "paid":
+                        from user.wallet.utils import refund_to_wallet
+                        refund_to_wallet(order.user, order.total, f"Refund for cancelled Order #{order.order_id} (Admin)")
+                        order.payment_status = "refunded"
+
             elif new_status == "delivered":
                 order.payment_status = "paid"
             elif new_status == "returned":

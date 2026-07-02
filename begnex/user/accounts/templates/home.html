@@ -637,7 +637,7 @@
 
 <div class="nav-icons">
 
-    <a href="#">
+    <a href="{% url 'shop' %}?focus=search" title="Search">
         <i class="fa-solid fa-magnifying-glass"></i>
     </a>
 
@@ -872,9 +872,8 @@
 
     </section>
 
-    <!-- FOOTER -->
+    {% include 'includes/footer.html' %}
 
-    </footer>
 
     <!-- TOAST CONTAINER -->
     <div class="shop-toast" id="shopToast">

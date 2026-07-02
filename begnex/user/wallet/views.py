@@ -95,3 +95,5 @@ def verify_razorpay_payment(request):
         return JsonResponse({"success": False, "message": "Signature verification failed."})
     except Exception as e:
         return JsonResponse({"success": False, "message": f"Verification error: {str(e)}"})
+
+

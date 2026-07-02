@@ -1,0 +1,162 @@
+{% load static %}
+<!-- ── SHARED FOOTER ── -->
+<style>
+    /* ── FOOTER ── */
+    .site-footer {
+        background: #0A0C13;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        padding: 80px 48px 30px;
+        margin-top: 80px;
+        position: relative;
+        overflow: hidden;
+        font-family: 'Inter', sans-serif;
+    }
+    .site-footer::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(79, 125, 243, 0.4), transparent);
+    }
+    .site-footer-top {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 40px;
+        margin-bottom: 60px;
+    }
+    .site-footer-brand h2 {
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: 4px;
+        color: #fff;
+        margin-bottom: 16px;
+    }
+    .site-footer-brand p {
+        color: #9CA3AF;
+        font-size: 14px;
+        line-height: 1.6;
+        max-width: 300px;
+        margin-bottom: 24px;
+    }
+    .site-footer-social {
+        display: flex;
+        gap: 14px;
+    }
+    .site-footer-social a {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex; align-items: center; justify-content: center;
+        color: #A1A1AA; font-size: 16px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    .site-footer-social a:hover {
+        background: #4F7DF3;
+        border-color: #4F7DF3;
+        color: #fff;
+        transform: translateY(-3px);
+    }
+    .site-footer-links-group h3 {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: #fff;
+        margin-bottom: 24px;
+        text-transform: uppercase;
+    }
+    .site-footer-links-group a {
+        display: block;
+        color: #9CA3AF;
+        font-size: 13px;
+        margin-bottom: 12px;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .site-footer-links-group a:hover {
+        color: #4F7DF3;
+    }
+    .site-footer-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .site-footer-bottom p {
+        color: #666;
+        font-size: 13px;
+    }
+    .site-footer-payment {
+        display: flex;
+        gap: 16px;
+        color: #666;
+        font-size: 24px;
+    }
+    @media (max-width: 992px) {
+        .site-footer-top { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+        .site-footer { padding: 60px 24px 24px; margin-top: 60px; }
+        .site-footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+        .site-footer-bottom { flex-direction: column; gap: 20px; text-align: center; }
+    }
+    @media (max-width: 480px) {
+        .site-footer-top { grid-template-columns: 1fr; }
+    }
+</style>
+
+<footer class="site-footer">
+    <div class="site-footer-top">
+
+        <!-- Brand -->
+        <div class="site-footer-brand">
+            <h2>BEGNEX</h2>
+            <p>Progressive by nature, built for modern utility. Bags designed for those who move with intent.</p>
+            <div class="site-footer-social">
+                <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" aria-label="X / Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            </div>
+        </div>
+
+        <!-- Shop links -->
+        <div class="site-footer-links-group">
+            <h3>Shop</h3>
+            <a href="{% url 'shop' %}">All Products</a>
+            <a href="{% url 'categories' %}">Categories</a>
+            <a href="{% url 'shop' %}">New Arrivals</a>
+            <a href="{% url 'shop' %}">Best Sellers</a>
+        </div>
+
+        <!-- Account links -->
+        <div class="site-footer-links-group">
+            <h3>Account</h3>
+            <a href="{% url 'profile' %}">My Profile</a>
+            <a href="{% url 'order_list' %}">My Orders</a>
+            <a href="{% url 'address_list' %}">Addresses</a>
+            <a href="{% url 'wallet_details' %}">Wallet</a>
+        </div>
+
+        <!-- Support / Legal -->
+        <div class="site-footer-links-group">
+            <h3>Support</h3>
+            <a href="{% url 'about' %}">About Us</a>
+            <a href="#">FAQ</a>
+            <a href="#">Shipping &amp; Returns</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </div>
+
+    </div>
+
+    <div class="site-footer-bottom">
+        <p>&copy; 2025 Begnex. All rights reserved.</p>
+        <div class="site-footer-payment">
+            <i class="fa-brands fa-cc-visa" title="Visa"></i>
+            <i class="fa-brands fa-cc-mastercard" title="Mastercard"></i>
+            <i class="fa-brands fa-cc-amex" title="Amex"></i>
+            <i class="fa-brands fa-cc-paypal" title="PayPal"></i>
+        </div>
+    </div>
+</footer>

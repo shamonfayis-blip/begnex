@@ -203,3 +203,5 @@ def change_password_view(request):
         return redirect("profile")
 
     return render(request, "change_password.html")
+
+

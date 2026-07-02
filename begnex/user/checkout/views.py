@@ -59,12 +59,14 @@ def checkout_page(request):
 
     
     blocked_items = []
-    for item in cart.items.all():
+    for item in cart.items.select_related('variant__product__category').all():
         is_inactive = (
             not item.variant.is_active
             or item.variant.is_deleted
             or not item.variant.product.is_active
             or item.variant.product.is_deleted
+            or item.variant.product.category.is_deleted
+            or not item.variant.product.category.is_active
         )
         is_oos = item.variant.stock < item.quantity
         if is_inactive or is_oos:
@@ -255,13 +257,15 @@ def place_order(request):
 
     try:
         with transaction.atomic():
-            cart_items = list(cart.items.select_related('variant', 'variant__product').all())
+            cart_items = list(cart.items.select_related('variant', 'variant__product', 'variant__product__category').all())
             for item in cart_items:
                 is_active = (
                     item.variant.is_active
                     and not item.variant.is_deleted
                     and item.variant.product.is_active
                     and not item.variant.product.is_deleted
+                    and not item.variant.product.category.is_deleted
+                    and item.variant.product.category.is_active
                 )
                 if not is_active:
                     raise ValueError(f"Product '{item.variant.product.name}' is no longer available.")
@@ -391,13 +395,15 @@ def initiate_razorpay_payment(request):
 
     try:
        
-        cart_items = list(cart.items.select_related('variant', 'variant__product').all())
+        cart_items = list(cart.items.select_related('variant', 'variant__product', 'variant__product__category').all())
         for item in cart_items:
             is_active = (
                 item.variant.is_active
                 and not item.variant.is_deleted
                 and item.variant.product.is_active
                 and not item.variant.product.is_deleted
+                and not item.variant.product.category.is_deleted
+                and item.variant.product.category.is_active
             )
             if not is_active:
                 return JsonResponse({"success": False, "message": f"Product '{item.variant.product.name}' is no longer available."})
@@ -513,8 +519,8 @@ def verify_razorpay_payment(request):
 
     try:
         with transaction.atomic():
-            cart_items = list(cart.items.select_related('variant', 'variant__product').all())
-            
+            cart_items = list(cart.items.select_related('variant', 'variant__product', 'variant__product__category').all())
+
            
             for item in cart_items:
                 is_active = (
@@ -522,6 +528,8 @@ def verify_razorpay_payment(request):
                     and not item.variant.is_deleted
                     and item.variant.product.is_active
                     and not item.variant.product.is_deleted
+                    and not item.variant.product.category.is_deleted
+                    and item.variant.product.category.is_active
                 )
                 if not is_active:
                     raise ValueError(f"Product '{item.variant.product.name}' is no longer available.")

@@ -96,7 +96,7 @@
             <a href="{% url 'about' %}">ABOUT</a>
         </div>
         <div class="nav-icons">
-            <a href="{% url 'shop' %}"><i class="fa-solid fa-magnifying-glass"></i></a>
+            <a href="{% url 'shop' %}?focus=search" title="Search"><i class="fa-solid fa-magnifying-glass"></i></a>
             <a href="{% url 'wishlist' %}" title="Wishlist" style="position:relative;">
                 <i class="fa-solid fa-heart" style="color:#ef4444;"></i>
             </a>
@@ -374,5 +374,8 @@
 <style>@keyframes djToastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}</style>
 <script>setTimeout(function(){var w=document.getElementById('dj-toast-wrap');if(w){w.style.transition='opacity .5s ease';w.style.opacity='0';setTimeout(function(){w.remove();},500);}},3500);</script>
 {% endif %}
+
+    {% include 'includes/footer.html' %}
+
 </body>
 </html>

@@ -530,8 +530,6 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         return user
 
 
-from django.contrib.auth.decorators import login_required
-
 @never_cache
 @login_required(login_url="login")
 def user_referrals_view(request):

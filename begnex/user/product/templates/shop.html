@@ -704,7 +704,7 @@
 
         <div class="nav-icons">
 
-            <a href="{% url 'shop' %}">
+            <a href="{% url 'shop' %}?focus=search" title="Search">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </a>
 
@@ -996,6 +996,34 @@
         const clearBtn = document.getElementById('searchClearBtn');
         const shopForm = document.getElementById('shopForm');
         const pageInput = document.getElementById('pageInput');
+
+        // ── AUTO-FOCUS: triggered by navbar search icon ──
+        // When arriving from another page via ?focus=search, scroll to
+        // the search input and focus it with a quick highlight pulse.
+        (function autoFocusSearch() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('focus') !== 'search') return;
+
+            // Remove the param from the URL without reloading
+            params.delete('focus');
+            const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            history.replaceState(null, '', newUrl);
+
+            // Small delay so the page has fully rendered
+            setTimeout(function () {
+                if (!searchInput) return;
+                searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                searchInput.focus();
+                // Glow pulse animation
+                searchInput.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
+                searchInput.style.borderColor = '#4F7DF3';
+                searchInput.style.boxShadow = '0 0 0 4px rgba(79,125,243,0.35)';
+                setTimeout(function () {
+                    searchInput.style.borderColor = '';
+                    searchInput.style.boxShadow = '';
+                }, 1800);
+            }, 250);
+        })();
 
         // Show/hide clear button dynamically as user types
         function updateClearBtn() {

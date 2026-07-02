@@ -122,19 +122,21 @@ def add_to_cart_api(request):
 
     cart = get_or_create_cart(request)
 
-
-
     item, created = CartItem.objects.get_or_create(cart=cart, variant=variant)
     new_quantity = quantity if created else item.quantity + quantity
 
-    
     max_allowed = min(MAX_CART_QUANTITY, variant.stock)
 
     if new_quantity > max_allowed:
         if created:
-            
+            # Brand new item exceeds max — delete it and return error
             item.delete()
-        if item.quantity >= max_allowed if not created else True:
+            return JsonResponse(
+                {"success": False, "message": f"Maximum allowed quantity ({max_allowed}) reached."},
+                status=400,
+            )
+        # Existing item — cap at max if room exists, otherwise error
+        if item.quantity >= max_allowed:
             return JsonResponse(
                 {"success": False, "message": f"Maximum allowed quantity ({max_allowed}) reached."},
                 status=400,
@@ -143,6 +145,7 @@ def add_to_cart_api(request):
 
     item.quantity = new_quantity
     item.save()
+
 
   
     wishlist_removed = False

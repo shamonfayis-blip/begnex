@@ -31,7 +31,7 @@ def admin_coupon_list_view(request):
     paginator = Paginator(coupons, 8)
     page_obj = paginator.get_page(request.GET.get("page"))
 
-    
+    total_c = Coupon.objects.count()
     active_coupons = Coupon.objects.filter(is_active=True, valid_until__gte=today, valid_from__lte=today).count()
     expired_coupons = Coupon.objects.filter(valid_until__lt=today).count()
     inactive_coupons = Coupon.objects.filter(is_active=False).count()
@@ -76,6 +76,7 @@ def admin_coupon_list_view(request):
     context = {
         "page_obj": page_obj,
         "search_query": search_query,
+        "total_c":total_c,
         "status_filter": status_filter,
         "active_coupons": active_coupons,
         "expired_coupons": expired_coupons,
