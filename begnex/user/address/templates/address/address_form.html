@@ -16,7 +16,6 @@
         body { font-family: 'Inter', sans-serif; background: #05070D; color: white; overflow-x: hidden; }
         a { text-decoration: none; }
 
-        /* NAVBAR */
         .navbar { width: 100%; height: 72px; background: #05070D; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; position: sticky; top: 0; z-index: 1000; }
         .logo { font-size: 15px; font-weight: 800; letter-spacing: 1px; color: white; }
         .logo a { color: white; }
@@ -28,10 +27,8 @@
         .nav-icons a:hover, .nav-icons a.active { color: white; }
         .cart-badge { position: absolute; top: -6px; right: -8px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 
-        /* MAIN */
         .profile-wrapper { width: 100%; min-height: calc(100vh - 72px); display: flex; }
 
-        /* SIDEBAR */
         .sidebar { width: 260px; background: #0A0D14; border-right: 1px solid rgba(255, 255, 255, 0.05); padding-top: 36px; flex-shrink: 0; }
         .sidebar-title { padding: 0 28px; margin-bottom: 34px; }
         .sidebar-title h4 { font-size: 11px; letter-spacing: 2px; color: #6B7280; margin-bottom: 8px; }
@@ -40,22 +37,24 @@
         .sidebar-links a { height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 28px; color: #9CA3AF; font-size: 12px; border-left: 3px solid transparent; transition: .3s; }
         .sidebar-links a:hover, .sidebar-links .active { background: rgba(255, 255, 255, 0.05); color: white; border-color: #4F78FF; }
 
-        /* CONTENT */
         .profile-content { flex: 1; padding: 60px; }
         .profile-title { font-size: 40px; font-weight: 900; letter-spacing: -2px; margin-bottom: 40px; }
-        
+
         .form-card { width: 100%; max-width: 800px; background: linear-gradient(to right, #111318, #171B24); border: 1px solid rgba(255, 255, 255, 0.05); padding: 50px; position: relative; overflow: hidden; border-radius: 16px; }
-        
+
         .form-row { display: flex; gap: 24px; margin-bottom: 24px; }
         .form-group { flex: 1; display: flex; flex-direction: column; }
-        
+
         .form-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #9CA3AF; margin-bottom: 10px; }
         .form-control { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 16px 20px; color: white; font-family: 'Inter', sans-serif; font-size: 14px; transition: .3s; }
         .form-control:focus { outline: none; border-color: #4F78FF; background: rgba(79, 120, 255, 0.05); box-shadow: 0 0 0 4px rgba(79, 120, 255, 0.1); }
         .form-control::placeholder { color: #52525B; }
-        
+        .form-control.is-error { border-color: #EF4444 !important; }
+
+        .field-error { font-size: 11px; color: #EF4444; margin-top: 6px; display: block; }
+
         select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239CA3AF' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 20px center; }
-        
+
         .checkbox-group { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; margin-top: 10px; }
         .custom-checkbox { appearance: none; width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; background: rgba(255,255,255,0.02); cursor: pointer; position: relative; transition: .2s; }
         .custom-checkbox:checked { background: #4F78FF; border-color: #4F78FF; }
@@ -67,7 +66,6 @@
         .btn-cancel { background: transparent; color: #A1A1AA; border: 1px solid rgba(255,255,255,0.1); padding: 18px 40px; border-radius: 8px; font-size: 13px; font-weight: 800; letter-spacing: 2px; cursor: pointer; transition: .3s; display: inline-flex; align-items: center; justify-content: center; width: 100%; margin-top: 16px; }
         .btn-cancel:hover { background: rgba(255,255,255,0.05); color: white; }
 
-        /* Hamburger */
         .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 6px; background: none; border: none; z-index: 1100; }
         .hamburger span { display: block; width: 22px; height: 2px; background: #D4D4D8; border-radius: 2px; transition: all 0.3s ease; }
         .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
@@ -86,8 +84,7 @@
             .sidebar-links { flex-direction: row; overflow-x: auto; padding: 0 16px; gap: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
             .sidebar-links::-webkit-scrollbar { display: none; }
             .sidebar-links a { height: 50px; white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; padding: 0 20px; flex-shrink: 0; border-radius: 0; }
-            .sidebar-links a.active,
-            .sidebar-links a:hover { border-bottom-color: #4F78FF; border-left-color: transparent; background: transparent; }
+            .sidebar-links a.active, .sidebar-links a:hover { border-bottom-color: #4F78FF; border-left-color: transparent; background: transparent; }
             .profile-content { padding: 30px 20px; }
             .profile-title { font-size: 32px; }
             .form-row { flex-direction: column; gap: 24px; }
@@ -129,7 +126,6 @@
         </div>
     </nav>
 
-    <!-- MOBILE NAV -->
     <div class="mobile-nav" id="mobileNav">
         <a href="{% url 'home' %}">HOME</a>
         <a href="{% url 'shop' %}">PRODUCTS</a>
@@ -147,10 +143,7 @@
                 <a href="{% url 'profile' %}"><i class="fa-regular fa-user"></i> PROFILE</a>
                 <a href="{% url 'address_list' %}" class="active"><i class="fa-solid fa-location-dot"></i> ADDRESS</a>
                 <a href="{% url 'order_list' %}"><i class="fa-solid fa-box"></i> MY ORDERS</a>
-                <a href="{% url 'wishlist' %}">
-                    <i class="fa-regular fa-heart"></i>
-                    WISHLIST
-                </a>
+                <a href="{% url 'wishlist' %}"><i class="fa-regular fa-heart"></i> WISHLIST</a>
                 <a href="{% url 'wallet_details' %}"><i class="fa-solid fa-wallet"></i> WALLET</a>
             </div>
         </div>
@@ -161,75 +154,107 @@
             </h1>
 
             <div class="form-card">
-                <form method="POST">
+                <form method="POST" id="addressForm" novalidate>
                     {% csrf_token %}
                     {% if request.GET.next %}
                         <input type="hidden" name="next" value="{{ request.GET.next }}">
                     {% endif %}
-                    
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">FULL NAME</label>
-                            <input type="text" name="name" class="form-control" placeholder="John Doe" value="{{ address.name|default:'' }}" required>
+                            <label class="form-label" for="id_name">FULL NAME</label>
+                            <input type="text" id="id_name" name="name"
+                                class="form-control {% if errors.name %}is-error{% endif %}"
+                                placeholder="John Doe"
+                                value="{{ val_name }}">
+                            {% if errors.name %}<span class="field-error">{{ errors.name }}</span>{% endif %}
                         </div>
                         <div class="form-group">
-                            <label class="form-label">PHONE NUMBER</label>
-                            <input type="text" name="phone_number" class="form-control" placeholder="+1 234 567 8900" value="{{ address.phone_number|default:'' }}" required>
+                            <label class="form-label" for="id_phone">PHONE NUMBER</label>
+                            <input type="text" id="id_phone" name="phone_number"
+                                class="form-control {% if errors.phone_number %}is-error{% endif %}"
+                                placeholder="9876543210"
+                                maxlength="10"
+                                value="{{ val_phone }}">
+                            {% if errors.phone_number %}<span class="field-error">{{ errors.phone_number }}</span>{% endif %}
                         </div>
                     </div>
 
                     <div class="form-group" style="margin-bottom: 24px;">
-                        <label class="form-label">ADDRESS LINE 1</label>
-                        <input type="text" name="address_line_1" class="form-control" placeholder="123 Main St, Apt 4B" value="{{ address.address_line_1|default:'' }}" required>
+                        <label class="form-label" for="id_addr1">ADDRESS LINE 1</label>
+                        <input type="text" id="id_addr1" name="address_line_1"
+                            class="form-control {% if errors.address_line_1 %}is-error{% endif %}"
+                            placeholder="123 Main St, Apt 4B"
+                            value="{{ val_addr1 }}">
+                        {% if errors.address_line_1 %}<span class="field-error">{{ errors.address_line_1 }}</span>{% endif %}
                     </div>
 
                     <div class="form-group" style="margin-bottom: 24px;">
-                        <label class="form-label">ADDRESS LINE 2 (OPTIONAL)</label>
-                        <input type="text" name="address_line_2" class="form-control" placeholder="Landmark, Company, etc." value="{{ address.address_line_2|default:'' }}">
+                        <label class="form-label" for="id_addr2">ADDRESS LINE 2 (OPTIONAL)</label>
+                        <input type="text" id="id_addr2" name="address_line_2"
+                            class="form-control"
+                            placeholder="Landmark, Company, etc."
+                            value="{{ val_addr2 }}">
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">CITY</label>
-                            <input type="text" name="city" class="form-control" placeholder="New York" value="{{ address.city|default:'' }}" required>
+                            <label class="form-label" for="id_city">CITY</label>
+                            <input type="text" id="id_city" name="city"
+                                class="form-control {% if errors.city %}is-error{% endif %}"
+                                placeholder="Mumbai"
+                                value="{{ val_city }}">
+                            {% if errors.city %}<span class="field-error">{{ errors.city }}</span>{% endif %}
                         </div>
                         <div class="form-group">
-                            <label class="form-label">STATE</label>
-                            <input type="text" name="state" class="form-control" placeholder="NY" value="{{ address.state|default:'' }}" required>
+                            <label class="form-label" for="id_state">STATE</label>
+                            <input type="text" id="id_state" name="state"
+                                class="form-control {% if errors.state %}is-error{% endif %}"
+                                placeholder="Kerala"
+                                value="{{ val_state }}">
+                            {% if errors.state %}<span class="field-error">{{ errors.state }}</span>{% endif %}
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">PINCODE / ZIP</label>
-                            <input type="text" name="pincode" class="form-control" placeholder="10001" value="{{ address.pincode|default:'' }}" required>
+                            <label class="form-label" for="id_pincode">PINCODE</label>
+                            <input type="text" id="id_pincode" name="pincode"
+                                class="form-control {% if errors.pincode %}is-error{% endif %}"
+                                placeholder="682001"
+                                maxlength="6"
+                                value="{{ val_pincode }}">
+                            {% if errors.pincode %}<span class="field-error">{{ errors.pincode }}</span>{% endif %}
                         </div>
                         <div class="form-group">
-                            <label class="form-label">COUNTRY</label>
-                            <input type="text" name="country" class="form-control" placeholder="United States" value="{{ address.country|default:'India' }}" required>
+                            <label class="form-label" for="id_country">COUNTRY</label>
+                            <input type="text" id="id_country" name="country"
+                                class="form-control {% if errors.country %}is-error{% endif %}"
+                                placeholder="India"
+                                value="{{ val_country }}">
+                            {% if errors.country %}<span class="field-error">{{ errors.country }}</span>{% endif %}
                         </div>
                     </div>
 
                     <div class="form-group" style="margin-bottom: 24px;">
-                        <label class="form-label">ADDRESS TYPE</label>
-                        <select name="address_type" class="form-control">
-                            <option value="Home" {% if address.address_type == 'Home' %}selected{% endif %}>Home</option>
-                            <option value="Work" {% if address.address_type == 'Work' %}selected{% endif %}>Work</option>
-                            <option value="Other" {% if address.address_type == 'Other' %}selected{% endif %}>Other</option>
+                        <label class="form-label" for="id_address_type">ADDRESS TYPE</label>
+                        <select id="id_address_type" name="address_type" class="form-control">
+                            <option value="Home"  {% if val_type == 'Home'  %}selected{% endif %}>Home</option>
+                            <option value="Work"  {% if val_type == 'Work'  %}selected{% endif %}>Work</option>
+                            <option value="Other" {% if val_type == 'Other' %}selected{% endif %}>Other</option>
                         </select>
                     </div>
 
                     <div class="checkbox-group">
-                        <input type="checkbox" name="is_default" id="is_default" class="custom-checkbox" {% if address.is_default %}checked{% endif %}>
+                        <input type="checkbox" name="is_default" id="is_default" class="custom-checkbox"
+                            {% if val_default %}checked{% endif %}>
                         <label for="is_default" class="checkbox-label">Set as default address</label>
                     </div>
 
-                    <button type="submit" class="btn-submit">
+                    <button type="submit" class="btn-submit" id="addressSubmitBtn">
                         {% if address %}SAVE CHANGES{% else %}SAVE ADDRESS{% endif %}
                     </button>
-                    <a href="{% url 'address_list' %}" class="btn-cancel">
-                        CANCEL
-                    </a>
+                    <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'address_list' %}{% endif %}" class="btn-cancel">CANCEL</a>
                 </form>
             </div>
         </div>
@@ -250,6 +275,77 @@
             mobileNav.classList.remove('open');
         }));
     }
+
+    // Digit-only filter
+    document.getElementById('id_phone').addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    });
+    document.getElementById('id_pincode').addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    });
+
+    // Client-side validation
+    document.getElementById('addressForm').addEventListener('submit', function (e) {
+        let valid = true;
+
+        function showError(inputId, msg) {
+            const input = document.getElementById(inputId);
+            input.classList.add('is-error');
+            let span = input.nextElementSibling;
+            if (!span || !span.classList.contains('field-error')) {
+                span = document.createElement('span');
+                span.className = 'field-error';
+                input.insertAdjacentElement('afterend', span);
+            }
+            span.textContent = msg;
+            valid = false;
+        }
+
+        function clearError(inputId) {
+            const input = document.getElementById(inputId);
+            input.classList.remove('is-error');
+            const span = input.nextElementSibling;
+            if (span && span.classList.contains('field-error')) span.textContent = '';
+        }
+
+        const name = document.getElementById('id_name').value.trim();
+        clearError('id_name');
+        if (!name) showError('id_name', 'Full name is required.');
+        else if (!/^[A-Za-z\s]{2,100}$/.test(name)) showError('id_name', 'Name must be 2–100 letters and spaces only.');
+
+        const phone = document.getElementById('id_phone').value.trim();
+        clearError('id_phone');
+        if (!phone) showError('id_phone', 'Phone number is required.');
+        else if (!/^\d{10}$/.test(phone)) showError('id_phone', 'Enter a valid 10-digit phone number.');
+
+        const addr1 = document.getElementById('id_addr1').value.trim();
+        clearError('id_addr1');
+        if (!addr1) showError('id_addr1', 'Address line 1 is required.');
+        else if (addr1.length < 5) showError('id_addr1', 'Address line 1 must be at least 5 characters.');
+        else if (!/^[A-Za-z0-9\s,./\-#&'()]{5,255}$/.test(addr1)) showError('id_addr1', 'Address contains invalid characters.');
+
+        const city = document.getElementById('id_city').value.trim();
+        clearError('id_city');
+        if (!city) showError('id_city', 'City is required.');
+        else if (!/^[A-Za-z\s]{2,100}$/.test(city)) showError('id_city', 'City must contain letters and spaces only.');
+
+        const state = document.getElementById('id_state').value.trim();
+        clearError('id_state');
+        if (!state) showError('id_state', 'State is required.');
+        else if (!/^[A-Za-z\s]{2,100}$/.test(state)) showError('id_state', 'State must contain letters and spaces only.');
+
+        const pincode = document.getElementById('id_pincode').value.trim();
+        clearError('id_pincode');
+        if (!pincode) showError('id_pincode', 'Pincode is required.');
+        else if (!/^\d{6}$/.test(pincode)) showError('id_pincode', 'Enter a valid 6-digit pincode.');
+
+        const country = document.getElementById('id_country').value.trim();
+        clearError('id_country');
+        if (!country) showError('id_country', 'Country is required.');
+        else if (!/^[A-Za-z\s]{2,100}$/.test(country)) showError('id_country', 'Country must contain letters and spaces only.');
+
+        if (!valid) e.preventDefault();
+    });
 </script>
 </body>
 </html>

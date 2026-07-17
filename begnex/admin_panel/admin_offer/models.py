@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -52,9 +53,6 @@ class CategoryOffer(models.Model):
     def is_valid(self):
         today = timezone.now().date()
         return self.is_active and self.valid_from <= today <= self.valid_until
-
-
-from django.conf import settings
 
 
 class ReferralOffer(models.Model):

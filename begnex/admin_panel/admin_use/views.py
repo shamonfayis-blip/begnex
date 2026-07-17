@@ -51,7 +51,7 @@ def admin_login_view(request):
 def admin_dashboard_view(request):
     from datetime import date, timedelta
 
-    from django.db.models import Count, Sum
+    from django.db.models import Sum
     from django.db.models.functions import TruncDate, TruncMonth
     from django.utils import timezone
 
@@ -271,6 +271,15 @@ def sales_report_view(request):
     elif filter_type == "weekly":
         date_from = today - timedelta(days=6)
         date_to = today
+    elif filter_type == "monthly":
+        date_from = date(today.year, today.month, 1)
+        date_to = today
+    elif filter_type == "last_month":
+        first_day_this_month = date(today.year, today.month, 1)
+        last_day_last_month = first_day_this_month - timedelta(days=1)
+        first_day_last_month = date(last_day_last_month.year, last_day_last_month.month, 1)
+        date_from = first_day_last_month
+        date_to = last_day_last_month
     elif filter_type == "yearly":
         date_from = date(today.year, 1, 1)
         date_to = today
@@ -278,7 +287,22 @@ def sales_report_view(request):
         try:
             date_from = date.fromisoformat(request.GET.get("date_from", ""))
             date_to = date.fromisoformat(request.GET.get("date_to", ""))
+            if date_from > today or date_to > today:
+                messages.warning(request, "Dates cannot be in the future.")
+                if date_from > today:
+                    date_from = today
+                if date_to > today:
+                    date_to = today
+
+            if date_from > date_to:
+                messages.warning(request, "Start date cannot be after end date.")
+                date_from, date_to = date_to, date_from
+
+            if (date_to - date_from).days > 365:
+                messages.warning(request, "Custom date range cannot exceed 365 days.")
+                date_from = date_to - timedelta(days=30)
         except (ValueError, TypeError):
+            messages.warning(request, "Invalid date range entered. Showing today's sales.")
             date_from = today
             date_to = today
     else:
@@ -391,7 +415,7 @@ def sales_report_view(request):
         from django.http import HttpResponse
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import letter
-        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.styles import ParagraphStyle
         from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer,
                                         Table, TableStyle)
 
@@ -405,7 +429,6 @@ def sales_report_view(request):
             bottomMargin=36,
         )
 
-        styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
             name="TitleStyle",
             fontName="Helvetica-Bold",

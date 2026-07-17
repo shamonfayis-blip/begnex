@@ -447,31 +447,31 @@
 <div style="display:flex; gap:16px;">
     <div class="field" style="flex:1;">
         <label>Color *</label>
-        <input type="text" name="color" id="v_color" placeholder="e.g. Black">
+        <input type="text" name="color" id="v_color" placeholder="e.g. Black" value="{{ add_form_color|default:'' }}">
         <span class="field-error" id="err_v_color"></span>
     </div>
     <div class="field" style="flex:1;">
         <label>Size *</label>
-        <input type="text" name="size" id="v_size" placeholder="e.g. XL">
+        <input type="text" name="size" id="v_size" placeholder="e.g. XL" value="{{ add_form_size|default:'' }}">
         <span class="field-error" id="err_v_size"></span>
     </div>
 </div>
 
                     <div class="field">
                         <label>SKU Code *</label>
-                        <input type="text" name="sku" id="v_sku" placeholder="Unique SKU identifier">
+                        <input type="text" name="sku" id="v_sku" placeholder="Unique SKU identifier" value="{{ add_form_sku|default:'' }}">
                         <span class="field-error" id="err_v_sku"></span>
                     </div>
 
                     <div style="display:flex; gap:16px;">
                         <div class="field" style="flex:1;">
                             <label>Price (₹) *</label>
-                            <input type="number" name="price" id="v_price" step="0.01" min="0.01" placeholder="0.00">
+                            <input type="number" name="price" id="v_price" step="0.01" min="0.01" placeholder="0.00" value="{{ add_form_price|default:'' }}">
                             <span class="field-error" id="err_v_price"></span>
                         </div>
                         <div class="field" style="flex:1;">
                             <label>Stock Quantity *</label>
-                            <input type="number" name="stock" id="v_stock" min="0" value="0">
+                            <input type="number" name="stock" id="v_stock" min="0" value="{{ add_form_stock|default:'0' }}">
                             <span class="field-error" id="err_v_stock"></span>
                         </div>
                     </div>
@@ -531,7 +531,7 @@
                                 <input type="hidden" name="clear_image_3" id="v_clear_image_3" value="">
                             </div>
                         </div>
-                        <span class="img-section-error" id="err_v_images"></span>
+                        <span class="img-section-error" id="err_v_images">{% if add_form_error %}{{ add_form_error }}{% endif %}</span>
                     </div>
 
                 </div>
@@ -786,6 +786,42 @@
                 if (e) { e.classList.remove('show'); e.textContent = ''; }
             });
         });
+
+        /* ─── AUTO-OPEN ADD DRAWER ON SERVER VALIDATION ERROR ─── */
+        {% if add_form_error %}
+        (function() {
+            openDrawer('variantDrawer');
+            // Restore status selection
+            setStatus({{ add_form_is_active|yesno:'true,false' }});
+            // Show the error in the image section (covers SKU/price/stock/image errors)
+            var errEl = document.getElementById('err_v_images');
+            if (errEl) errEl.classList.add('show');
+            // Highlight the relevant field based on error type
+            var error = "{{ add_form_error|escapejs }}";
+            if (error.includes('Color') || error.includes('Size')) {
+                if (!document.getElementById('v_color').value) {
+                    document.getElementById('v_color').classList.add('invalid');
+                } else {
+                    document.getElementById('v_size').classList.add('invalid');
+                }
+            } else if (error.includes('SKU')) {
+                document.getElementById('v_sku').classList.add('invalid');
+                document.getElementById('err_v_sku').textContent = error;
+                document.getElementById('err_v_sku').classList.add('show');
+                document.getElementById('err_v_images').classList.remove('show');
+            } else if (error.includes('Price') || error.includes('price')) {
+                document.getElementById('v_price').classList.add('invalid');
+                document.getElementById('err_v_price').textContent = error;
+                document.getElementById('err_v_price').classList.add('show');
+                document.getElementById('err_v_images').classList.remove('show');
+            } else if (error.includes('Stock') || error.includes('stock')) {
+                document.getElementById('v_stock').classList.add('invalid');
+                document.getElementById('err_v_stock').textContent = error;
+                document.getElementById('err_v_stock').classList.add('show');
+                document.getElementById('err_v_images').classList.remove('show');
+            }
+        })();
+        {% endif %}
 
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>

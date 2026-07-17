@@ -35,7 +35,7 @@ def _log_email_status(
             if success:
                 f.write("Status: SUCCESS\n")
             else:
-                f.write(f"Status: FAILED\n")
+                f.write("Status: FAILED\n")
                 f.write(f"Error: {error_msg}\n")
                 if tb:
                     f.write(f"Traceback:\n{tb}\n")
@@ -78,8 +78,8 @@ def send_order_cancelled_email(user, order, refund_amount):
         )
     else:
         refund_section = (
-            f"\nSince this was a Cash on Delivery order, no online\n"
-            f"refund is applicable.\n"
+            "\nSince this was a Cash on Delivery order, no online\n"
+            "refund is applicable.\n"
         )
 
     body = (
@@ -153,8 +153,8 @@ def send_item_cancelled_email(user, order, item, cancel_qty, refund_amount):
         )
     else:
         refund_section = (
-            f"\nSince this was a Cash on Delivery order, no online\n"
-            f"refund is applicable for the cancelled item.\n"
+            "\nSince this was a Cash on Delivery order, no online\n"
+            "refund is applicable for the cancelled item.\n"
         )
 
     body = (

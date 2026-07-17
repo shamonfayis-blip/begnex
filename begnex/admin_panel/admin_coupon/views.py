@@ -194,11 +194,20 @@ def admin_coupon_create_view(request):
             except ValueError:
                 errors.append("Invalid date format.")
 
+        # Flat coupon: min order must be higher than coupon value
+        if discount_type == "fixed" and not errors:
+            try:
+                if float(min_order_amount) <= float(discount_value):
+                    errors.append("Minimum order amount must be greater than the flat coupon value.")
+            except (ValueError, TypeError):
+                pass  # already caught above
+
         if errors:
             for err in errors:
                 messages.error(request, err)
         else:
-            Coupon.objects.create(
+            from django.core.exceptions import ValidationError
+            coupon = Coupon(
                 code=code,
                 description=description,
                 discount_type=discount_type,
@@ -210,8 +219,15 @@ def admin_coupon_create_view(request):
                 valid_until=valid_until,
                 is_active=is_active,
             )
-            messages.success(request, f"Coupon '{code}' created successfully!")
-            return redirect("admin_coupons")
+            try:
+                coupon.full_clean()
+                coupon.save()
+                messages.success(request, f"Coupon '{code}' created successfully!")
+                return redirect("admin_coupons")
+            except ValidationError as e:
+                for field, err_list in e.message_dict.items():
+                    for err in err_list:
+                        messages.error(request, err)
 
     return redirect("admin_coupons")
 
@@ -325,10 +341,19 @@ def admin_coupon_edit_view(request, coupon_id):
             except ValueError:
                 errors.append("Invalid date format.")
 
+        # Flat coupon: min order must be higher than coupon value
+        if discount_type == "fixed" and not errors:
+            try:
+                if float(min_order_amount) <= float(discount_value):
+                    errors.append("Minimum order amount must be greater than the flat coupon value.")
+            except (ValueError, TypeError):
+                pass  # already caught above
+
         if errors:
             for err in errors:
                 messages.error(request, err)
         else:
+            from django.core.exceptions import ValidationError
             coupon.code = code
             coupon.description = description
             coupon.discount_type = discount_type
@@ -339,8 +364,14 @@ def admin_coupon_edit_view(request, coupon_id):
             coupon.valid_from = valid_from
             coupon.valid_until = valid_until
             coupon.is_active = is_active
-            coupon.save()
-            messages.success(request, f"Coupon '{code}' updated successfully!")
+            try:
+                coupon.full_clean()
+                coupon.save()
+                messages.success(request, f"Coupon '{code}' updated successfully!")
+            except ValidationError as e:
+                for field, err_list in e.message_dict.items():
+                    for err in err_list:
+                        messages.error(request, err)
 
     return redirect("admin_coupons")
 
@@ -367,7 +398,7 @@ def admin_coupon_usage_history_view(request):
     page_obj = paginator.get_page(request.GET.get("page"))
 
     total_uses = orders.count()
-    from django.db.models import Count, Sum
+    from django.db.models import Sum
 
     total_savings = orders.aggregate(s=Sum("coupon_discount"))["s"] or 0
     unique_coupons = orders.values("coupon_code").distinct().count()

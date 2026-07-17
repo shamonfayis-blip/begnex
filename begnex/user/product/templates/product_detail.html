@@ -981,7 +981,7 @@
                                 'Content-Type': 'application/json',
                                 'X-CSRFToken': '{{ csrf_token }}'
                             },
-                            body: JSON.stringify({ product_id: productId })
+                        body: JSON.stringify({ product_id: productId, variant_id: currentVariant ? currentVariant.id : null })
                         });
                         const data = await res.json();
                         

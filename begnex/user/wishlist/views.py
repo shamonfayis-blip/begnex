@@ -22,8 +22,8 @@ def wishlist_view(request):
             product__category__is_active=True,
             product__category__is_deleted=False,
         )
-        .select_related("product", "product__category")
-        .prefetch_related("product__variants")
+        .select_related("product", "product__category", "variant")
+        .prefetch_related("product__variants", "variant__images")
     )
 
     product_ids = wishlist_items.values_list("product_id", flat=True)
@@ -39,14 +39,28 @@ def wishlist_view(request):
     for wi in wishlist_items:
         wi.product.min_price = price_map.get(wi.product.id)
 
-        active_variants = [
-            v for v in wi.product.variants.all() if v.is_active and not v.is_deleted
-        ]
-        default_variant = next(
-            (v for v in active_variants if v.is_default),
-            active_variants[0] if active_variants else None,
-        )
-        wi.product.default_variant_id = default_variant.id if default_variant else None
+        # Determine which variant to show
+        display_variant = wi.variant  # stored variant (the one user selected)
+        if not display_variant:
+            # Fall back to default variant
+            active_variants = [
+                v for v in wi.product.variants.all() if v.is_active and not v.is_deleted
+            ]
+            display_variant = next(
+                (v for v in active_variants if v.is_default),
+                active_variants[0] if active_variants else None,
+            )
+
+        # Resolve the image from the display variant
+        if display_variant:
+            wi.display_image = (
+                display_variant.images.filter(is_primary=True).first()
+                or display_variant.images.first()
+            )
+            wi.product.default_variant_id = display_variant.id
+        else:
+            wi.display_image = None
+            wi.product.default_variant_id = None
 
         items.append(wi)
 
@@ -64,6 +78,7 @@ def toggle_wishlist_api(request):
     try:
         data = json.loads(request.body)
         product_id = data.get("product_id")
+        variant_id = data.get("variant_id")  # optional
     except (ValueError, TypeError, json.JSONDecodeError):
         return JsonResponse(
             {"success": False, "message": "Invalid request."}, status=400
@@ -76,10 +91,37 @@ def toggle_wishlist_api(request):
             {"success": False, "message": "Product not found."}, status=404
         )
 
-    obj, created = Wishlist.objects.get_or_create(user=request.user, product=product)
+    # Resolve variant
+    variant = None
+    if variant_id:
+        from admin_panel.admin_product.models import ProductVariant
+        try:
+            variant = ProductVariant.objects.get(
+                id=variant_id, product=product, is_deleted=False
+            )
+        except ProductVariant.DoesNotExist:
+            pass
+
+    obj, created = Wishlist.objects.get_or_create(
+        user=request.user,
+        product=product,
+        defaults={"variant": variant},
+    )
 
     if not created:
-
+        if variant and obj.variant != variant:
+            # Update stored variant if a different one was selected
+            obj.variant = variant
+            obj.save(update_fields=["variant"])
+            count = Wishlist.objects.filter(user=request.user).count()
+            return JsonResponse(
+                {
+                    "success": True,
+                    "action": "updated",
+                    "wishlist_count": count,
+                    "message": "Wishlist variant updated.",
+                }
+            )
         obj.delete()
         count = Wishlist.objects.filter(user=request.user).count()
         return JsonResponse(

@@ -3,6 +3,8 @@ import re
 import threading
 import time
 
+from allauth.core.exceptions import ImmediateHttpResponse
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
@@ -33,6 +35,28 @@ def _send_mail_async(subject, body, to_email):
     threading.Thread(target=_send, daemon=True).start()
 
 
+OTP_EXPIRY_SECONDS = 60  # keep in sync with otp_page view
+
+
+def _build_otp_email(otp, username, expiry_seconds=OTP_EXPIRY_SECONDS):
+    """Return a plain-text OTP verification email body."""
+    expiry_minutes = expiry_seconds // 60
+    expiry_label = (
+        f"{expiry_minutes} minute{'s' if expiry_minutes != 1 else ''}"
+        if expiry_seconds >= 60
+        else f"{expiry_seconds} seconds"
+    )
+
+    return (
+        f"Hi {username},\n\n"
+        f"Your Begnex verification code is: {otp}\n\n"
+        f"This code expires in {expiry_label}.\n"
+        f"Do not share it with anyone.\n\n"
+        f"If you did not request this, please ignore this email.\n\n"
+        f"- The Begnex Team"
+    )
+
+
 def validate_password_strength(password):
     if len(password) < 8:
         return "Password must be at least 8 characters"
@@ -46,50 +70,46 @@ def validate_password_strength(password):
 
 
 def signup_view(request):
-
     if request.user.is_authenticated:
         return redirect("home")
-
     ref_code = request.GET.get("ref", "").strip()
     if not ref_code:
         ref_code = request.session.get("referrer_code", "")
     else:
         request.session["referrer_code"] = ref_code
-
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
         confirm = request.POST.get("confirm_password", "")
         manual_ref_code = request.POST.get("referral_code", "").strip()
-
         errors = {}
-
         if not username:
             errors["username"] = "Username is required"
+        elif len(username) < 3:
+            errors["username"] = "Username must be at least 3 characters"
+        elif len(username) > 30:
+            errors["username"] = "Username must be at most 30 characters"
+        elif not re.match(r'^[a-zA-Z0-9_]+$', username):
+            errors["username"] = "Username can only contain letters, numbers, and underscores"
         if not email:
             errors["email"] = "Email is required"
         if not password:
             errors["password"] = "Password is required"
         if not confirm:
             errors["confirm_password"] = "Confirm password is required"
-
         if password and confirm and password != confirm:
             errors["confirm_password"] = "Passwords do not match"
-
         pw_error = validate_password_strength(password) if password else None
         if pw_error:
             errors["password"] = pw_error
-
         if username and User.objects.filter(username=username).exists():
             errors["username"] = "Username already exists"
         if email and User.objects.filter(email=email).exists():
             errors["email"] = "Email already exists"
-
         if manual_ref_code:
             if not User.objects.filter(referral_code=manual_ref_code).exists():
                 errors["referral_code"] = "Invalid referral code"
-
         if errors:
             return render(
                 request,
@@ -101,7 +121,6 @@ def signup_view(request):
                     "referral_code": manual_ref_code or ref_code,
                 },
             )
-
         otp = random.randint(100000, 999999)
         request.session["signup_data"] = {
             "username": username,
@@ -111,28 +130,21 @@ def signup_view(request):
         }
         request.session["otp"] = str(otp)
         request.session["otp_created_time"] = time.time()
-
-        _send_mail_async("Begnex OTP Verification", f"Your OTP is {otp}", email)
-
-        messages.success(request, "OTP sent successfully")
+        body = _build_otp_email(otp, username)
+        _send_mail_async("Begnex OTP Verification", body, email)
         return redirect("otp_page")
-
     return render(request, "signup.html", {"referral_code": ref_code})
 
 
 @never_cache
 def otp_page(request):
-
     if request.user.is_authenticated:
         return redirect("home")
-
     if request.method == "POST":
         entered_otp = "".join([request.POST.get(f"otp{i}", "") for i in range(1, 7)])
-
         otp_created_time = request.session.get("otp_created_time")
         if not otp_created_time:
             return redirect("signup")
-
         if time.time() - otp_created_time > 60:
             request.session.pop("otp", None)
             request.session.pop("signup_data", None)
@@ -142,13 +154,10 @@ def otp_page(request):
                 "otp.html",
                 {"error": "OTP expired. Please sign up again."},
             )
-
         session_otp = request.session.get("otp")
         signup_data = request.session.get("signup_data")
-
         if not session_otp or not signup_data:
             return redirect("signup")
-
         if entered_otp == session_otp:
             parts = signup_data["username"].split()
             user = User.objects.create_user(
@@ -158,13 +167,8 @@ def otp_page(request):
                 first_name=parts[0],
                 last_name=" ".join(parts[1:]) if len(parts) > 1 else "",
             )
-
-            # Create user's wallet
             from user.wallet.utils import get_user_wallet, refund_to_wallet
-
             get_user_wallet(user)
-
-            # Check referral code
             ref_code = signup_data.get("referral_code")
             if not ref_code:
                 ref_code = request.session.get("referrer_code")
@@ -173,16 +177,12 @@ def otp_page(request):
                     referrer = User.objects.get(referral_code=ref_code)
                     from admin_panel.admin_offer.models import (ReferralOffer,
                                                                 ReferralRecord)
-
                     active_offer = ReferralOffer.objects.filter(is_active=True).first()
-
                     referrer_reward = 100.00
                     referee_reward = 50.00
                     if active_offer:
                         referrer_reward = float(active_offer.referrer_reward)
                         referee_reward = float(active_offer.referee_reward)
-
-                    # Credit wallets
                     if referee_reward > 0:
                         refund_to_wallet(
                             user,
@@ -195,8 +195,6 @@ def otp_page(request):
                             referrer_reward,
                             f"Referral invite reward (referred {user.username})",
                         )
-
-                    # Log record
                     ReferralRecord.objects.create(
                         referrer=referrer,
                         referee=user,
@@ -207,44 +205,48 @@ def otp_page(request):
                     pass
                 except Exception as ex:
                     print("Error in referral reward processing:", ex)
-
             login(
                 request,
                 user,
                 backend="django.contrib.auth.backends.ModelBackend",
             )
-
             request.session.pop("otp", None)
             request.session.pop("signup_data", None)
             request.session.pop("otp_created_time", None)
-
             return redirect("home")
         else:
+            elapsed = time.time() - otp_created_time
+            time_left = max(0, int(OTP_EXPIRY_SECONDS - elapsed))
             return render(
                 request,
                 "otp.html",
-                {"error": "Invalid OTP. Please try again."},
+                {"error": "Invalid OTP. Please try again.", "time_left": time_left},
             )
-
-    return render(request, "otp.html")
+    list(messages.get_messages(request))
+    otp_created_time = request.session.get("otp_created_time")
+    if otp_created_time:
+        elapsed = time.time() - otp_created_time
+        time_left = max(0, int(OTP_EXPIRY_SECONDS - elapsed))
+    else:
+        time_left = 0
+    return render(request, "otp.html", {"time_left": time_left})
 
 
 def resend_otp(request):
     signup_data = request.session.get("signup_data")
     if not signup_data:
         return redirect("signup")
-
     otp = random.randint(100000, 999999)
     request.session["otp"] = str(otp)
     request.session["otp_created_time"] = time.time()
 
+    body = _build_otp_email(otp, signup_data["username"])
     _send_mail_async(
         "Begnex OTP Verification",
-        f"Your new OTP is {otp}",
+        body,
         signup_data["email"],
     )
 
-    messages.success(request, "New OTP sent successfully")
     return redirect("otp_page")
 
 
@@ -460,10 +462,6 @@ def logout_view(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
     return redirect("login")
-
-
-from allauth.core.exceptions import ImmediateHttpResponse
-from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):

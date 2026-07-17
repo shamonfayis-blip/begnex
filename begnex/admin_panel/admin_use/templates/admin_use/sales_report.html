@@ -151,11 +151,29 @@ table td{ padding:13px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
 .page-btn.active{ background:#111; color:white; border-color:#111; font-weight:700; }
 .page-btn.disabled{ opacity:.35; pointer-events:none; }
 
+/* ─── TOAST ─── */
+.toast-container {
+    position: fixed; top: 24px; right: 24px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.toast {
+    min-width: 280px; padding: 14px 18px; border-radius: 10px;
+    font-size: 13px; font-weight: 500; display: flex; align-items: center;
+    gap: 10px; animation: slideIn .35s ease; box-shadow: 0 6px 20px rgba(0,0,0,.12);
+}
+.toast.success { background: #ECFDF5; border: 1px solid #D1FAE5; color: #065F46; }
+.toast.error   { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+.toast.warning { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
+@keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+
 @media(max-width:1100px){ .stats-grid{grid-template-columns:repeat(2,1fr);} .row2{grid-template-columns:1fr;} .row3{grid-template-columns:1fr;} }
 @media(max-width:768px){ .sidebar{display:none;} .main{width:100%;margin-left:0;} .stats-grid{grid-template-columns:1fr 1fr;} }
 </style>
 </head>
 <body>
+
+    <!-- ─── TOAST ─── -->
+    <div class="toast-container" id="toastContainer"></div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -213,6 +231,8 @@ table td{ padding:13px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
                 <div class="filter-tabs">
                     <a href="?filter=daily"  class="filter-tab {% if filter_type == 'daily'  %}active{% endif %}">Today</a>
                     <a href="?filter=weekly" class="filter-tab {% if filter_type == 'weekly' %}active{% endif %}">Last 7 Days</a>
+                    <a href="?filter=monthly" class="filter-tab {% if filter_type == 'monthly' %}active{% endif %}">This Month</a>
+                    <a href="?filter=last_month" class="filter-tab {% if filter_type == 'last_month' %}active{% endif %}">Last Month</a>
                     <a href="?filter=yearly" class="filter-tab {% if filter_type == 'yearly' %}active{% endif %}">This Year</a>
                 </div>
                 <div class="filter-sep"></div>
@@ -571,6 +591,62 @@ table td{ padding:13px 0; border-top:1px solid #F3F4F6; font-size:13px; vertical
         }
     });
 })();
+
+/* ---- Toast Notification ---- */
+function showToast(msg, type) {
+    var c = document.getElementById('toastContainer');
+    if (!c) return;
+    var t = document.createElement('div');
+    t.className = 'toast ' + type;
+    var icon = '✅ ';
+    if (type === 'error') icon = '❌ ';
+    if (type === 'warning') icon = '⚠️ ';
+    t.textContent = icon + msg;
+    c.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 4000);
+}
+
+/* Render Django messages as toasts */
+{% for message in messages %}
+    {% if message.tags == 'error' %}
+        showToast("{{ message|escapejs }}", 'error');
+    {% elif message.tags == 'warning' %}
+        showToast("{{ message|escapejs }}", 'warning');
+    {% else %}
+        showToast("{{ message|escapejs }}", 'success');
+    {% endif %}
+{% endfor %}
+
+/* Client-side custom date validation */
+document.querySelector('.date-group').addEventListener('submit', function(e) {
+    var dateFromInput = document.querySelector('input[name="date_from"]');
+    var dateToInput = document.querySelector('input[name="date_to"]');
+    if (!dateFromInput || !dateToInput) return;
+
+    var dateFrom = new Date(dateFromInput.value);
+    var dateTo = new Date(dateToInput.value);
+    var today = new Date();
+    today.setHours(23, 59, 59, 999); // Allow selecting today fully
+
+    if (dateFrom > today || dateTo > today) {
+        e.preventDefault();
+        showToast("Start date and End date cannot be in the future.", "warning");
+        return;
+    }
+
+    if (dateFrom > dateTo) {
+        e.preventDefault();
+        showToast("Start date cannot be after end date.", "warning");
+        return;
+    }
+
+    var diffDays = Math.ceil(Math.abs(dateTo - dateFrom) / (1000 * 60 * 60 * 24));
+    if (diffDays > 365) {
+        e.preventDefault();
+        showToast("Custom date range cannot exceed 365 days.", "warning");
+        return;
+    }
+});
 </script>
 </body>
 </html>

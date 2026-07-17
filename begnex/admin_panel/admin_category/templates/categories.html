@@ -547,22 +547,23 @@
 
                     <div class="field">
                         <label>Category Name *</label>
-                        <input type="text" name="name" id="addCatName" placeholder="e.g. Backpack, Travel Bags" maxlength="100">
-                        <span class="field-error" id="err_add_name"></span>
+                        <input type="text" name="name" id="addCatName" placeholder="e.g. Backpack, Travel Bags" maxlength="100"
+                               value="{{ add_form_name|default:''|escapejs }}">
+                        <span class="field-error" id="err_add_name">{% if add_form_error %}{{ add_form_error }}{% endif %}</span>
                     </div>
 
                     <div class="field">
                         <label>Status</label>
                         <div class="status-box">
-                            <button type="button" class="status-btn active" id="addActiveBtn" onclick="setStatus('add', true)">Active</button>
-                            <button type="button" class="status-btn" id="addInactiveBtn" onclick="setStatus('add', false)">Inactive</button>
+                            <button type="button" class="status-btn {% if add_form_name is defined and not add_form_is_active %}{% else %}active{% endif %}" id="addActiveBtn" onclick="setStatus('add', true)">Active</button>
+                            <button type="button" class="status-btn {% if add_form_name is defined and not add_form_is_active %}active{% endif %}" id="addInactiveBtn" onclick="setStatus('add', false)">Inactive</button>
                         </div>
                         <input type="hidden" name="is_active" id="addIsActive" value="true">
                     </div>
 
                     <div class="field">
                         <label>Description</label>
-                        <textarea name="description" placeholder="Brief details about this category..."></textarea>
+                        <textarea name="description" placeholder="Brief details about this category...">{{ add_form_description|default:'' }}</textarea>
                     </div>
 
                     <div class="field">
@@ -612,8 +613,9 @@
 
                     <div class="field">
                         <label>Category Name *</label>
-                        <input type="text" name="name" id="editName" placeholder="Category name" maxlength="100">
-                        <span class="field-error" id="err_edit_name"></span>
+                        <input type="text" name="name" id="editName" placeholder="Category name" maxlength="100"
+                               value="{{ edit_form_name|default:''|escapejs }}">
+                        <span class="field-error" id="err_edit_name">{% if edit_form_error %}{{ edit_form_error }}{% endif %}</span>
                     </div>
 
                     <div class="field">
@@ -627,7 +629,7 @@
 
                     <div class="field">
                         <label>Description</label>
-                        <textarea name="description" id="editDescription" placeholder="Brief details..."></textarea>
+                        <textarea name="description" id="editDescription" placeholder="Brief details...">{{ edit_form_description|default:'' }}</textarea>
                     </div>
 
                     <div class="field">
@@ -1198,6 +1200,47 @@
                 if (e) { e.classList.remove('show'); e.textContent = ''; }
             });
         });
+
+        /* ─── AUTO-OPEN DRAWER ON SERVER VALIDATION ERROR ─── */
+        {% if add_form_error %}
+        (function() {
+            // Re-open add drawer with pre-filled state
+            openDrawer('addDrawer');
+            var nameEl = document.getElementById('addCatName');
+            if (nameEl) nameEl.classList.add('invalid');
+            var errEl = document.getElementById('err_add_name');
+            if (errEl) errEl.classList.add('show');
+            // Restore status selection
+            setStatus('add', {{ add_form_is_active|yesno:'true,false' }});
+        })();
+        {% endif %}
+
+        {% if edit_form_error %}
+        (function() {
+            // Re-open edit drawer with pre-filled state
+            var baseUrl = "{% url 'admin_category_edit' 0 %}".replace('/0/', '/{{ edit_form_category_id }}/');
+            document.getElementById('editForm').action = baseUrl;
+            // Image preview (current image)
+            var imageUrl = "{{ edit_form_image_url|escapejs }}";
+            var wrap = document.getElementById('currentImgWrap');
+            if (imageUrl) {
+                document.getElementById('currentImgPreview').src = imageUrl;
+                wrap.style.display = 'flex';
+            } else {
+                wrap.style.display = 'none';
+            }
+            document.getElementById('clearImageInput').value = '0';
+            document.getElementById('editImageInput').value = '';
+            document.getElementById('editPreviewBox').style.display = 'none';
+            openDrawer('editDrawer');
+            var nameEl = document.getElementById('editName');
+            if (nameEl) nameEl.classList.add('invalid');
+            var errEl = document.getElementById('err_edit_name');
+            if (errEl) errEl.classList.add('show');
+            // Restore status selection
+            setStatus('edit', {{ edit_form_is_active|yesno:'true,false' }});
+        })();
+        {% endif %}
 
     </script>
 

@@ -218,6 +218,8 @@
             margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
         .btn-primary:hover { background: #3d6be0; }
+        .modal-field-error { font-size: 11px; color: #EF4444; min-height: 16px; }
+        .form-input.is-error, .form-select.is-error { border-color: #EF4444 !important; }
 
         /* TOAST */
         .toast-container { position: fixed; top: 90px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; }
@@ -665,20 +667,23 @@
                 <h3 class="modal-title">Add Shipping Address</h3>
                 <button type="button" class="modal-close" onclick="closeAddAddressModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            
-            <form id="addAddressForm" onsubmit="submitAddAddress(event)">
+
+            <form id="addAddressForm" onsubmit="submitAddAddress(event)" novalidate>
                 <div class="form-grid">
                     <div class="form-group form-full">
                         <label for="add_name">Full Name *</label>
-                        <input type="text" class="form-input" id="add_name" required>
+                        <input type="text" class="form-input" id="add_name">
+                        <span class="modal-field-error" id="err-add_name"></span>
                     </div>
                     <div class="form-group form-full">
                         <label for="add_phone">Phone Number *</label>
-                        <input type="text" class="form-input" id="add_phone" required>
+                        <input type="text" class="form-input" id="add_phone" maxlength="10">
+                        <span class="modal-field-error" id="err-add_phone"></span>
                     </div>
                     <div class="form-group form-full">
                         <label for="add_line1">Address Line 1 *</label>
-                        <input type="text" class="form-input" id="add_line1" placeholder="House/Flat No, Apartment, Street" required>
+                        <input type="text" class="form-input" id="add_line1" placeholder="House/Flat No, Apartment, Street">
+                        <span class="modal-field-error" id="err-add_line1"></span>
                     </div>
                     <div class="form-group form-full">
                         <label for="add_line2">Address Line 2 (Optional)</label>
@@ -686,15 +691,18 @@
                     </div>
                     <div class="form-group">
                         <label for="add_city">City *</label>
-                        <input type="text" class="form-input" id="add_city" required>
+                        <input type="text" class="form-input" id="add_city">
+                        <span class="modal-field-error" id="err-add_city"></span>
                     </div>
                     <div class="form-group">
                         <label for="add_state">State *</label>
-                        <input type="text" class="form-input" id="add_state" required>
+                        <input type="text" class="form-input" id="add_state">
+                        <span class="modal-field-error" id="err-add_state"></span>
                     </div>
                     <div class="form-group">
                         <label for="add_pincode">Pincode *</label>
-                        <input type="text" class="form-input" id="add_pincode" required>
+                        <input type="text" class="form-input" id="add_pincode" maxlength="6">
+                        <span class="modal-field-error" id="err-add_pincode"></span>
                     </div>
                     <div class="form-group">
                         <label for="add_type">Address Type</label>
@@ -721,21 +729,24 @@
                 <h3 class="modal-title">Edit Shipping Address</h3>
                 <button type="button" class="modal-close" onclick="closeEditAddressModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            
-            <form id="editAddressForm" onsubmit="submitEditAddress(event)">
+
+            <form id="editAddressForm" onsubmit="submitEditAddress(event)" novalidate>
                 <input type="hidden" id="edit_id">
                 <div class="form-grid">
                     <div class="form-group form-full">
                         <label for="edit_name">Full Name *</label>
-                        <input type="text" class="form-input" id="edit_name" required>
+                        <input type="text" class="form-input" id="edit_name">
+                        <span class="modal-field-error" id="err-edit_name"></span>
                     </div>
                     <div class="form-group form-full">
                         <label for="edit_phone">Phone Number *</label>
-                        <input type="text" class="form-input" id="edit_phone" required>
+                        <input type="text" class="form-input" id="edit_phone" maxlength="10">
+                        <span class="modal-field-error" id="err-edit_phone"></span>
                     </div>
                     <div class="form-group form-full">
                         <label for="edit_line1">Address Line 1 *</label>
-                        <input type="text" class="form-input" id="edit_line1" required>
+                        <input type="text" class="form-input" id="edit_line1">
+                        <span class="modal-field-error" id="err-edit_line1"></span>
                     </div>
                     <div class="form-group form-full">
                         <label for="edit_line2">Address Line 2 (Optional)</label>
@@ -743,15 +754,18 @@
                     </div>
                     <div class="form-group">
                         <label for="edit_city">City *</label>
-                        <input type="text" class="form-input" id="edit_city" required>
+                        <input type="text" class="form-input" id="edit_city">
+                        <span class="modal-field-error" id="err-edit_city"></span>
                     </div>
                     <div class="form-group">
                         <label for="edit_state">State *</label>
-                        <input type="text" class="form-input" id="edit_state" required>
+                        <input type="text" class="form-input" id="edit_state">
+                        <span class="modal-field-error" id="err-edit_state"></span>
                     </div>
                     <div class="form-group">
                         <label for="edit_pincode">Pincode *</label>
-                        <input type="text" class="form-input" id="edit_pincode" required>
+                        <input type="text" class="form-input" id="edit_pincode" maxlength="6">
+                        <span class="modal-field-error" id="err-edit_pincode"></span>
                     </div>
                     <div class="form-group">
                         <label for="edit_type">Address Type</label>
@@ -1178,11 +1192,68 @@
             }
         }
 
+        /* ── MODAL VALIDATION HELPERS ── */
+        function _mSetErr(id, msg) {
+            const input = document.getElementById(id);
+            const span  = document.getElementById('err-' + id);
+            if (input) input.classList.toggle('is-error', !!msg);
+            if (span)  span.textContent = msg || '';
+        }
+        function _mClear(prefix) {
+            ['name','phone','line1','city','state','pincode'].forEach(f => _mSetErr(prefix + f, ''));
+        }
+        function _mValidate(prefix) {
+            let ok = true;
+            const v = id => (document.getElementById(id)?.value ?? '').trim();
+            const err = (id, msg) => { _mSetErr(id, msg); ok = false; };
+            const clr = id => _mSetErr(id, '');
+
+            const name = v(prefix+'name');
+            if (!name) err(prefix+'name','Full name is required.');
+            else if (!/^[A-Za-z\s]{2,100}$/.test(name)) err(prefix+'name','Name: letters and spaces only (2–100 chars).');
+            else clr(prefix+'name');
+
+            const phone = v(prefix+'phone');
+            if (!phone) err(prefix+'phone','Phone number is required.');
+            else if (!/^\d{10}$/.test(phone)) err(prefix+'phone','Enter a valid 10-digit phone number.');
+            else clr(prefix+'phone');
+
+            const line1 = v(prefix+'line1');
+            if (!line1) err(prefix+'line1','Address line 1 is required.');
+            else if (line1.length < 5) err(prefix+'line1','Address line 1 must be at least 5 characters.');
+            else if (!/^[A-Za-z0-9\s,.\/\-#&'()]{5,255}$/.test(line1)) err(prefix+'line1','Address contains invalid characters.');
+            else clr(prefix+'line1');
+
+            const city = v(prefix+'city');
+            if (!city) err(prefix+'city','City is required.');
+            else if (!/^[A-Za-z\s]{2,100}$/.test(city)) err(prefix+'city','City: letters and spaces only.');
+            else clr(prefix+'city');
+
+            const state = v(prefix+'state');
+            if (!state) err(prefix+'state','State is required.');
+            else if (!/^[A-Za-z\s]{2,100}$/.test(state)) err(prefix+'state','State: letters and spaces only.');
+            else clr(prefix+'state');
+
+            const pin = v(prefix+'pincode');
+            if (!pin) err(prefix+'pincode','Pincode is required.');
+            else if (!/^\d{6}$/.test(pin)) err(prefix+'pincode','Enter a valid 6-digit pincode.');
+            else clr(prefix+'pincode');
+
+            return ok;
+        }
+        function _mShowApiErrors(prefix, errors) {
+            const map = { name: 'name', phone_number: 'phone', address_line_1: 'line1', city: 'city', state: 'state', pincode: 'pincode' };
+            Object.entries(errors).forEach(([field, msg]) => {
+                if (map[field]) _mSetErr(prefix + map[field], msg);
+                else showToast(msg, 'error');
+            });
+        }
+
         /* MODALS BEHAVIOR */
         function openAddAddressModal() {
             document.getElementById('addAddressForm').reset();
-            const modal = document.getElementById('addAddressModal');
-            modal.classList.add('show');
+            _mClear('add_');
+            document.getElementById('addAddressModal').classList.add('show');
         }
         function closeAddAddressModal() {
             document.getElementById('addAddressModal').classList.remove('show');
@@ -1192,19 +1263,18 @@
             const addr = userAddresses.find(a => a.id === parseInt(id));
             if (!addr) return;
 
-            document.getElementById('edit_id').value = addr.id;
-            document.getElementById('edit_name').value = addr.name;
-            document.getElementById('edit_phone').value = addr.phone_number;
-            document.getElementById('edit_line1').value = addr.address_line_1;
-            document.getElementById('edit_line2').value = addr.address_line_2 || "";
-            document.getElementById('edit_city').value = addr.city;
-            document.getElementById('edit_state').value = addr.state;
-            document.getElementById('edit_pincode').value = addr.pincode;
-            document.getElementById('edit_type').value = addr.address_type;
+            document.getElementById('edit_id').value       = addr.id;
+            document.getElementById('edit_name').value     = addr.name;
+            document.getElementById('edit_phone').value    = addr.phone_number;
+            document.getElementById('edit_line1').value    = addr.address_line_1;
+            document.getElementById('edit_line2').value    = addr.address_line_2 || '';
+            document.getElementById('edit_city').value     = addr.city;
+            document.getElementById('edit_state').value    = addr.state;
+            document.getElementById('edit_pincode').value  = addr.pincode;
+            document.getElementById('edit_type').value     = addr.address_type;
             document.getElementById('edit_default').checked = addr.is_default;
-
-            const modal = document.getElementById('editAddressModal');
-            modal.classList.add('show');
+            _mClear('edit_');
+            document.getElementById('editAddressModal').classList.add('show');
         }
         function closeEditAddressModal() {
             document.getElementById('editAddressModal').classList.remove('show');
@@ -1213,75 +1283,90 @@
         /* SUBMIT ADDRESS ADD */
         async function submitAddAddress(e) {
             e.preventDefault();
-            
+            if (!_mValidate('add_')) return;
+
             const formData = new FormData();
-            formData.append('name', document.getElementById('add_name').value.trim());
-            formData.append('phone_number', document.getElementById('add_phone').value.trim());
-            formData.append('address_line_1', document.getElementById('add_line1').value.trim());
-            formData.append('address_line_2', document.getElementById('add_line2').value.trim());
-            formData.append('city', document.getElementById('add_city').value.trim());
-            formData.append('state', document.getElementById('add_state').value.trim());
-            formData.append('pincode', document.getElementById('add_pincode').value.trim());
-            formData.append('address_type', document.getElementById('add_type').value);
-            formData.append('is_default', document.getElementById('add_default').checked);
+            formData.append('name',            document.getElementById('add_name').value.trim());
+            formData.append('phone_number',    document.getElementById('add_phone').value.trim());
+            formData.append('address_line_1',  document.getElementById('add_line1').value.trim());
+            formData.append('address_line_2',  document.getElementById('add_line2').value.trim());
+            formData.append('city',            document.getElementById('add_city').value.trim());
+            formData.append('state',           document.getElementById('add_state').value.trim());
+            formData.append('pincode',         document.getElementById('add_pincode').value.trim());
+            formData.append('address_type',    document.getElementById('add_type').value);
+            formData.append('is_default',      document.getElementById('add_default').checked);
 
             try {
                 const res = await fetch("{% url 'checkout_add_address_api' %}", {
-                    method: "POST",
-                    headers: { "X-CSRFToken": CSRF },
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': CSRF },
                     body: formData
                 });
                 const data = await res.json();
-
                 if (data.success) {
                     redrawAddressList(data.addresses);
                     closeAddAddressModal();
-                    showToast("Address added successfully!", "success");
+                    showToast('Address added successfully!', 'success');
+                } else if (data.errors) {
+                    _mShowApiErrors('add_', data.errors);
                 } else {
-                    showToast(data.message || "Failed to add address.", "error");
+                    showToast(data.message || 'Failed to add address.', 'error');
                 }
             } catch (err) {
-                showToast("Network error. Failed to add address.", "error");
+                showToast('Network error. Failed to add address.', 'error');
             }
         }
 
         /* SUBMIT ADDRESS EDIT */
         async function submitEditAddress(e) {
             e.preventDefault();
+            if (!_mValidate('edit_')) return;
 
             const id = document.getElementById('edit_id').value;
             const formData = new FormData();
-            formData.append('name', document.getElementById('edit_name').value.trim());
-            formData.append('phone_number', document.getElementById('edit_phone').value.trim());
-            formData.append('address_line_1', document.getElementById('edit_line1').value.trim());
-            formData.append('address_line_2', document.getElementById('edit_line2').value.trim());
-            formData.append('city', document.getElementById('edit_city').value.trim());
-            formData.append('state', document.getElementById('edit_state').value.trim());
-            formData.append('pincode', document.getElementById('edit_pincode').value.trim());
-            formData.append('address_type', document.getElementById('edit_type').value);
-            formData.append('is_default', document.getElementById('edit_default').checked);
+            formData.append('name',            document.getElementById('edit_name').value.trim());
+            formData.append('phone_number',    document.getElementById('edit_phone').value.trim());
+            formData.append('address_line_1',  document.getElementById('edit_line1').value.trim());
+            formData.append('address_line_2',  document.getElementById('edit_line2').value.trim());
+            formData.append('city',            document.getElementById('edit_city').value.trim());
+            formData.append('state',           document.getElementById('edit_state').value.trim());
+            formData.append('pincode',         document.getElementById('edit_pincode').value.trim());
+            formData.append('address_type',    document.getElementById('edit_type').value);
+            formData.append('is_default',      document.getElementById('edit_default').checked);
 
             try {
-                // Generate URL dynamically replacing id
                 const url = "{% url 'checkout_edit_address_api' id=99999 %}".replace('99999', id);
                 const res = await fetch(url, {
-                    method: "POST",
-                    headers: { "X-CSRFToken": CSRF },
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': CSRF },
                     body: formData
                 });
                 const data = await res.json();
-
                 if (data.success) {
                     redrawAddressList(data.addresses);
                     closeEditAddressModal();
-                    showToast("Address updated successfully!", "success");
+                    showToast('Address updated successfully!', 'success');
+                } else if (data.errors) {
+                    _mShowApiErrors('edit_', data.errors);
                 } else {
-                    showToast(data.message || "Failed to update address.", "error");
+                    showToast(data.message || 'Failed to update address.', 'error');
                 }
             } catch (err) {
-                showToast("Network error. Failed to update address.", "error");
+                showToast('Network error. Failed to update address.', 'error');
             }
         }
+
+        /* Digit-only filters for phone & pincode in modals */
+        document.addEventListener('DOMContentLoaded', function () {
+            ['add_phone','edit_phone'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', function () { this.value = this.value.replace(/\D/g,'').slice(0,10); });
+            });
+            ['add_pincode','edit_pincode'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', function () { this.value = this.value.replace(/\D/g,'').slice(0,6); });
+            });
+        });
 
         /* PAYMENT SELECTION METHOD */
         let activePaymentMethod = "cod";

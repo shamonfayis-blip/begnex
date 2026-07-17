@@ -122,10 +122,47 @@ def checkout_add_address_api(request):
     address_type = request.POST.get("address_type", "Home").strip()
     is_default = request.POST.get("is_default") in ["on", "true", True]
 
-    if not all([name, phone_number, address_line_1, city, state, pincode]):
-        return JsonResponse(
-            {"success": False, "message": "All required fields must be filled."}
-        )
+    import re
+    errors = {}
+    if not name:
+        errors["name"] = "Full name is required."
+    elif not re.match(r"^[A-Za-z\s]{2,100}$", name):
+        errors["name"] = "Name must be 2–100 letters and spaces only."
+
+    if not phone_number:
+        errors["phone_number"] = "Phone number is required."
+    elif not re.match(r"^\d{10}$", phone_number):
+        errors["phone_number"] = "Enter a valid 10-digit phone number."
+
+    if not address_line_1:
+        errors["address_line_1"] = "Address line 1 is required."
+    elif len(address_line_1) < 5:
+        errors["address_line_1"] = "Address line 1 must be at least 5 characters."
+    elif not re.match(r"^[A-Za-z0-9\s,./\-#&'()]{5,255}$", address_line_1):
+        errors["address_line_1"] = "Address contains invalid characters."
+
+    if not city:
+        errors["city"] = "City is required."
+    elif not re.match(r"^[A-Za-z\s]{2,100}$", city):
+        errors["city"] = "City must contain letters and spaces only."
+
+    if not state:
+        errors["state"] = "State is required."
+    elif not re.match(r"^[A-Za-z\s]{2,100}$", state):
+        errors["state"] = "State must contain letters and spaces only."
+
+    if not pincode:
+        errors["pincode"] = "Pincode is required."
+    elif not re.match(r"^\d{6}$", pincode):
+        errors["pincode"] = "Enter a valid 6-digit pincode."
+
+    if not country:
+        errors["country"] = "Country is required."
+    elif not re.match(r"^[A-Za-z\s]{2,100}$", country):
+        errors["country"] = "Country must contain letters and spaces only."
+
+    if errors:
+        return JsonResponse({"success": False, "errors": errors})
 
     try:
         address = Address(
@@ -165,10 +202,47 @@ def checkout_edit_address_api(request, id):
     address_type = request.POST.get("address_type", "Home").strip()
     is_default = request.POST.get("is_default") in ["on", "true", True]
 
-    if not all([name, phone_number, address_line_1, city, state, pincode]):
-        return JsonResponse(
-            {"success": False, "message": "All required fields must be filled."}
-        )
+    import re
+    errors = {}
+    if not name:
+        errors["name"] = "Full name is required."
+    elif not re.match(r"^[A-Za-z\s]{2,100}$", name):
+        errors["name"] = "Name must be 2–100 letters and spaces only."
+
+    if not phone_number:
+        errors["phone_number"] = "Phone number is required."
+    elif not re.match(r"^\d{10}$", phone_number):
+        errors["phone_number"] = "Enter a valid 10-digit phone number."
+
+    if not address_line_1:
+        errors["address_line_1"] = "Address line 1 is required."
+    elif len(address_line_1) < 5:
+        errors["address_line_1"] = "Address line 1 must be at least 5 characters."
+    elif not re.match(r"^[A-Za-z0-9\s,.\/\-#&'()]{5,255}$", address_line_1):
+        errors["address_line_1"] = "Address contains invalid characters."
+
+    if not city:
+        errors["city"] = "City is required."
+    elif not re.match(r"^[A-Za-z\s]{2,100}$", city):
+        errors["city"] = "City must contain letters and spaces only."
+
+    if not state:
+        errors["state"] = "State is required."
+    elif not re.match(r"^[A-Za-z\s]{2,100}$", state):
+        errors["state"] = "State must contain letters and spaces only."
+
+    if not pincode:
+        errors["pincode"] = "Pincode is required."
+    elif not re.match(r"^\d{6}$", pincode):
+        errors["pincode"] = "Enter a valid 6-digit pincode."
+
+    if not country:
+        errors["country"] = "Country is required."
+    elif not re.match(r"^[A-Za-z\s]{2,100}$", country):
+        errors["country"] = "Country must contain letters and spaces only."
+
+    if errors:
+        return JsonResponse({"success": False, "errors": errors})
 
     try:
         address.name = name

@@ -199,16 +199,14 @@
                     </button>
                     <a href="{% url 'product_detail' item.product.id %}" style="display:block; text-decoration:none; color:inherit;">
                         <div class="wl-image">
-                            {% with img=item.product.get_primary_image %}
-                            {% if img %}
-                                <img src="{{ img.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+                            {% if item.display_image %}
+                                <img src="{{ item.display_image.image.url }}" alt="{{ item.product.name }}" loading="lazy">
                             {% else %}
                                 <div class="wl-img-placeholder">
                                     <i class="fa-regular fa-image"></i>
                                     <span style="font-size:12px;">No Image</span>
                                 </div>
                             {% endif %}
-                            {% endwith %}
                             <span class="wl-category-badge">{{ item.product.category.name }}</span>
                         </div>
                         <div class="wl-body">

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import models
@@ -8,7 +10,7 @@ from django.views.decorators.cache import never_cache
 from admin_panel.admin_category.models import Category
 from admin_panel.admin_product.models import Product
 
-from .models import CategoryOffer, ProductOffer
+from .models import CategoryOffer, ProductOffer, ReferralOffer, ReferralRecord
 
 
 @never_cache
@@ -368,11 +370,6 @@ def admin_category_offer_toggle_view(request, offer_id):
             request, f"Offer for category '{offer.category.name}' {status}."
         )
     return redirect("admin_offers")
-
-
-from decimal import Decimal
-
-from .models import ReferralOffer, ReferralRecord
 
 
 @never_cache

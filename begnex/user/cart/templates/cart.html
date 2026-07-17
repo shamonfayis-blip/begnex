@@ -462,7 +462,8 @@
 
         /* ── CHECK BLOCKED ITEMS ── */
         function checkBlockedItems() {
-            const blocked = document.querySelectorAll('.cart-item.blocked, .cart-item.out-of-stock');
+            // .low-stock means qty > stock — also blocks checkout, same as server-side
+            const blocked = document.querySelectorAll('.cart-item.blocked, .cart-item.out-of-stock, .cart-item.low-stock');
             const btn = document.getElementById('checkoutBtn');
             const warn = document.getElementById('checkoutWarning');
             if (!btn) return;
@@ -509,6 +510,25 @@
                     // Re-evaluate button states
                     if (incBtn) incBtn.disabled = data.new_quantity >= maxAllowed;
                     if (decBtn) decBtn.disabled = data.new_quantity <= 1;
+
+                    // Update card class based on new qty vs available stock
+                    if (card) {
+                        if (data.max_allowed === 0) {
+                            // Stock is 0 — still out of stock
+                            card.classList.add('out-of-stock');
+                            card.classList.remove('low-stock');
+                        } else if (data.new_quantity > data.max_allowed) {
+                            // Qty still exceeds available stock
+                            card.classList.remove('out-of-stock');
+                            card.classList.add('low-stock');
+                        } else {
+                            // Quantity is valid and within stock
+                            card.classList.remove('out-of-stock', 'low-stock');
+                        }
+                    }
+
+                    // Re-check whether checkout should be enabled
+                    checkBlockedItems();
 
                     // Show success toast
                     const itemName = card ? card.querySelector('.item-name').textContent.trim() : 'Product';

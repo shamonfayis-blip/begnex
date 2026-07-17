@@ -87,35 +87,49 @@ def admin_category_add_view(request):
         if not image:
             image = _save_base64_image(request.POST.get("image_base64", ""))
 
+        error = None
+
         if not name:
-            messages.error(request, "Category name is required.")
-            return redirect("admin_categories")
+            error = "Category name is required."
+        elif len(name) < 2:
+            error = "Category name must be at least 2 characters."
+        elif len(name) > 100:
+            error = "Category name cannot exceed 100 characters."
+        elif not any(c.isalpha() for c in name):
+            error = "Category name must contain at least one letter."
+        elif Category.objects.filter(name__iexact=name, is_deleted=False).exists():
+            error = f'Category "{name}" already exists.'
+        else:
+            ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+            if (
+                image
+                and hasattr(image, "content_type")
+                and image.content_type not in ALLOWED_IMAGE_TYPES
+            ):
+                error = "Invalid image format. Only JPG, PNG, and WEBP are allowed."
 
-        if len(name) < 2:
-            messages.error(request, "Category name must be at least 2 characters.")
-            return redirect("admin_categories")
-        if len(name) > 100:
-            messages.error(request, "Category name cannot exceed 100 characters.")
-            return redirect("admin_categories")
-        if not any(c.isalpha() for c in name):
-            messages.error(request, "Category name must contain at least one letter.")
-            return redirect("admin_categories")
-
-        if Category.objects.filter(name__iexact=name, is_deleted=False).exists():
-
-            messages.error(request, f'Category "{name}" already exists.')
-            return redirect("admin_categories")
-
-        ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
-        if (
-            image
-            and hasattr(image, "content_type")
-            and image.content_type not in ALLOWED_IMAGE_TYPES
-        ):
-            messages.error(
-                request, "Invalid image format. Only JPG, PNG, and WEBP are allowed."
-            )
-            return redirect("admin_categories")
+        if error:
+            # Re-render the page with the drawer open and form values preserved
+            search_query = request.GET.get("q", "").strip()
+            categories = Category.objects.filter(is_deleted=False).order_by("-id")
+            total_categories = categories.count()
+            active_categories = categories.filter(is_active=True).count()
+            inactive_categories = categories.filter(is_active=False).count()
+            paginator = Paginator(categories, 5)
+            page_obj = paginator.get_page(request.GET.get("page"))
+            context = {
+                "page_obj": page_obj,
+                "search_query": search_query,
+                "total_categories": total_categories,
+                "active_categories": active_categories,
+                "inactive_categories": inactive_categories,
+                # Add-form error state
+                "add_form_error": error,
+                "add_form_name": name,
+                "add_form_description": description,
+                "add_form_is_active": is_active,
+            }
+            return render(request, "categories.html", context)
 
         category_id = generate_category_id()
         Category.objects.create(
@@ -146,38 +160,55 @@ def admin_category_edit_view(request, category_id):
             image = _save_base64_image(request.POST.get("image_base64", ""))
         clear_image = request.POST.get("clear_image") == "1"
 
+        error = None
+
         if not name:
-            messages.error(request, "Category name is required.")
-            return redirect("admin_categories")
-
-        if len(name) < 2:
-            messages.error(request, "Category name must be at least 2 characters.")
-            return redirect("admin_categories")
-        if len(name) > 100:
-            messages.error(request, "Category name cannot exceed 100 characters.")
-            return redirect("admin_categories")
-        if not any(c.isalpha() for c in name):
-            messages.error(request, "Category name must contain at least one letter.")
-            return redirect("admin_categories")
-
-        if (
+            error = "Category name is required."
+        elif len(name) < 2:
+            error = "Category name must be at least 2 characters."
+        elif len(name) > 100:
+            error = "Category name cannot exceed 100 characters."
+        elif not any(c.isalpha() for c in name):
+            error = "Category name must contain at least one letter."
+        elif (
             Category.objects.filter(name__iexact=name, is_deleted=False)
             .exclude(id=category.id)
             .exists()
         ):
-            messages.error(request, f'Category "{name}" already exists.')
-            return redirect("admin_categories")
+            error = f'Category "{name}" already exists.'
+        else:
+            ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+            if (
+                image
+                and hasattr(image, "content_type")
+                and image.content_type not in ALLOWED_IMAGE_TYPES
+            ):
+                error = "Invalid image format. Only JPG, PNG, and WEBP are allowed."
 
-        ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
-        if (
-            image
-            and hasattr(image, "content_type")
-            and image.content_type not in ALLOWED_IMAGE_TYPES
-        ):
-            messages.error(
-                request, "Invalid image format. Only JPG, PNG, and WEBP are allowed."
-            )
-            return redirect("admin_categories")
+        if error:
+            # Re-render the page with the edit drawer open and form values preserved
+            search_query = request.GET.get("q", "").strip()
+            categories = Category.objects.filter(is_deleted=False).order_by("-id")
+            total_categories = categories.count()
+            active_categories = categories.filter(is_active=True).count()
+            inactive_categories = categories.filter(is_active=False).count()
+            paginator = Paginator(categories, 5)
+            page_obj = paginator.get_page(request.GET.get("page"))
+            context = {
+                "page_obj": page_obj,
+                "search_query": search_query,
+                "total_categories": total_categories,
+                "active_categories": active_categories,
+                "inactive_categories": inactive_categories,
+                # Edit-form error state
+                "edit_form_error": error,
+                "edit_form_category_id": category.id,
+                "edit_form_name": name,
+                "edit_form_description": description,
+                "edit_form_is_active": is_active,
+                "edit_form_image_url": category.image.url if category.image else "",
+            }
+            return render(request, "categories.html", context)
 
         category.name = name
         category.description = description

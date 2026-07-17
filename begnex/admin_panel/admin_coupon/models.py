@@ -1,4 +1,4 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -51,6 +51,14 @@ class Coupon(models.Model):
 
     def __str__(self):
         return self.code
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        super().clean()
+        if self.discount_type == "fixed":
+            if self.min_order_amount is not None and self.discount_value is not None:
+                if self.min_order_amount <= self.discount_value:
+                    raise ValidationError("Minimum order amount must be greater than the flat coupon value.")
 
     @property
     def is_expired(self):

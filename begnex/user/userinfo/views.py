@@ -1,4 +1,5 @@
 import random
+import re
 import threading
 import time
 
@@ -33,6 +34,7 @@ def _send_mail_async(subject, body, to_email):
 def profile_view(request):
 
     user = request.user
+    user.refresh_from_db()
 
     return render(request, "profile.html", {"user": user})
 
@@ -48,21 +50,38 @@ def edit_profile_view(request):
         full_name = request.POST.get("full_name", "").strip()
         email = request.POST.get("email", "").strip().lower()
         phone = request.POST.get("phone", "").strip()
-        if phone and (not phone.isdigit() or len(phone) != 10):
-
-            messages.error(request, "Phone number must contain exactly 10 digits.")
-
-            return redirect("edit_profile")
         profile_photo = request.FILES.get("profile_image")
         remove_image = request.POST.get("remove_image") == "true"
 
-        if not full_name or not email:
-            messages.error(request, "Name and email are required.")
-            return redirect("edit_profile")
+        errors = {}
 
-        if User.objects.filter(email=email).exclude(id=user.id).exists():
-            messages.error(request, "That email is already in use.")
-            return redirect("edit_profile")
+        # Full name
+        if not full_name:
+            errors["full_name"] = "Full name is required."
+        elif not re.match(r"^[a-zA-Z\s]+$", full_name):
+            errors["full_name"] = "Name can only contain letters and spaces."
+        elif len(full_name) < 2:
+            errors["full_name"] = "Name must be at least 2 characters."
+
+        # Email
+        if not email:
+            errors["email"] = "Email address is required."
+        elif not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+            errors["email"] = "Enter a valid email address."
+        elif User.objects.filter(email=email).exclude(id=user.id).exists():
+            errors["email"] = "That email is already in use."
+
+        # Phone (optional)
+        if phone and (not phone.isdigit() or len(phone) != 10):
+            errors["phone"] = "Phone number must be exactly 10 digits."
+
+        if errors:
+            return render(request, "edit_profile.html", {
+                "errors": errors,
+                "form_full_name": full_name,
+                "form_email": email,
+                "form_phone": phone,
+            })
 
         parts = full_name.split(" ", 1)
         user.first_name = parts[0]

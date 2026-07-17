@@ -939,6 +939,8 @@
 
             if (isNaN(minOrder) || minOrder < 0) {
                 errors.push('Minimum order amount cannot be negative.');
+            } else if (discType === 'fixed' && !isNaN(discVal) && discVal > 0 && minOrder <= discVal) {
+                errors.push('Minimum order amount must be greater than the flat coupon value.');
             }
 
             if (maxDisc && (isNaN(parseFloat(maxDisc)) || parseFloat(maxDisc) <= 0)) {
@@ -1064,6 +1066,8 @@
 
             if (isNaN(minOrder) || minOrder < 0) {
                 errors.push('Minimum order amount cannot be negative.');
+            } else if (discType === 'fixed' && !isNaN(discVal) && discVal > 0 && minOrder <= discVal) {
+                errors.push('Minimum order amount must be greater than the flat coupon value.');
             }
 
             if (maxDisc && (isNaN(parseFloat(maxDisc)) || parseFloat(maxDisc) <= 0)) {

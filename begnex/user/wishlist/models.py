@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from admin_panel.admin_product.models import Product
+from admin_panel.admin_product.models import Product, ProductVariant
 
 
 class Wishlist(models.Model):
@@ -13,6 +13,13 @@ class Wishlist(models.Model):
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
+        related_name="wishlisted_by",
+    )
+    variant = models.ForeignKey(
+        ProductVariant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="wishlisted_by",
     )
     added_at = models.DateTimeField(auto_now_add=True)

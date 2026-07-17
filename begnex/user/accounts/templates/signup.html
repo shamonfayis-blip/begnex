@@ -165,6 +165,15 @@
             gap: 18px;
         }
 
+        /* USERNAME ERROR */
+
+        .username-error{
+            display: none;
+            font-size: 11px;
+            margin-top: 5px;
+            color: #EF4444;
+        }
+
         /* BUTTON */
 
         .signup-btn{
@@ -366,12 +375,16 @@
 
                     <div class="input-group">
 
-                        <label>FULL NAME</label>
+                        <label>USERNAME</label>
 
                         <input type="text"
+                            id="username-input"
                             name="username"
                             value="{{ username }}"
-                            placeholder="Johnathan Doe" required>
+                            placeholder="john_doe" required
+                            autocomplete="username">
+
+                        <span class="username-error" id="username-error"></span>
 
                     </div>
 
@@ -447,6 +460,47 @@
                     </a>
 
                 </form>
+
+                <script>
+                (function(){
+                    var input = document.getElementById('username-input');
+                    var err   = document.getElementById('username-error');
+                    if (!input || !err) return;
+
+                    var PATTERN = /^[a-zA-Z0-9_]+$/;
+
+                    function getError(val) {
+                        if (!val)            return 'Username is required';
+                        if (val.length < 3)  return 'Too short – minimum 3 characters';
+                        if (val.length > 30) return 'Too long – maximum 30 characters';
+                        if (!PATTERN.test(val)) return 'Only letters, numbers, and underscores allowed';
+                        return '';
+                    }
+
+                    function showError(msg) {
+                        if (msg) {
+                            err.textContent = msg;
+                            err.style.display = 'block';
+                        } else {
+                            err.textContent = '';
+                            err.style.display = 'none';
+                        }
+                    }
+
+                    input.addEventListener('input', function(){
+                        showError(getError(this.value.trim()));
+                    });
+
+                    input.closest('form').addEventListener('submit', function(e){
+                        var msg = getError(input.value.trim());
+                        if (msg) {
+                            e.preventDefault();
+                            showError(msg);
+                            input.focus();
+                        }
+                    });
+                })();
+                </script>
 
                 <p class="login-text">
 

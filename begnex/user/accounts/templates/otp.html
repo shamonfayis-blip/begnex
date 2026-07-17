@@ -383,7 +383,7 @@ body{
 
     </main>
 <script>
-    let timeLeft = 60;
+    let timeLeft = {{ time_left|default:60 }};
 
     const timer      = document.getElementById('timer');
     const resendLink = document.getElementById('resendLink');
@@ -391,19 +391,18 @@ body{
     // Start disabled
     resendLink.classList.add('disabled');
 
-    const countdown = setInterval(() => {
-        timeLeft--;
-
+    function updateTimer() {
         if (timeLeft > 0) {
             timer.innerHTML = `OTP expires in <strong>${timeLeft}s</strong>`;
+            timeLeft--;
+            setTimeout(updateTimer, 1000);
         } else {
-            clearInterval(countdown);
             timer.innerHTML = 'OTP Expired.';
-
-            // Enable Resend now that timer has reached zero
             resendLink.classList.remove('disabled');
         }
-    }, 1000);
+    }
+
+    updateTimer();
 </script>
 
 

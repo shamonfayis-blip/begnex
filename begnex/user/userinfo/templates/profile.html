@@ -594,7 +594,7 @@
                     <div class="profile-image">
 
                         {% if request.user.profile_photo %}
-                        <img src="{{ request.user.profile_photo.url }}" alt="Profile Photo">
+                        <img src="{{ request.user.profile_photo.url }}?v={{ request.user.updated_at.timestamp|floatformat:0 }}" alt="Profile Photo">
                         {% else %}
                         {{ request.user.first_name|slice:":1"|upper }}
                         {% endif %}

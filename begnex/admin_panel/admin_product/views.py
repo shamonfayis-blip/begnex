@@ -1,6 +1,5 @@
 import base64
 import os
-import re
 import uuid
 from decimal import Decimal, InvalidOperation
 
@@ -152,7 +151,6 @@ def admin_product_add_view(request):
     name = request.POST.get("name", "").strip()
     category_id = request.POST.get("category")
     material = request.POST.get("material", "").strip()
-    fit_type = request.POST.get("fit_type", "").strip()
     description = request.POST.get("description", "").strip()
     is_active = request.POST.get("is_active", "true") == "true"
 
@@ -391,10 +389,12 @@ def admin_variant_list_view(request, product_id):
 
 @never_cache
 @staff_member_required(login_url="admin_login")
-@require_POST
 def admin_variant_add_view(request, product_id):
 
     product = get_object_or_404(Product, id=product_id, is_deleted=False)
+
+    if request.method != "POST":
+        return redirect("admin_variants", product_id=product.id)
 
     color = request.POST.get("color", "").strip()
     size = request.POST.get("size", "").strip()
@@ -405,82 +405,99 @@ def admin_variant_add_view(request, product_id):
 
     name = f"{color} / {size}"
 
+    error = None
+
     if not color or not size:
-        messages.error(request, "Color and Size are required.")
-        return redirect("admin_variants", product_id=product.id)
-    if len(color) < 2 or not any(c.isalpha() for c in color):
-        messages.error(
-            request,
-            "Color must be at least 2 characters and contain at least one letter.",
-        )
-        return redirect("admin_variants", product_id=product.id)
-
-    if not sku:
-        messages.error(request, "SKU is required.")
-        return redirect("admin_variants", product_id=product.id)
-    if ProductVariant.objects.filter(sku__iexact=sku, is_deleted=False).exists():
-        messages.error(request, f'SKU "{sku}" already exists.')
-        return redirect("admin_variants", product_id=product.id)
-
-    try:
-        price_val = Decimal(price_str)
-        if price_val <= 0:
-            messages.error(request, "Price must be greater than ₹0.")
-            return redirect("admin_variants", product_id=product.id)
-        if price_val > Decimal("9999999"):
-            messages.error(request, "Price value is too large.")
-            return redirect("admin_variants", product_id=product.id)
-    except InvalidOperation:
-        messages.error(request, "Invalid price value entered.")
-        return redirect("admin_variants", product_id=product.id)
-
-    try:
-        stock_val = int(stock_str)
-        if stock_val < 0:
-            messages.error(request, "Stock quantity cannot be negative.")
-            return redirect("admin_variants", product_id=product.id)
-        if stock_val > 99999:
-            messages.error(request, "Stock value is too large (max 99,999).")
-            return redirect("admin_variants", product_id=product.id)
-    except (ValueError, TypeError):
-        messages.error(request, "Stock must be a whole number.")
-        return redirect("admin_variants", product_id=product.id)
-
-    image1 = None
-    image2 = None
-    image3 = None
-
-    img1_b64 = request.POST.get("image_1_base64")
-    img2_b64 = request.POST.get("image_2_base64")
-    img3_b64 = request.POST.get("image_3_base64")
-
-    if img1_b64:
-        image1 = _save_base64_image(img1_b64, prefix=f"var_{sku}_1")
+        error = "Color and Size are required."
+    elif len(color) < 2 or not any(c.isalpha() for c in color):
+        error = "Color must be at least 2 characters and contain at least one letter."
+    elif not sku:
+        error = "SKU is required."
+    elif ProductVariant.objects.filter(sku__iexact=sku, is_deleted=False).exists():
+        error = f'SKU "{sku}" already exists.'
     else:
-        image1 = request.FILES.get("image_1")
+        try:
+            price_val = Decimal(price_str)
+            if price_val <= 0:
+                error = "Price must be greater than ₹0."
+            elif price_val > Decimal("9999999"):
+                error = "Price value is too large."
+        except InvalidOperation:
+            error = "Invalid price value entered."
 
-    if img2_b64:
-        image2 = _save_base64_image(img2_b64, prefix=f"var_{sku}_2")
-    else:
-        image2 = request.FILES.get("image_2")
+    if not error:
+        try:
+            stock_val = int(stock_str)
+            if stock_val < 0:
+                error = "Stock quantity cannot be negative."
+            elif stock_val > 99999:
+                error = "Stock value is too large (max 99,999)."
+        except (ValueError, TypeError):
+            error = "Stock must be a whole number."
 
-    if img3_b64:
-        image3 = _save_base64_image(img3_b64, prefix=f"var_{sku}_3")
-    else:
-        image3 = request.FILES.get("image_3")
+    if not error:
+        image1 = None
+        image2 = None
+        image3 = None
 
-    if not image1 or not image2 or not image3:
-        messages.error(request, "All 3 variant images are required.")
-        return redirect("admin_variants", product_id=product.id)
+        img1_b64 = request.POST.get("image_1_base64")
+        img2_b64 = request.POST.get("image_2_base64")
+        img3_b64 = request.POST.get("image_3_base64")
 
-    ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
-    for img in [image1, image2, image3]:
-        if hasattr(img, "content_type") and img.content_type not in ALLOWED_IMAGE_TYPES:
-            messages.error(
-                request,
-                f'"{img.name}" is not a valid image. Only JPG, PNG, and WEBP are allowed.',
-            )
-            return redirect("admin_variants", product_id=product.id)
+        if img1_b64:
+            image1 = _save_base64_image(img1_b64, prefix=f"var_{sku}_1")
+        else:
+            image1 = request.FILES.get("image_1")
+
+        if img2_b64:
+            image2 = _save_base64_image(img2_b64, prefix=f"var_{sku}_2")
+        else:
+            image2 = request.FILES.get("image_2")
+
+        if img3_b64:
+            image3 = _save_base64_image(img3_b64, prefix=f"var_{sku}_3")
+        else:
+            image3 = request.FILES.get("image_3")
+
+        if not image1 or not image2 or not image3:
+            error = "All 3 variant images are required."
+        else:
+            ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+            for img in [image1, image2, image3]:
+                if hasattr(img, "content_type") and img.content_type not in ALLOWED_IMAGE_TYPES:
+                    error = f'"{img.name}" is not a valid image. Only JPG, PNG, and WEBP are allowed.'
+                    break
+
+    if error:
+        # Re-render the page with the add drawer open and form values preserved
+        search_query = request.GET.get("q", "").strip()
+        status_filter = request.GET.get("status", "").strip()
+        stock_filter = request.GET.get("stock", "").strip()
+        variants = ProductVariant.objects.filter(product=product, is_deleted=False).order_by("-id")
+        total_variants = variants.count()
+        active_variants = variants.filter(is_active=True).count()
+        out_of_stock = variants.filter(stock=0).count()
+        paginator = Paginator(variants, 10)
+        page_obj = paginator.get_page(request.GET.get("page"))
+        context = {
+            "product": product,
+            "page_obj": page_obj,
+            "search_query": search_query,
+            "status_filter": status_filter,
+            "stock_filter": stock_filter,
+            "total_variants": total_variants,
+            "active_variants": active_variants,
+            "out_of_stock": out_of_stock,
+            # Add-form error state
+            "add_form_error": error,
+            "add_form_color": color,
+            "add_form_size": size,
+            "add_form_sku": sku,
+            "add_form_price": price_str,
+            "add_form_stock": stock_str,
+            "add_form_is_active": is_active,
+        }
+        return render(request, "variants.html", context)
 
     is_default = not ProductVariant.objects.filter(
         product=product, is_deleted=False

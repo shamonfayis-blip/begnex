@@ -291,6 +291,13 @@
             letter-spacing: 1px;
         }
 
+        .field-error {
+            display: block;
+            margin-top: 7px;
+            font-size: 11px;
+            color: #EF4444;
+        }
+
         /* INFO BOX */
 
         .info-box {
@@ -478,33 +485,6 @@
 
                 </div>
 
-                {% if messages %}
-                <div id="django-messages" style="margin-bottom: 30px;">
-                    {% for message in messages %}
-                    {% if message.tags == 'success' %}
-                    <div
-                        style="color: #10B981; font-size: 14px; background: rgba(16, 185, 129, 0.1); padding: 14px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 10px;">
-                        {{ message }}
-                    </div>
-                    {% else %}
-                    <div
-                        style="color: #EF4444; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 14px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); margin-bottom: 10px;">
-                        {{ message }}
-                    </div>
-                    {% endif %}
-                    {% endfor %}
-                </div>
-                <script>
-                    setTimeout(function () {
-                        var msg = document.getElementById('django-messages');
-                        if (msg) {
-                            msg.style.transition = 'opacity 0.5s ease';
-                            msg.style.opacity = '0';
-                            setTimeout(function () { msg.style.display = 'none'; }, 500);
-                        }
-                    }, 3000);
-                </script>
-                {% endif %}
 
                 <div class="edit-layout">
 
@@ -513,7 +493,7 @@
                         <div class="profile-image">
 
                             {% if request.user.profile_photo %}
-                            <img src="{{ request.user.profile_photo.url }}" id="profile-preview" alt="profile">
+                            <img src="{{ request.user.profile_photo.url }}?v={{ request.user.updated_at.timestamp|floatformat:0 }}" id="profile-preview" alt="profile">
                             {% else %}
                             <img src="https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=111827&color=fff"
                                 id="profile-preview" alt="profile">
@@ -530,11 +510,19 @@
                                 onclick="document.getElementById('profile_image_input').click()">
                                 CHANGE IMAGE
                             </button>
-                            <button type="button" class="cancel-btn"
+                            {% if request.user.profile_photo %}
+                            <button type="button" class="cancel-btn" id="remove-image-btn"
                                 style="width: 140px; height: 38px; font-size: 10px; border-color: #EF4444; color: #EF4444;"
                                 onclick="removeImage()">
                                 REMOVE IMAGE
                             </button>
+                            {% else %}
+                            <button type="button" class="cancel-btn" id="remove-image-btn"
+                                style="width: 140px; height: 38px; font-size: 10px; border-color: #EF4444; color: #EF4444; display: none;"
+                                onclick="removeImage()">
+                                REMOVE IMAGE
+                            </button>
+                            {% endif %}
                         </div>
 
                         <input type="hidden" name="remove_image" id="remove_image_input" value="false">
@@ -552,6 +540,7 @@
                                     var output = document.getElementById('profile-preview');
                                     output.src = reader.result;
                                     document.getElementById('remove_image_input').value = 'false';
+                                    document.getElementById('remove-image-btn').style.display = '';
                                 }
                                 reader.readAsDataURL(event.target.files[0]);
                             }
@@ -560,8 +549,10 @@
                                 document.getElementById('profile_image_input').value = '';
                                 document.getElementById('profile-preview').src = 'https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=111827&color=fff';
                                 document.getElementById('remove_image_input').value = 'true';
+                                document.getElementById('remove-image-btn').style.display = 'none';
                             }
                         </script>
+
 
                     </div>
 
@@ -571,11 +562,14 @@
 
                             <label>FULL NAME</label>
 
-                            <input type="text" name="full_name" value="{{ request.user.get_full_name }}">
+                            <input type="text" id="field-full-name" name="full_name"
+                                value="{% if form_full_name %}{{ form_full_name }}{% else %}{{ request.user.get_full_name }}{% endif %}">
 
-                            <p>
-                                YOUR UNIQUE DIGITAL SIGNATURE WITHIN THE MONOLITH.
-                            </p>
+                            {% if errors.full_name %}
+                            <span class="field-error">{{ errors.full_name }}</span>
+                            {% else %}
+                            <p>YOUR UNIQUE DIGITAL SIGNATURE WITHIN THE MONOLITH.</p>
+                            {% endif %}
 
                         </div>
 
@@ -583,12 +577,15 @@
 
                             <label>PHONE NUMBER</label>
 
-                            <input type="text" name="phone" value="{{ request.user.phone_number|default:'' }}"
-                                placeholder="+91 XXXXX XXXXX">
+                            <input type="text" id="field-phone" name="phone"
+                                value="{% if form_phone is not None %}{{ form_phone }}{% else %}{{ request.user.phone_number|default:'' }}{% endif %}"
+                                placeholder="XXXXXXXXXX" maxlength="10">
 
-                            <p>
-                                STANDARD COMMUNICATION PROTOCOLS APPLY
-                            </p>
+                            {% if errors.phone %}
+                            <span class="field-error">{{ errors.phone }}</span>
+                            {% else %}
+                            <p>STANDARD COMMUNICATION PROTOCOLS APPLY</p>
+                            {% endif %}
 
                         </div>
 
@@ -596,11 +593,14 @@
 
                             <label>EMAIL ADDRESS</label>
 
-                            <input type="email" name="email" value="{{ request.user.email }}">
+                            <input type="email" id="field-email" name="email"
+                                value="{% if form_email %}{{ form_email }}{% else %}{{ request.user.email }}{% endif %}">
 
-                            <p>
-                                PRIMARY DATA LINK FOR ALL TRANSACTION NOTIFICATIONS
-                            </p>
+                            {% if errors.email %}
+                            <span class="field-error">{{ errors.email }}</span>
+                            {% else %}
+                            <p>PRIMARY DATA LINK FOR ALL TRANSACTION NOTIFICATIONS</p>
+                            {% endif %}
 
                         </div>
 
@@ -646,6 +646,52 @@
             mobileNav.classList.remove('open');
         }));
     }
+
+    /* Client-side validation */
+    document.querySelector('form').addEventListener('submit', function(e) {
+        var name  = document.getElementById('field-full-name').value.trim();
+        var email = document.getElementById('field-email').value.trim();
+        var phone = document.getElementById('field-phone').value.trim();
+        var ok = true;
+
+        if (!name) {
+            showFieldError('field-full-name', 'Full name is required.');
+            ok = false;
+        } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+            showFieldError('field-full-name', 'Name can only contain letters and spaces.');
+            ok = false;
+        }
+
+        if (!email) {
+            showFieldError('field-email', 'Email address is required.');
+            ok = false;
+        } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+            showFieldError('field-email', 'Enter a valid email address.');
+            ok = false;
+        }
+
+        if (phone && (!/^\d{10}$/.test(phone))) {
+            showFieldError('field-phone', 'Phone must be exactly 10 digits.');
+            ok = false;
+        }
+
+        if (!ok) e.preventDefault();
+    });
+
+    function showFieldError(fieldId, msg) {
+        var input = document.getElementById(fieldId);
+        var existing = input.parentElement.querySelector('.field-error');
+        if (existing) { existing.textContent = msg; return; }
+        var span = document.createElement('span');
+        span.className = 'field-error';
+        span.textContent = msg;
+        input.parentElement.appendChild(span);
+    }
+
+    /* Live phone digit-only filter */
+    document.getElementById('field-phone').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    });
 </script>
 </body>
-</html>
+</html>
