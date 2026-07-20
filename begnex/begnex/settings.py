@@ -20,7 +20,6 @@ DEBUG = os.getenv("DEBUG") == "True"
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "13.60.96.33",
     "fayis.space",
     "www.fayis.space",
 ]
