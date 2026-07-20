@@ -194,13 +194,13 @@ def admin_coupon_create_view(request):
             except ValueError:
                 errors.append("Invalid date format.")
 
-        # Flat coupon: min order must be higher than coupon value
+        
         if discount_type == "fixed" and not errors:
             try:
                 if float(min_order_amount) <= float(discount_value):
                     errors.append("Minimum order amount must be greater than the flat coupon value.")
             except (ValueError, TypeError):
-                pass  # already caught above
+                pass  
 
         if errors:
             for err in errors:
@@ -341,13 +341,13 @@ def admin_coupon_edit_view(request, coupon_id):
             except ValueError:
                 errors.append("Invalid date format.")
 
-        # Flat coupon: min order must be higher than coupon value
+       
         if discount_type == "fixed" and not errors:
             try:
                 if float(min_order_amount) <= float(discount_value):
                     errors.append("Minimum order amount must be greater than the flat coupon value.")
             except (ValueError, TypeError):
-                pass  # already caught above
+                pass
 
         if errors:
             for err in errors:
@@ -403,7 +403,7 @@ def admin_coupon_usage_history_view(request):
     total_savings = orders.aggregate(s=Sum("coupon_discount"))["s"] or 0
     unique_coupons = orders.values("coupon_code").distinct().count()
 
-    # All distinct coupon codes (for filter dropdown)
+    
     all_coupon_codes = (
         Order.objects.exclude(coupon_code__isnull=True)
         .exclude(coupon_code="")

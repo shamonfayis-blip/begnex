@@ -39,10 +39,10 @@ def wishlist_view(request):
     for wi in wishlist_items:
         wi.product.min_price = price_map.get(wi.product.id)
 
-        # Determine which variant to show
-        display_variant = wi.variant  # stored variant (the one user selected)
+     
+        display_variant = wi.variant 
         if not display_variant:
-            # Fall back to default variant
+            
             active_variants = [
                 v for v in wi.product.variants.all() if v.is_active and not v.is_deleted
             ]
@@ -51,7 +51,7 @@ def wishlist_view(request):
                 active_variants[0] if active_variants else None,
             )
 
-        # Resolve the image from the display variant
+        
         if display_variant:
             wi.display_image = (
                 display_variant.images.filter(is_primary=True).first()
@@ -91,7 +91,7 @@ def toggle_wishlist_api(request):
             {"success": False, "message": "Product not found."}, status=404
         )
 
-    # Resolve variant
+  
     variant = None
     if variant_id:
         from admin_panel.admin_product.models import ProductVariant
@@ -110,7 +110,7 @@ def toggle_wishlist_api(request):
 
     if not created:
         if variant and obj.variant != variant:
-            # Update stored variant if a different one was selected
+           
             obj.variant = variant
             obj.save(update_fields=["variant"])
             count = Wishlist.objects.filter(user=request.user).count()

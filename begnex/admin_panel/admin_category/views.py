@@ -109,7 +109,7 @@ def admin_category_add_view(request):
                 error = "Invalid image format. Only JPG, PNG, and WEBP are allowed."
 
         if error:
-            # Re-render the page with the drawer open and form values preserved
+           
             search_query = request.GET.get("q", "").strip()
             categories = Category.objects.filter(is_deleted=False).order_by("-id")
             total_categories = categories.count()
@@ -123,7 +123,7 @@ def admin_category_add_view(request):
                 "total_categories": total_categories,
                 "active_categories": active_categories,
                 "inactive_categories": inactive_categories,
-                # Add-form error state
+                
                 "add_form_error": error,
                 "add_form_name": name,
                 "add_form_description": description,
@@ -186,7 +186,7 @@ def admin_category_edit_view(request, category_id):
                 error = "Invalid image format. Only JPG, PNG, and WEBP are allowed."
 
         if error:
-            # Re-render the page with the edit drawer open and form values preserved
+           
             search_query = request.GET.get("q", "").strip()
             categories = Category.objects.filter(is_deleted=False).order_by("-id")
             total_categories = categories.count()

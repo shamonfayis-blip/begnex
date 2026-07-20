@@ -21,7 +21,7 @@ User = get_user_model()
 
 
 def _send_mail_async(subject, body, to_email):
-    """Send email in a background daemon thread so views never block."""
+
 
     def _send():
         send_mail(
@@ -35,11 +35,11 @@ def _send_mail_async(subject, body, to_email):
     threading.Thread(target=_send, daemon=True).start()
 
 
-OTP_EXPIRY_SECONDS = 60  # keep in sync with otp_page view
+OTP_EXPIRY_SECONDS = 60  
 
 
 def _build_otp_email(otp, username, expiry_seconds=OTP_EXPIRY_SECONDS):
-    """Return a plain-text OTP verification email body."""
+    
     expiry_minutes = expiry_seconds // 60
     expiry_label = (
         f"{expiry_minutes} minute{'s' if expiry_minutes != 1 else ''}"
@@ -421,10 +421,10 @@ def home_view(request):
         category__is_active=True,
     ).order_by("-id")[:3]
 
-    # Referral offer for home page banner
+    
     referral_offer = ReferralOffer.objects.filter(is_active=True).first()
 
-    # Cart & wishlist counts for navbar icons
+    
     cart_count = 0
     wishlist_ids = []
     wishlist_count = 0
@@ -490,12 +490,12 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     def save_user(self, request, sociallogin, form=None):
         user = super().save_user(request, sociallogin, form)
 
-        # Ensure a wallet is created for the new user
+       
         from user.wallet.utils import get_user_wallet, refund_to_wallet
 
         get_user_wallet(user)
 
-        # Check if there is a referral code in the session
+     
         ref_code = request.session.get("referrer_code")
         if ref_code:
             try:
@@ -504,7 +504,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 User = get_user_model()
                 referrer = User.objects.get(referral_code=ref_code)
 
-                # Check if this user already has a referral record to prevent duplicates
+                
                 from admin_panel.admin_offer.models import (ReferralOffer,
                                                             ReferralRecord)
 
@@ -517,7 +517,6 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                         referrer_reward = float(active_offer.referrer_reward)
                         referee_reward = float(active_offer.referee_reward)
 
-                    # Credit wallets
                     if referee_reward > 0:
                         refund_to_wallet(
                             user,
@@ -531,7 +530,6 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                             f"Referral invite reward via Google (referred {user.username})",
                         )
 
-                    # Log record
                     ReferralRecord.objects.create(
                         referrer=referrer,
                         referee=user,
@@ -563,7 +561,7 @@ def user_referrals_view(request):
         referrer_reward = float(active_offer.referrer_reward)
         referee_reward = float(active_offer.referee_reward)
 
-    # Referral history — all users this person has successfully referred
+   
     referral_history = (
         ReferralRecord.objects.filter(referrer=user)
         .select_related("referee")

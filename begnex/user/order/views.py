@@ -207,7 +207,7 @@ def cancel_order_item(request, item_pk):
             item.save()
 
             if item.variant:
-                item.variant.stock += cancel_qty  # RESTORE
+                item.variant.stock += cancel_qty  
                 item.variant.save()
 
             all_items = order.items.all()
@@ -345,14 +345,13 @@ def return_order_item(request, item_pk):
         return_qty = int(request.POST.get("return_quantity", active_qty))
     except (ValueError, TypeError):
         return_qty = active_qty
-    return_qty = max(1, min(return_qty, active_qty))  # safe range
-
+    return_qty = max(1, min(return_qty, active_qty))  
     try:
         with transaction.atomic():
             item.return_requested_quantity += return_qty
             item.return_reason = reason
 
-            if item.return_requested_quantity >= active_qty:  # full return
+            if item.return_requested_quantity >= active_qty:  
 
                 item.status = "return_requested"
 

@@ -469,7 +469,7 @@ def admin_variant_add_view(request, product_id):
                     break
 
     if error:
-        # Re-render the page with the add drawer open and form values preserved
+       
         search_query = request.GET.get("q", "").strip()
         status_filter = request.GET.get("status", "").strip()
         stock_filter = request.GET.get("stock", "").strip()

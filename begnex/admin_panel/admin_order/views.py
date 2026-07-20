@@ -193,7 +193,7 @@ def admin_order_update_status_view(request, order_id):
                         order.status = "delivered"
                         order.payment_status = "paid"
                     elif all_non_cancelled_returned:
-                        order.status = "returned"  # already set above
+                        order.status = "returned"  
             elif new_status == "return_rejected":
                 reason = request.POST.get("reason", "").strip()
                 if reason:

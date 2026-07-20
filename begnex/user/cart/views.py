@@ -137,7 +137,7 @@ def add_to_cart_api(request):
 
     if new_quantity > max_allowed:
         if created:
-            # Brand new item exceeds max — delete it and return error
+            
             item.delete()
             return JsonResponse(
                 {
@@ -146,7 +146,7 @@ def add_to_cart_api(request):
                 },
                 status=400,
             )
-        # Existing item — cap at max if room exists, otherwise error
+        
         if item.quantity >= max_allowed:
             return JsonResponse(
                 {

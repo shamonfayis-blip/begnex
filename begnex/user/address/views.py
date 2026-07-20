@@ -8,7 +8,7 @@ from .models import Address
 
 
 def _validate_address_data(data):
-    """Validate address form fields. Returns a dict of field -> error message."""
+   
     errors = {}
 
     name = data.get("name", "").strip()
@@ -59,10 +59,7 @@ def _validate_address_data(data):
 
 
 def _form_context(address=None, post_data=None, errors=None, next_url=None):
-    """
-    Build template context with pre-resolved field values.
-    Helper to prepare template variables for create/edit.
-    """
+ 
     d = post_data or {}
     a = address
 
@@ -70,7 +67,7 @@ def _form_context(address=None, post_data=None, errors=None, next_url=None):
         "address": address,
         "errors": errors or {},
         "next_url": next_url,
-        # Pre-resolved values — no attribute access on None in template
+       
         "val_name": d.get("name", a.name if a else ""),
         "val_phone": d.get("phone_number", a.phone_number if a else ""),
         "val_addr1": d.get("address_line_1", a.address_line_1 if a else ""),

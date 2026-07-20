@@ -110,7 +110,7 @@ def checkout_page(request):
 @login_required(login_url="login")
 @require_POST
 def checkout_add_address_api(request):
-    """AJAX API to add an address during checkout."""
+    
     name = request.POST.get("name", "").strip()
     phone_number = request.POST.get("phone_number", "").strip()
     address_line_1 = request.POST.get("address_line_1", "").strip()

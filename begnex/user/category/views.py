@@ -7,7 +7,7 @@ from admin_panel.admin_product.models import Product
 
 
 def category_list_view(request):
-    """User-facing categories page — shows all active, non-deleted categories."""
+   
     categories = Category.objects.filter(
         is_deleted=False,
         is_active=True,
@@ -28,7 +28,7 @@ def category_list_view(request):
 
 
 def category_detail_view(request, category_id):
-    """Show all products in a specific category."""
+    
     category = get_object_or_404(
         Category, id=category_id, is_deleted=False, is_active=True
     )

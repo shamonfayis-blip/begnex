@@ -203,12 +203,12 @@ def product_detail_view(request, product_id):
 
     reviews = product.reviews.select_related("user").order_by("-created_at")
 
-    # Average rating
+
     avg_data = reviews.aggregate(avg=Avg("rating"))
     avg_rating = round(avg_data["avg"] or 0, 1)
     avg_rating_int = round(avg_data["avg"] or 0)
 
-    # Review permission for current user
+   
     user_can_review = False
     user_review = None
 
@@ -242,12 +242,12 @@ def product_detail_view(request, product_id):
 @login_required(login_url="login")
 @require_POST
 def submit_review(request, product_id):
-    """Submit or update a product review. Only for users with a delivered order."""
+    
     product = get_object_or_404(
         Product, id=product_id, is_deleted=False, is_active=True
     )
 
-    # Verify the user has a delivered order containing this product
+   
     has_delivered = Order.objects.filter(
         user=request.user,
         status="delivered",
@@ -287,7 +287,7 @@ def submit_review(request, product_id):
 @login_required(login_url="login")
 @require_POST
 def delete_review(request, product_id):
-    """Delete the current user's review for a product."""
+  
     product = get_object_or_404(
         Product, id=product_id, is_deleted=False, is_active=True
     )
