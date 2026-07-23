@@ -276,76 +276,125 @@
         }));
     }
 
-    // Digit-only filter
-    document.getElementById('id_phone').addEventListener('input', function () {
-        this.value = this.value.replace(/\D/g, '').slice(0, 10);
-    });
-    document.getElementById('id_pincode').addEventListener('input', function () {
-        this.value = this.value.replace(/\D/g, '').slice(0, 6);
-    });
+    // ---- Real-time address validation ----
+    (function () {
+        var FIELD_RULES = [
+            {
+                id: 'id_name',
+                validate: function(v) {
+                    if (!v) return 'Full name is required.';
+                    if (!/^[A-Za-z\s]{2,100}$/.test(v)) return 'Name must be 2–100 letters and spaces only.';
+                    return '';
+                }
+            },
+            {
+                id: 'id_phone',
+                validate: function(v) {
+                    if (!v) return 'Phone number is required.';
+                    if (!/^\d{10}$/.test(v)) return 'Enter a valid 10-digit phone number.';
+                    return '';
+                }
+            },
+            {
+                id: 'id_addr1',
+                validate: function(v) {
+                    if (!v) return 'Address line 1 is required.';
+                    if (v.length < 5) return 'Address line 1 must be at least 5 characters.';
+                    if (!/^[A-Za-z0-9\s,./\-#&'()]{5,255}$/.test(v)) return 'Address contains invalid characters.';
+                    return '';
+                }
+            },
+            {
+                id: 'id_city',
+                validate: function(v) {
+                    if (!v) return 'City is required.';
+                    if (!/^[A-Za-z\s]{2,100}$/.test(v)) return 'City must contain letters and spaces only.';
+                    return '';
+                }
+            },
+            {
+                id: 'id_state',
+                validate: function(v) {
+                    if (!v) return 'State is required.';
+                    if (!/^[A-Za-z\s]{2,100}$/.test(v)) return 'State must contain letters and spaces only.';
+                    return '';
+                }
+            },
+            {
+                id: 'id_pincode',
+                validate: function(v) {
+                    if (!v) return 'Pincode is required.';
+                    if (!/^\d{6}$/.test(v)) return 'Enter a valid 6-digit pincode.';
+                    return '';
+                }
+            },
+            {
+                id: 'id_country',
+                validate: function(v) {
+                    if (!v) return 'Country is required.';
+                    if (!/^[A-Za-z\s]{2,100}$/.test(v)) return 'Country must contain letters and spaces only.';
+                    return '';
+                }
+            },
+        ];
 
-    // Client-side validation
-    document.getElementById('addressForm').addEventListener('submit', function (e) {
-        let valid = true;
+        function getErrSpan(input) {
+            var sib = input.nextElementSibling;
+            if (sib && sib.classList.contains('field-error')) return sib;
+            var s = document.createElement('span');
+            s.className = 'field-error';
+            input.insertAdjacentElement('afterend', s);
+            return s;
+        }
 
-        function showError(inputId, msg) {
-            const input = document.getElementById(inputId);
-            input.classList.add('is-error');
-            let span = input.nextElementSibling;
-            if (!span || !span.classList.contains('field-error')) {
-                span = document.createElement('span');
-                span.className = 'field-error';
-                input.insertAdjacentElement('afterend', span);
+        function applyErr(input, errSpan, msg) {
+            input.classList.toggle('is-error', !!msg);
+            errSpan.textContent = msg;
+        }
+
+        // Attach live listeners
+        FIELD_RULES.forEach(function(rule) {
+            var input = document.getElementById(rule.id);
+            if (!input) return;
+            var errSpan = getErrSpan(input);
+
+            input.addEventListener('blur', function () {
+                applyErr(input, errSpan, rule.validate(this.value.trim()));
+            });
+
+            input.addEventListener('input', function () {
+                if (input.classList.contains('is-error')) {
+                    applyErr(input, errSpan, rule.validate(this.value.trim()));
+                }
+            });
+        });
+
+        // Submit guard
+        document.getElementById('addressForm').addEventListener('submit', function (e) {
+            var valid = true;
+            FIELD_RULES.forEach(function(rule) {
+                var input = document.getElementById(rule.id);
+                if (!input) return;
+                var errSpan = getErrSpan(input);
+                var msg = rule.validate(input.value.trim());
+                applyErr(input, errSpan, msg);
+                if (msg) valid = false;
+            });
+            if (!valid) {
+                e.preventDefault();
+                var firstErr = document.querySelector('.is-error');
+                if (firstErr) firstErr.focus();
             }
-            span.textContent = msg;
-            valid = false;
-        }
+        });
 
-        function clearError(inputId) {
-            const input = document.getElementById(inputId);
-            input.classList.remove('is-error');
-            const span = input.nextElementSibling;
-            if (span && span.classList.contains('field-error')) span.textContent = '';
-        }
-
-        const name = document.getElementById('id_name').value.trim();
-        clearError('id_name');
-        if (!name) showError('id_name', 'Full name is required.');
-        else if (!/^[A-Za-z\s]{2,100}$/.test(name)) showError('id_name', 'Name must be 2–100 letters and spaces only.');
-
-        const phone = document.getElementById('id_phone').value.trim();
-        clearError('id_phone');
-        if (!phone) showError('id_phone', 'Phone number is required.');
-        else if (!/^\d{10}$/.test(phone)) showError('id_phone', 'Enter a valid 10-digit phone number.');
-
-        const addr1 = document.getElementById('id_addr1').value.trim();
-        clearError('id_addr1');
-        if (!addr1) showError('id_addr1', 'Address line 1 is required.');
-        else if (addr1.length < 5) showError('id_addr1', 'Address line 1 must be at least 5 characters.');
-        else if (!/^[A-Za-z0-9\s,./\-#&'()]{5,255}$/.test(addr1)) showError('id_addr1', 'Address contains invalid characters.');
-
-        const city = document.getElementById('id_city').value.trim();
-        clearError('id_city');
-        if (!city) showError('id_city', 'City is required.');
-        else if (!/^[A-Za-z\s]{2,100}$/.test(city)) showError('id_city', 'City must contain letters and spaces only.');
-
-        const state = document.getElementById('id_state').value.trim();
-        clearError('id_state');
-        if (!state) showError('id_state', 'State is required.');
-        else if (!/^[A-Za-z\s]{2,100}$/.test(state)) showError('id_state', 'State must contain letters and spaces only.');
-
-        const pincode = document.getElementById('id_pincode').value.trim();
-        clearError('id_pincode');
-        if (!pincode) showError('id_pincode', 'Pincode is required.');
-        else if (!/^\d{6}$/.test(pincode)) showError('id_pincode', 'Enter a valid 6-digit pincode.');
-
-        const country = document.getElementById('id_country').value.trim();
-        clearError('id_country');
-        if (!country) showError('id_country', 'Country is required.');
-        else if (!/^[A-Za-z\s]{2,100}$/.test(country)) showError('id_country', 'Country must contain letters and spaces only.');
-
-        if (!valid) e.preventDefault();
-    });
+        // Digit-only filters
+        document.getElementById('id_phone').addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+        document.getElementById('id_pincode').addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+        });
+    })();
 </script>
 </body>
 </html>

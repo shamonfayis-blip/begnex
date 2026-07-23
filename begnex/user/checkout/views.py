@@ -1,4 +1,5 @@
 import json
+import re
 import random
 import string
 
@@ -122,7 +123,6 @@ def checkout_add_address_api(request):
     address_type = request.POST.get("address_type", "Home").strip()
     is_default = request.POST.get("is_default") in ["on", "true", True]
 
-    import re
     errors = {}
     if not name:
         errors["name"] = "Full name is required."
@@ -202,7 +202,6 @@ def checkout_edit_address_api(request, id):
     address_type = request.POST.get("address_type", "Home").strip()
     is_default = request.POST.get("is_default") in ["on", "true", True]
 
-    import re
     errors = {}
     if not name:
         errors["name"] = "Full name is required."

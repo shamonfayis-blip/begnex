@@ -206,6 +206,12 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            25%      { transform: translateX(-4px); }
+            75%      { transform: translateX(4px); }
+        }
+
         /* BUTTON */
 
         .verify-btn {
@@ -515,6 +521,21 @@
 
         // Focus first input on load
         inputs[0].focus();
+
+        // Submit guard — all 6 boxes must be filled
+        document.getElementById('otp-form').addEventListener('submit', function (e) {
+            syncOtp();
+            var allFilled = Array.from(inputs).every(function(inp){ return inp.value.trim() !== ''; });
+            if (!allFilled) {
+                e.preventDefault();
+                var firstEmpty = Array.from(inputs).find(function(inp){ return !inp.value.trim(); });
+                if (firstEmpty) firstEmpty.focus();
+                inputs.forEach(function(inp) {
+                    inp.style.animation = 'shake 0.3s ease';
+                    setTimeout(function(){ inp.style.animation = ''; }, 350);
+                });
+            }
+        });
     </script>
 
 </body>

@@ -647,51 +647,87 @@
         }));
     }
 
-    /* Client-side validation */
-    document.querySelector('form').addEventListener('submit', function(e) {
-        var name  = document.getElementById('field-full-name').value.trim();
-        var email = document.getElementById('field-email').value.trim();
-        var phone = document.getElementById('field-phone').value.trim();
-        var ok = true;
+    /* Client-side validation – real-time */
+    (function () {
+        var nameIn  = document.getElementById('field-full-name');
+        var emailIn = document.getElementById('field-email');
+        var phoneIn = document.getElementById('field-phone');
 
-        if (!name) {
-            showFieldError('field-full-name', 'Full name is required.');
-            ok = false;
-        } else if (!/^[a-zA-Z\s]+$/.test(name)) {
-            showFieldError('field-full-name', 'Name can only contain letters and spaces.');
-            ok = false;
+        var EM_PAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        /* ---- build/reuse inline error spans ---- */
+        function getErrSpan(field) {
+            var existing = field.parentElement.querySelector('.field-error');
+            if (existing) return existing;
+            var s = document.createElement('span');
+            s.className = 'field-error';
+            field.parentElement.appendChild(s);
+            return s;
         }
 
-        if (!email) {
-            showFieldError('field-email', 'Email address is required.');
-            ok = false;
-        } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-            showFieldError('field-email', 'Enter a valid email address.');
-            ok = false;
+        var nameErr  = getErrSpan(nameIn);
+        var emailErr = getErrSpan(emailIn);
+        var phoneErr = getErrSpan(phoneIn);
+
+        function setErr(el, errEl, msg) {
+            el.style.outline = msg ? '1px solid #EF4444' : '';
+            errEl.textContent = msg;
+            errEl.style.display = msg ? 'block' : 'none';
         }
 
-        if (phone && (!/^\d{10}$/.test(phone))) {
-            showFieldError('field-phone', 'Phone must be exactly 10 digits.');
-            ok = false;
-        }
+        /* ---- live: full name ---- */
+        nameIn.addEventListener('input', function () {
+            var v = this.value.trim();
+            if (!v) setErr(nameIn, nameErr, 'Full name is required.');
+            else if (!/^[a-zA-Z\s]+$/.test(v)) setErr(nameIn, nameErr, 'Name can only contain letters and spaces.');
+            else if (v.length < 2) setErr(nameIn, nameErr, 'Name must be at least 2 characters.');
+            else setErr(nameIn, nameErr, '');
+        });
 
-        if (!ok) e.preventDefault();
-    });
+        /* ---- live: email ---- */
+        emailIn.addEventListener('input', function () {
+            var v = this.value.trim();
+            if (!v) { setErr(emailIn, emailErr, ''); return; }
+            setErr(emailIn, emailErr, EM_PAT.test(v) ? '' : 'Enter a valid email address.');
+        });
 
-    function showFieldError(fieldId, msg) {
-        var input = document.getElementById(fieldId);
-        var existing = input.parentElement.querySelector('.field-error');
-        if (existing) { existing.textContent = msg; return; }
-        var span = document.createElement('span');
-        span.className = 'field-error';
-        span.textContent = msg;
-        input.parentElement.appendChild(span);
-    }
+        emailIn.addEventListener('blur', function () {
+            var v = this.value.trim();
+            if (!v) setErr(emailIn, emailErr, 'Email address is required.');
+            else if (!EM_PAT.test(v)) setErr(emailIn, emailErr, 'Enter a valid email address.');
+            else setErr(emailIn, emailErr, '');
+        });
 
-    /* Live phone digit-only filter */
-    document.getElementById('field-phone').addEventListener('input', function() {
-        this.value = this.value.replace(/\D/g, '').slice(0, 10);
-    });
+        /* ---- live: phone (digit-only filter + error) ---- */
+        phoneIn.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+            var v = this.value;
+            if (v && v.length !== 10) setErr(phoneIn, phoneErr, 'Phone must be exactly 10 digits.');
+            else setErr(phoneIn, phoneErr, '');
+        });
+
+        /* ---- submit guard ---- */
+        document.querySelector('form').addEventListener('submit', function (e) {
+            var ok = true;
+
+            var name = nameIn.value.trim();
+            if (!name) { setErr(nameIn, nameErr, 'Full name is required.'); ok = false; }
+            else if (!/^[a-zA-Z\s]+$/.test(name)) { setErr(nameIn, nameErr, 'Name can only contain letters and spaces.'); ok = false; }
+            else if (name.length < 2) { setErr(nameIn, nameErr, 'Name must be at least 2 characters.'); ok = false; }
+            else setErr(nameIn, nameErr, '');
+
+            var email = emailIn.value.trim();
+            if (!email) { setErr(emailIn, emailErr, 'Email address is required.'); ok = false; }
+            else if (!EM_PAT.test(email)) { setErr(emailIn, emailErr, 'Enter a valid email address.'); ok = false; }
+            else setErr(emailIn, emailErr, '');
+
+            var phone = phoneIn.value.trim();
+            if (phone && phone.length !== 10) { setErr(phoneIn, phoneErr, 'Phone must be exactly 10 digits.'); ok = false; }
+            else setErr(phoneIn, phoneErr, '');
+
+            if (!ok) e.preventDefault();
+        });
+    })();
 </script>
 </body>
-</html>
+</html>

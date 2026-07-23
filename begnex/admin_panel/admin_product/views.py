@@ -516,20 +516,17 @@ def admin_variant_add_view(request, product_id):
     variant_image_1 = VariantImage.objects.create(
         variant=variant, image=image1, is_primary=True
     )
-    if hasattr(image1, "content_type"):
-        resize_image(variant_image_1.image.path)
+    resize_image(variant_image_1.image.path)
 
     variant_image_2 = VariantImage.objects.create(
         variant=variant, image=image2, is_primary=False
     )
-    if hasattr(image2, "content_type"):
-        resize_image(variant_image_2.image.path)
+    resize_image(variant_image_2.image.path)
 
     variant_image_3 = VariantImage.objects.create(
         variant=variant, image=image3, is_primary=False
     )
-    if hasattr(image3, "content_type"):
-        resize_image(variant_image_3.image.path)
+    resize_image(variant_image_3.image.path)
 
     messages.success(request, f'Variant "{name}" added successfully.')
     return redirect("admin_variants", product_id=product.id)

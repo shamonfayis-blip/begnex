@@ -24,12 +24,12 @@
         body{
             width: 100%;
             height: 100%;
+            overflow: hidden;
         }
 
         body{
             font-family: 'Inter', sans-serif;
             background: #000;
-            overflow: hidden;
         }
 
         /* MAIN */
@@ -46,6 +46,7 @@
             width: 50%;
             position: relative;
             height: 100vh;
+            flex-shrink: 0;
         }
 
         .signup-image{
@@ -94,59 +95,63 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 28px 40px;
+            padding: 0 44px;
+            overflow: hidden;
         }
 
         .form-wrapper{
             width: 100%;
-            max-width: 520px;
+            max-width: 460px;
         }
 
         /* TOP */
 
         .top-content{
-            margin-bottom: 20px;
+            margin-bottom: 14px;
         }
 
         .top-content h2{
             color: white;
-            font-size: 38px;
+            font-size: 34px;
             font-weight: 800;
-            line-height: 42px;
+            line-height: 38px;
             letter-spacing: -1.5px;
         }
 
         .top-content p{
             color: #6B7280;
-            margin-top: 8px;
-            font-size: 14px;
-            line-height: 22px;
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 20px;
         }
 
-        /* INPUT */
+        /* INPUT — fixed height reserves space for error so layout never shifts */
 
         .input-group{
-            margin-bottom: 14px;
+            min-height: 74px;   /* label + input + error-line reserved */
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         .input-group label{
-            display: block;
             color: #6B7280;
             font-size: 10px;
-            letter-spacing: 4px;
-            margin-bottom: 8px;
+            letter-spacing: 3px;
+            margin-bottom: 6px;
         }
 
         .input-group input{
             width: 100%;
-            height: 48px;
+            height: 42px;
             background: #020817;
             border: 1px solid #16213E;
-            border-radius: 12px;
-            padding: 0 18px;
+            border-radius: 10px;
+            padding: 0 16px;
             color: white;
-            font-size: 15px;
+            font-size: 14px;
             outline: none;
+            flex-shrink: 0;
         }
 
         .input-group input::placeholder{
@@ -162,32 +167,33 @@
         .password-grid{
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 18px;
+            gap: 12px;
         }
 
-        /* USERNAME ERROR */
+        /* USERNAME ERROR (and all inline errors — stay inside reserved space) */
 
         .username-error{
             display: none;
-            font-size: 11px;
-            margin-top: 5px;
+            font-size: 10px;
+            margin-top: 3px;
             color: #EF4444;
+            line-height: 1.2;
         }
 
         /* BUTTON */
 
         .signup-btn{
             width: 100%;
-            height: 48px;
+            height: 44px;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             background: #2563EB;
             color: white;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
             cursor: pointer;
-            margin-top: 6px;
+            margin-top: 8px;
             transition: 0.3s;
         }
 
@@ -201,7 +207,7 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            margin: 14px 0;
+            margin: 10px 0;
         }
 
         .line{
@@ -220,12 +226,12 @@
 
         .google-btn{
             width: 100%;
-            height: 48px;
-            border-radius: 12px;
+            height: 44px;
+            border-radius: 10px;
             border: 1px solid #16213E;
             background: #020817;
             color: white;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             display: flex;
             justify-content: center;
@@ -237,7 +243,7 @@
         }
 
         .google-btn img{
-            width: 18px;
+            width: 16px;
         }
 
         .google-btn:hover{
@@ -248,9 +254,9 @@
 
         .login-text{
             text-align: center;
-            margin-top: 14px;
+            margin-top: 10px;
             color: #6B7280;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .login-text a{
@@ -263,9 +269,7 @@
 
         @media(max-width: 992px){
 
-            body{
-                overflow-y: auto;
-            }
+            html, body { overflow-x: hidden; overflow-y: auto; }
 
             .left-section{
                 display: none;
@@ -273,7 +277,11 @@
 
             .right-section{
                 width: 100%;
+                height: auto;
+                min-height: 100vh;
                 padding: 40px 24px;
+                align-items: flex-start;
+                overflow: visible;
             }
 
             .form-wrapper{
@@ -281,13 +289,14 @@
             }
 
             .top-content h2{
-                font-size: 42px;
+                font-size: 32px;
             }
 
             .password-grid{
                 grid-template-columns: 1fr;
             }
 
+        }
         }
 
     </style>
@@ -462,43 +471,154 @@
                 </form>
 
                 <script>
-                (function(){
-                    var input = document.getElementById('username-input');
-                    var err   = document.getElementById('username-error');
-                    if (!input || !err) return;
+                (function () {
 
-                    var PATTERN = /^[a-zA-Z0-9_]+$/;
+                    /* ---------- helpers ---------- */
+                    function getEl(id) { return document.getElementById(id); }
 
-                    function getError(val) {
+                    function setError(inputEl, errEl, msg) {
+                        inputEl.style.borderColor = msg ? '#EF4444' : '';
+                        errEl.textContent = msg;
+                        errEl.style.display = msg ? 'block' : 'none';
+                    }
+
+                    /* ---------- build inline error spans ---------- */
+                    function addErrSpan(inputEl) {
+                        var s = document.createElement('span');
+                        s.style.cssText = 'display:none;font-size:11px;color:#EF4444;margin-top:4px;';
+                        inputEl.parentNode.appendChild(s);
+                        return s;
+                    }
+
+                    var usernameInput = getEl('username-input');
+                    var usernameErr   = getEl('username-error');
+
+                    var emailInput  = usernameInput.closest('form').querySelector('input[name="email"]');
+                    var emailErr    = addErrSpan(emailInput);
+
+                    var pwInput  = usernameInput.closest('form').querySelector('input[name="password"]');
+                    var pwErr    = addErrSpan(pwInput);
+
+                    var cfmInput = usernameInput.closest('form').querySelector('input[name="confirm_password"]');
+                    var cfmErr   = addErrSpan(cfmInput);
+
+                    var refInput = usernameInput.closest('form').querySelector('input[name="referral_code"]');
+                    var refErr   = refInput ? addErrSpan(refInput) : null;
+
+                    /* ---------- password strength bar ---------- */
+                    var strengthBar = document.createElement('div');
+                    strengthBar.style.cssText = 'height:3px;border-radius:99px;margin-top:6px;background:#1F2937;overflow:hidden;';
+                    var strengthFill = document.createElement('div');
+                    strengthFill.style.cssText = 'height:100%;width:0%;border-radius:99px;transition:width .3s,background .3s;';
+                    strengthBar.appendChild(strengthFill);
+                    pwInput.parentNode.appendChild(strengthBar);
+
+                    /* ---------- validators ---------- */
+                    var UN_PAT = /^[a-zA-Z0-9_]+$/;
+                    var EM_PAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                    function validateUsername(val) {
                         if (!val)            return 'Username is required';
                         if (val.length < 3)  return 'Too short – minimum 3 characters';
                         if (val.length > 30) return 'Too long – maximum 30 characters';
-                        if (!PATTERN.test(val)) return 'Only letters, numbers, and underscores allowed';
+                        if (!UN_PAT.test(val)) return 'Only letters, numbers, and underscores allowed';
                         return '';
                     }
 
-                    function showError(msg) {
-                        if (msg) {
-                            err.textContent = msg;
-                            err.style.display = 'block';
-                        } else {
-                            err.textContent = '';
-                            err.style.display = 'none';
-                        }
+                    function validateEmail(val) {
+                        if (!val) return 'Email is required';
+                        if (!EM_PAT.test(val)) return 'Enter a valid email address';
+                        return '';
                     }
 
-                    input.addEventListener('input', function(){
-                        showError(getError(this.value.trim()));
+                    function getPasswordStrength(val) {
+                        /* returns { score: 0-4, msg, color } */
+                        var score = 0;
+                        if (val.length >= 8)             score++;
+                        if (/[A-Z]/.test(val))           score++;
+                        if (/[a-z]/.test(val))           score++;
+                        if (/\d/.test(val))              score++;
+                        var levels = [
+                            { pct: '0%',   color: '#1F2937', msg: '' },
+                            { pct: '25%',  color: '#EF4444', msg: 'Too weak' },
+                            { pct: '50%',  color: '#F97316', msg: 'Weak' },
+                            { pct: '75%',  color: '#EAB308', msg: 'Good' },
+                            { pct: '100%', color: '#22C55E', msg: 'Strong' },
+                        ];
+                        return levels[score];
+                    }
+
+                    function validatePassword(val) {
+                        if (!val)          return 'Password is required';
+                        if (val.length < 8) return 'At least 8 characters required';
+                        if (!/[A-Z]/.test(val)) return 'Add at least one uppercase letter';
+                        if (!/[a-z]/.test(val)) return 'Add at least one lowercase letter';
+                        if (!/\d/.test(val))    return 'Add at least one number';
+                        return '';
+                    }
+
+                    function validateConfirm(cfm, pw) {
+                        if (!cfm) return 'Please confirm your password';
+                        if (cfm !== pw) return 'Passwords do not match';
+                        return '';
+                    }
+
+                    function validateRef(val) {
+                        if (!val) return '';   /* optional */
+                        if (!/^[A-Za-z0-9\-]{4,20}$/.test(val)) return 'Invalid referral code format';
+                        return '';
+                    }
+
+                    /* ---------- live listeners ---------- */
+                    usernameInput.addEventListener('input', function () {
+                        setError(usernameInput, usernameErr, validateUsername(this.value.trim()));
                     });
 
-                    input.closest('form').addEventListener('submit', function(e){
-                        var msg = getError(input.value.trim());
-                        if (msg) {
-                            e.preventDefault();
-                            showError(msg);
-                            input.focus();
+                    emailInput.addEventListener('input', function () {
+                        setError(emailInput, emailErr, validateEmail(this.value.trim()));
+                    });
+
+                    pwInput.addEventListener('input', function () {
+                        var val = this.value;
+                        var lvl = getPasswordStrength(val);
+                        strengthFill.style.width = lvl.pct;
+                        strengthFill.style.background = lvl.color;
+                        setError(pwInput, pwErr, validatePassword(val));
+                        /* re-check confirm too */
+                        if (cfmInput.value) {
+                            setError(cfmInput, cfmErr, validateConfirm(cfmInput.value, val));
                         }
                     });
+
+                    cfmInput.addEventListener('input', function () {
+                        setError(cfmInput, cfmErr, validateConfirm(this.value, pwInput.value));
+                    });
+
+                    if (refInput) {
+                        refInput.addEventListener('input', function () {
+                            setError(refInput, refErr, validateRef(this.value.trim()));
+                        });
+                    }
+
+                    /* ---------- submit guard ---------- */
+                    usernameInput.closest('form').addEventListener('submit', function (e) {
+                        var ok = true;
+                        function chk(el, errEl, msg) {
+                            if (msg) { setError(el, errEl, msg); ok = false; }
+                        }
+                        chk(usernameInput, usernameErr, validateUsername(usernameInput.value.trim()));
+                        chk(emailInput,    emailErr,    validateEmail(emailInput.value.trim()));
+                        chk(pwInput,       pwErr,       validatePassword(pwInput.value));
+                        chk(cfmInput,      cfmErr,      validateConfirm(cfmInput.value, pwInput.value));
+                        if (refInput) chk(refInput, refErr, validateRef(refInput.value.trim()));
+                        if (!ok) {
+                            e.preventDefault();
+                            /* scroll to first error */
+                            var firstErr = usernameInput.closest('form').querySelector('input[style*="EF4444"]');
+                            if (firstErr) firstErr.focus();
+                        }
+                    });
+
                 })();
                 </script>
 

@@ -195,7 +195,8 @@ body{
     transition: opacity .2s;
 }
 
-.resend a.disabled{
+.resend a.disabled,
+.resend button.disabled{
     color: #4B5563;
     pointer-events: none;
     cursor: not-allowed;
@@ -356,9 +357,13 @@ body{
 
                 <div class="resend">
                     <span>Didn't receive a code?&nbsp;</span>
-                    <a href="{% url 'resend_otp' %}" id="resendLink" class="disabled">
-                        Resend
-                    </a>
+                    <form method="POST" action="{% url 'resend_otp' %}" id="resendForm" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" id="resendLink" class="disabled"
+                            style="background:none;border:none;padding:0;color:#3B82F6;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:opacity .2s;">
+                            Resend
+                        </button>
+                    </form>
                 </div>
 
                 <div class="footer">
@@ -383,13 +388,23 @@ body{
 
     </main>
 <script>
-    let timeLeft = {{ time_left|default:60 }};
+    let timeLeft = {{ time_left|default_if_none:60 }};
+    const otpExpired = {{ otp_expired|yesno:"true,false" }};
 
     const timer      = document.getElementById('timer');
-    const resendLink = document.getElementById('resendLink');
+    const resendBtn  = document.getElementById('resendLink');
 
     // Start disabled
-    resendLink.classList.add('disabled');
+    resendBtn.classList.add('disabled');
+    resendBtn.disabled = true;
+
+    function enableResend() {
+        timer.innerHTML = 'OTP Expired.';
+        resendBtn.classList.remove('disabled');
+        resendBtn.disabled = false;
+        resendBtn.style.color = '#3B82F6';
+        resendBtn.style.cursor = 'pointer';
+    }
 
     function updateTimer() {
         if (timeLeft > 0) {
@@ -397,34 +412,87 @@ body{
             timeLeft--;
             setTimeout(updateTimer, 1000);
         } else {
-            timer.innerHTML = 'OTP Expired.';
-            resendLink.classList.remove('disabled');
+            enableResend();
         }
     }
 
-    updateTimer();
+    // If OTP is already expired (e.g. submitted after timeout), enable resend immediately
+    if (otpExpired || timeLeft <= 0) {
+        enableResend();
+    } else {
+        updateTimer();
+    }
 </script>
 
 
 <script>
+(function () {
+    var inputs = Array.from(document.querySelectorAll('.otp-input'));
+    var form   = document.querySelector('form[action]');
 
-    const inputs = document.querySelectorAll('.otp-input');
+    inputs.forEach(function (input, i) {
 
-    inputs.forEach((input, index) => {
+        /* digit-only filter */
+        input.setAttribute('inputmode', 'numeric');
+        input.setAttribute('pattern', '[0-9]*');
 
-        input.addEventListener('input', () => {
-
-            if(input.value.length === 1 && index < inputs.length - 1){
-
-                inputs[index + 1].focus();
-
+        input.addEventListener('keydown', function (e) {
+            /* allow: Backspace, Tab, ArrowLeft/Right, Delete */
+            if (['Backspace','Delete','Tab','ArrowLeft','ArrowRight'].includes(e.key)) {
+                if (e.key === 'Backspace' && !this.value && i > 0) {
+                    inputs[i - 1].focus();
+                    inputs[i - 1].value = '';
+                    e.preventDefault();
+                }
+                return;
             }
-
+            /* block non-digits */
+            if (!/^[0-9]$/.test(e.key)) { e.preventDefault(); return; }
         });
 
+        input.addEventListener('input', function () {
+            /* keep only last digit */
+            this.value = this.value.replace(/\D/g, '').slice(-1);
+            if (this.value && i < inputs.length - 1) {
+                inputs[i + 1].focus();
+            }
+        });
+
+        /* paste on any box: distribute digits */
+        input.addEventListener('paste', function (e) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+            text.split('').slice(0, inputs.length).forEach(function (ch, j) {
+                inputs[j].value = ch;
+            });
+            var nextEmpty = inputs.findIndex(function(inp){ return !inp.value; });
+            (nextEmpty >= 0 ? inputs[nextEmpty] : inputs[inputs.length - 1]).focus();
+        });
     });
 
+    /* submit guard: all boxes must be filled */
+    form.addEventListener('submit', function (e) {
+        var allFilled = inputs.every(function(inp){ return inp.value.trim() !== ''; });
+        if (!allFilled) {
+            e.preventDefault();
+            var firstEmpty = inputs.find(function(inp){ return !inp.value.trim(); });
+            if (firstEmpty) firstEmpty.focus();
+            /* show brief shake */
+            inputs.forEach(function(inp) {
+                inp.style.animation = 'otp-shake 0.3s ease';
+                setTimeout(function(){ inp.style.animation = ''; }, 350);
+            });
+        }
+    });
+})();
 </script>
+<style>
+@keyframes otp-shake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-4px); }
+    75%      { transform: translateX(4px); }
+}
+</style>
 
 </body>
 

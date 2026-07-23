@@ -125,9 +125,8 @@ def cancel_order(request, order_pk):
             refund_amount = order.total
             order.status = "cancelled"
             order.cancel_reason = reason or "Cancelled by user"
-            order.subtotal = 0
-            order.discount = 0
-            order.shipping_charge = 0
+            # Preserve subtotal/discount/shipping_charge as a financial snapshot for the invoice.
+            # Only zero out total to indicate nothing further is owed.
             order.total = 0
             order.save()
 

@@ -531,6 +531,59 @@
 
             </form>
 
+            <script>
+            (function () {
+                var form     = document.querySelector('form[action]');
+                var emailIn  = form.querySelector('input[name="email"]');
+                var pwIn     = form.querySelector('input[name="password"]');
+
+                function addErrSpan(input) {
+                    var s = document.createElement('span');
+                    s.style.cssText = 'display:none;font-size:11px;color:#EF4444;margin-top:5px;';
+                    input.parentNode.appendChild(s);
+                    return s;
+                }
+
+                var emailErr = addErrSpan(emailIn);
+                var pwErr    = addErrSpan(pwIn);
+
+                var EM_PAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                function setErr(el, errEl, msg) {
+                    el.style.outline = msg ? '1px solid #EF4444' : '';
+                    errEl.textContent = msg;
+                    errEl.style.display = msg ? 'block' : 'none';
+                }
+
+                emailIn.addEventListener('input', function () {
+                    var v = this.value.trim();
+                    setErr(emailIn, emailErr, v ? (EM_PAT.test(v) ? '' : 'Enter a valid email address') : '');
+                });
+
+                form.addEventListener('submit', function (e) {
+                    var ok = true;
+                    var email = emailIn.value.trim();
+                    var pw    = pwIn.value;
+
+                    if (!email) {
+                        setErr(emailIn, emailErr, 'Email is required'); ok = false;
+                    } else if (!EM_PAT.test(email)) {
+                        setErr(emailIn, emailErr, 'Enter a valid email address'); ok = false;
+                    } else {
+                        setErr(emailIn, emailErr, '');
+                    }
+
+                    if (!pw) {
+                        setErr(pwIn, pwErr, 'Password is required'); ok = false;
+                    } else {
+                        setErr(pwIn, pwErr, '');
+                    }
+
+                    if (!ok) e.preventDefault();
+                });
+            })();
+            </script>
+
                 <div class="signup-row">
 
                     <p>

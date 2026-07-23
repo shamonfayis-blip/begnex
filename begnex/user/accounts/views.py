@@ -16,6 +16,7 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.cache import cache_control, never_cache
+from django.views.decorators.http import require_POST
 
 User = get_user_model()
 
@@ -146,13 +147,17 @@ def otp_page(request):
         if not otp_created_time:
             return redirect("signup")
         if time.time() - otp_created_time > 60:
+            # Keep signup_data so the user can still Resend OTP
             request.session.pop("otp", None)
-            request.session.pop("signup_data", None)
             request.session.pop("otp_created_time", None)
             return render(
                 request,
                 "otp.html",
-                {"error": "OTP expired. Please sign up again."},
+                {
+                    "error": "OTP has expired. Please request a new OTP.",
+                    "time_left": 0,
+                    "otp_expired": True,
+                },
             )
         session_otp = request.session.get("otp")
         signup_data = request.session.get("signup_data")
@@ -223,6 +228,9 @@ def otp_page(request):
                 {"error": "Invalid OTP. Please try again.", "time_left": time_left},
             )
     list(messages.get_messages(request))
+    # If signup_data is missing the user has no active OTP session — send to signup
+    if not request.session.get("signup_data"):
+        return redirect("signup")
     otp_created_time = request.session.get("otp_created_time")
     if otp_created_time:
         elapsed = time.time() - otp_created_time
@@ -232,6 +240,7 @@ def otp_page(request):
     return render(request, "otp.html", {"time_left": time_left})
 
 
+@require_POST
 def resend_otp(request):
     signup_data = request.session.get("signup_data")
     if not signup_data:
@@ -421,39 +430,12 @@ def home_view(request):
         category__is_active=True,
     ).order_by("-id")[:3]
 
-    
+    # cart_count, wishlist_ids, wishlist_count are injected by context processors
     referral_offer = ReferralOffer.objects.filter(is_active=True).first()
-
-    
-    cart_count = 0
-    wishlist_ids = []
-    wishlist_count = 0
-    if request.user.is_authenticated:
-        try:
-            from user.cart.models import Cart
-
-            cart = Cart.objects.filter(user=request.user).first()
-            if cart:
-                cart_count = cart.items.count()
-        except Exception:
-            pass
-        try:
-            from user.wishlist.models import Wishlist
-
-            wishlist_qs = Wishlist.objects.filter(user=request.user).values_list(
-                "product_id", flat=True
-            )
-            wishlist_ids = list(wishlist_qs)
-            wishlist_count = len(wishlist_ids)
-        except Exception:
-            pass
 
     context = {
         "latest_products": latest_products,
         "referral_offer": referral_offer,
-        "cart_count": cart_count,
-        "wishlist_ids": wishlist_ids,
-        "wishlist_count": wishlist_count,
     }
     return render(request, "home.html", context)
 

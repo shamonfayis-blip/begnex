@@ -36,7 +36,11 @@ def profile_view(request):
     user = request.user
     user.refresh_from_db()
 
-    return render(request, "profile.html", {"user": user})
+    context = {
+        "user": user,
+    }
+
+    return render(request, "profile.html", context)
 
 
 @never_cache
