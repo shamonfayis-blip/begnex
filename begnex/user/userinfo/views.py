@@ -15,7 +15,6 @@ User = get_user_model()
 
 
 def _send_mail_async(subject, body, to_email):
-    """Non-blocking email dispatch."""
 
     def _send():
         send_mail(
@@ -59,7 +58,7 @@ def edit_profile_view(request):
 
         errors = {}
 
-        # Full name
+       
         if not full_name:
             errors["full_name"] = "Full name is required."
         elif not re.match(r"^[a-zA-Z\s]+$", full_name):
@@ -67,7 +66,7 @@ def edit_profile_view(request):
         elif len(full_name) < 2:
             errors["full_name"] = "Name must be at least 2 characters."
 
-        # Email
+       
         if not email:
             errors["email"] = "Email address is required."
         elif not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
@@ -75,7 +74,7 @@ def edit_profile_view(request):
         elif User.objects.filter(email=email).exclude(id=user.id).exists():
             errors["email"] = "That email is already in use."
 
-        # Phone (optional)
+        
         if phone and (not phone.isdigit() or len(phone) != 10):
             errors["phone"] = "Phone number must be exactly 10 digits."
 

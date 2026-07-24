@@ -78,7 +78,7 @@ def toggle_wishlist_api(request):
     try:
         data = json.loads(request.body)
         product_id = data.get("product_id")
-        variant_id = data.get("variant_id")  # optional
+        variant_id = data.get("variant_id")  
     except (ValueError, TypeError, json.JSONDecodeError):
         return JsonResponse(
             {"success": False, "message": "Invalid request."}, status=400

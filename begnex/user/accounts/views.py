@@ -147,7 +147,7 @@ def otp_page(request):
         if not otp_created_time:
             return redirect("signup")
         if time.time() - otp_created_time > 60:
-            # Keep signup_data so the user can still Resend OTP
+           
             request.session.pop("otp", None)
             request.session.pop("otp_created_time", None)
             return render(
@@ -228,7 +228,7 @@ def otp_page(request):
                 {"error": "Invalid OTP. Please try again.", "time_left": time_left},
             )
     list(messages.get_messages(request))
-    # If signup_data is missing the user has no active OTP session — send to signup
+    
     if not request.session.get("signup_data"):
         return redirect("signup")
     otp_created_time = request.session.get("otp_created_time")
@@ -430,7 +430,7 @@ def home_view(request):
         category__is_active=True,
     ).order_by("-id")[:3]
 
-    # cart_count, wishlist_ids, wishlist_count are injected by context processors
+   
     referral_offer = ReferralOffer.objects.filter(is_active=True).first()
 
     context = {
