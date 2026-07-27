@@ -180,6 +180,28 @@ def admin_order_update_status_view(request, order_id):
                             f"Refund for returned items in Order #{order.order_id}",
                         )
 
+                    # ── Recalculate invoice totals to exclude returned items ──
+                    # returned_subtotal = the raw (pre-discount) value of the
+                    # items that were just marked as "returned".
+                    returned_subtotal = sum(
+                        item.unit_price * item.return_requested_quantity
+                        for item in returning_items
+                    )
+                    new_subtotal = max(0, order.subtotal - returned_subtotal)
+                    new_discount = round(new_subtotal * discount_ratio, 2)
+                    # Keep shipping only when some ordered items still remain;
+                    # if everything was returned, refund shipping too (already
+                    # added to refund_total above) and zero it out on the order.
+                    new_shipping = 0 if all_active_returned else order.shipping_charge
+                    new_total = max(0, new_subtotal + new_shipping - new_discount)
+
+                    order.subtotal = new_subtotal
+                    order.discount = new_discount
+                    order.shipping_charge = new_shipping
+                    order.total = new_total
+                    # order.save() is called later via order.save() at line 218
+                    # ── End invoice recalculation ──
+
                     has_active_ordered = any(
                         i.status == "ordered"
                         and (i.quantity - i.cancelled_quantity) > 0
@@ -193,7 +215,7 @@ def admin_order_update_status_view(request, order_id):
                         order.status = "delivered"
                         order.payment_status = "paid"
                     elif all_non_cancelled_returned:
-                        order.status = "returned"  
+                        order.status = "returned"
             elif new_status == "return_rejected":
                 reason = request.POST.get("reason", "").strip()
                 if reason:

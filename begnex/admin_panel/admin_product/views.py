@@ -30,6 +30,30 @@ def generate_product_id():
     return f"PRD-{num:03d}"
 
 
+def generate_sku():
+    """Return a globally unique SKU of the form SKU-XXXXXXXX.
+
+    Uses uuid4 hex to guarantee randomness, then double-checks against the
+    database so the unique=True constraint is never violated.
+    """
+    while True:
+        candidate = "SKU-" + uuid.uuid4().hex[:8].upper()
+        if not ProductVariant.objects.filter(sku=candidate).exists():
+            return candidate
+
+
+@never_cache
+@staff_member_required(login_url="admin_login")
+def generate_sku_api(request):
+    """JSON endpoint: returns a freshly generated unique SKU.
+
+    Called by the Add Variant drawer on open so the admin can see the SKU
+    before saving.  GET-only; no state is changed on the server.
+    """
+    from django.http import JsonResponse
+    return JsonResponse({"sku": generate_sku()})
+
+
 def resize_image(image_path):
 
     img = Image.open(image_path)
@@ -398,7 +422,6 @@ def admin_variant_add_view(request, product_id):
 
     color = request.POST.get("color", "").strip()
     size = request.POST.get("size", "").strip()
-    sku = request.POST.get("sku", "").strip()
     price_str = request.POST.get("price", "0").strip()
     stock_str = request.POST.get("stock", "0").strip()
     is_active = request.POST.get("is_active", "true") == "true"
@@ -411,10 +434,6 @@ def admin_variant_add_view(request, product_id):
         error = "Color and Size are required."
     elif len(color) < 2 or not any(c.isalpha() for c in color):
         error = "Color must be at least 2 characters and contain at least one letter."
-    elif not sku:
-        error = "SKU is required."
-    elif ProductVariant.objects.filter(sku__iexact=sku, is_deleted=False).exists():
-        error = f'SKU "{sku}" already exists.'
     else:
         try:
             price_val = Decimal(price_str)
@@ -436,6 +455,13 @@ def admin_variant_add_view(request, product_id):
             error = "Stock must be a whole number."
 
     if not error:
+        # Use the SKU that was pre-generated on modal open and sent via the
+        # readonly form field.  If it is missing or has been taken by a
+        # concurrent save (race condition), silently generate a fresh one.
+        sku = request.POST.get("sku", "").strip()
+        if not sku or ProductVariant.objects.filter(sku=sku).exists():
+            sku = generate_sku()
+
         image1 = None
         image2 = None
         image3 = None
@@ -469,7 +495,6 @@ def admin_variant_add_view(request, product_id):
                     break
 
     if error:
-       
         search_query = request.GET.get("q", "").strip()
         status_filter = request.GET.get("status", "").strip()
         stock_filter = request.GET.get("stock", "").strip()
@@ -488,11 +513,10 @@ def admin_variant_add_view(request, product_id):
             "total_variants": total_variants,
             "active_variants": active_variants,
             "out_of_stock": out_of_stock,
-            # Add-form error state
+            # Add-form error state (SKU is auto-generated so not included)
             "add_form_error": error,
             "add_form_color": color,
             "add_form_size": size,
-            "add_form_sku": sku,
             "add_form_price": price_str,
             "add_form_stock": stock_str,
             "add_form_is_active": is_active,
@@ -528,7 +552,7 @@ def admin_variant_add_view(request, product_id):
     )
     resize_image(variant_image_3.image.path)
 
-    messages.success(request, f'Variant "{name}" added successfully.')
+    messages.success(request, f'Variant "{name}" added successfully. SKU: {sku}')
     return redirect("admin_variants", product_id=product.id)
 
 
@@ -567,8 +591,38 @@ def admin_variant_edit_view(request, variant_id):
         .exclude(id=variant.id)
         .exists()
     ):
-        messages.error(request, f'SKU "{sku}" already exists.')
-        return redirect("admin_variants", product_id=product_id)
+        # Re-render the variants page with the edit drawer open and error shown
+        search_query = request.GET.get("q", "").strip()
+        status_filter = request.GET.get("status", "").strip()
+        stock_filter = request.GET.get("stock", "").strip()
+        variants_qs = ProductVariant.objects.filter(
+            product=variant.product, is_deleted=False
+        ).order_by("-id")
+        total_variants = variants_qs.count()
+        active_variants = variants_qs.filter(is_active=True).count()
+        out_of_stock = variants_qs.filter(stock=0).count()
+        paginator = Paginator(variants_qs, 10)
+        page_obj = paginator.get_page(request.GET.get("page"))
+        context = {
+            "product": variant.product,
+            "page_obj": page_obj,
+            "search_query": search_query,
+            "status_filter": status_filter,
+            "stock_filter": stock_filter,
+            "total_variants": total_variants,
+            "active_variants": active_variants,
+            "out_of_stock": out_of_stock,
+            # Edit-form error state — used by JS to reopen the drawer
+            "edit_form_error": "SKU already exists. Please enter a unique SKU.",
+            "edit_form_variant_id": variant.id,
+            "edit_form_color": color,
+            "edit_form_size": size,
+            "edit_form_sku": sku,
+            "edit_form_price": price_str,
+            "edit_form_stock": stock_str,
+            "edit_form_is_active": is_active,
+        }
+        return render(request, "variants.html", context)
 
     try:
         price_val = Decimal(price_str)

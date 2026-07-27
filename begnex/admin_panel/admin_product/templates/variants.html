@@ -230,7 +230,7 @@
                     <p>Manage sizes, colors, and attributes for {{ product.name }}</p>
                 </div>
             </div>
-            <button class="add-btn" onclick="openDrawer('variantDrawer')">
+            <button class="add-btn" onclick="openAddVariant()">
                 <i class="fa-solid fa-plus"></i> Add Variant
             </button>
         </div>
@@ -458,8 +458,11 @@
 </div>
 
                     <div class="field">
-                        <label>SKU Code *</label>
-                        <input type="text" name="sku" id="v_sku" placeholder="Unique SKU identifier" value="{{ add_form_sku|default:'' }}">
+                        <label>SKU Code</label>
+                        <input type="text" name="sku" id="v_sku" value="" readonly
+                            placeholder="Generating SKU…"
+                            style="background:#F0F4FF;color:#1e3a8a;cursor:default;font-family:monospace;letter-spacing:0.05em;"
+                            title="SKU is auto-generated. In add mode it is pre-filled when the drawer opens.">
                         <span class="field-error" id="err_v_sku"></span>
                     </div>
 
@@ -645,7 +648,12 @@
             setStatus(true);
             document.getElementById('v_color').value = '';
             document.getElementById('v_size').value = '';
-            
+            // SKU: clear value and reset to loading placeholder (add mode)
+            var skuEl = document.getElementById('v_sku');
+            skuEl.value = '';
+            skuEl.placeholder = 'Generating SKU\u2026';
+            skuEl.style.color = '#9CA3AF';
+
             for(let i=1; i<=3; i++) {
                 document.getElementById('v_clear_image_' + i).value = "";
                 document.getElementById('uploadBox' + i).style.display = 'flex';
@@ -660,15 +668,17 @@
             resetForm();
             document.getElementById('drawerTitle').textContent = 'Edit Variant';
             document.getElementById('variantForm').action = "{% url 'admin_variant_edit' 0 %}".replace('0', id);
-            
+
             let parts = name.split('/');
+            document.getElementById('v_color').value = parts[0] ? parts[0].trim() : '';
+            document.getElementById('v_size').value  = parts[1] ? parts[1].trim() : '';
 
-            document.getElementById('v_color').value =
-                parts[0] ? parts[0].trim() : '';
+            // SKU: show the existing SKU in the readonly field
+            var skuEl = document.getElementById('v_sku');
+            skuEl.value = sku;
+            skuEl.placeholder = '';
+            skuEl.style.color = '#1e3a8a';
 
-            document.getElementById('v_size').value =
-                parts[1] ? parts[1].trim() : '';
-            document.getElementById('v_sku').value = sku;
             document.getElementById('v_price').value = price;
             document.getElementById('v_stock').value = stock;
             setStatus(isActive);
@@ -680,13 +690,37 @@
                         document.getElementById('uploadBox' + i).style.display = 'none';
                         document.getElementById('existingImgPreview' + i).src = img.url;
                         document.getElementById('existingPreviewArea' + i).style.display = 'flex';
-                        document.getElementById('v_clear_image_' + i).value = ""; // Leave blank so backend doesn't delete on normal save
-                        document.querySelector('#existingPreviewArea' + i + ' .remove-img').dataset.imgId = img.id; // Store ID for removal
+                        document.getElementById('v_clear_image_' + i).value = "";
+                        document.querySelector('#existingPreviewArea' + i + ' .remove-img').dataset.imgId = img.id;
                     }
                 });
             }
 
             openDrawer('variantDrawer');
+        }
+
+        // Add Mode — fetches a pre-generated unique SKU then opens the drawer
+        function openAddVariant() {
+            resetForm();
+            openDrawer('variantDrawer');
+            var skuEl = document.getElementById('v_sku');
+            skuEl.value = '';
+            skuEl.placeholder = 'Generating SKU\u2026';
+            skuEl.style.color = '#9CA3AF';
+            fetch("{% url 'admin_variant_generate_sku' %}", {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                skuEl.value = data.sku;
+                skuEl.placeholder = '';
+                skuEl.style.color = '#1e3a8a';
+            })
+            .catch(function() {
+                skuEl.placeholder = 'Enter SKU manually';
+                skuEl.removeAttribute('readonly');
+                skuEl.style.color = '#374151';
+            });
         }
 
         // Auto-dismiss toasts
@@ -723,10 +757,15 @@
             const size = document.getElementById('v_size').value.trim();
             if (!size) { markVErr('v_size','err_v_size','Size is required.'); valid = false; }
 
-            // SKU
-            const sku = document.getElementById('v_sku').value.trim();
-            if (!sku) {
-                markVErr('v_sku','err_v_sku','SKU is required.'); valid = false;
+            // Determine mode early (needed for both SKU and image checks)
+            const isAddMode = document.getElementById('drawerTitle').textContent.trim() === 'Add Variant';
+
+            // SKU — read-only in edit mode; auto-generated in add mode (skip validation)
+            if (!isAddMode) {
+                const sku = document.getElementById('v_sku').value.trim();
+                if (!sku) {
+                    markVErr('v_sku','err_v_sku','SKU is required.'); valid = false;
+                }
             }
 
             // Price
@@ -747,7 +786,6 @@
             }
 
             // Images
-            const isAddMode = document.getElementById('drawerTitle').textContent.trim() === 'Add Variant';
             const errImgEl = document.getElementById('err_v_images');
             let imgError = '';
             for (let i = 1; i <= 3; i++) {
@@ -790,10 +828,13 @@
         /* ─── AUTO-OPEN ADD DRAWER ON SERVER VALIDATION ERROR ─── */
         {% if add_form_error %}
         (function() {
+            // Re-open in add mode; SKU was already submitted so restore it
+            // from the form field value embedded by the view's error context.
+            // (No need to fetch again — the SKU the admin saw is already set.)
             openDrawer('variantDrawer');
             // Restore status selection
             setStatus({{ add_form_is_active|yesno:'true,false' }});
-            // Show the error in the image section (covers SKU/price/stock/image errors)
+            // Show the error in the image section (covers price/stock/image errors)
             var errEl = document.getElementById('err_v_images');
             if (errEl) errEl.classList.add('show');
             // Highlight the relevant field based on error type
@@ -804,11 +845,6 @@
                 } else {
                     document.getElementById('v_size').classList.add('invalid');
                 }
-            } else if (error.includes('SKU')) {
-                document.getElementById('v_sku').classList.add('invalid');
-                document.getElementById('err_v_sku').textContent = error;
-                document.getElementById('err_v_sku').classList.add('show');
-                document.getElementById('err_v_images').classList.remove('show');
             } else if (error.includes('Price') || error.includes('price')) {
                 document.getElementById('v_price').classList.add('invalid');
                 document.getElementById('err_v_price').textContent = error;
@@ -820,6 +856,54 @@
                 document.getElementById('err_v_stock').classList.add('show');
                 document.getElementById('err_v_images').classList.remove('show');
             }
+            // Fetch a fresh SKU to display (the old one was already used/submitted)
+            var skuEl = document.getElementById('v_sku');
+            skuEl.placeholder = 'Generating SKU\u2026';
+            skuEl.style.color = '#9CA3AF';
+            fetch("{% url 'admin_variant_generate_sku' %}", {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                skuEl.value = data.sku;
+                skuEl.placeholder = '';
+                skuEl.style.color = '#1e3a8a';
+            })
+            .catch(function() {
+                skuEl.placeholder = 'Enter SKU manually';
+                skuEl.removeAttribute('readonly');
+                skuEl.style.color = '#374151';
+            });
+        })();
+        {% endif %}
+
+        /* ─── AUTO-OPEN EDIT DRAWER ON SERVER-SIDE SKU DUPLICATE ERROR ─── */
+        {% if edit_form_error %}
+        (function() {
+            // Switch the drawer to edit mode
+            document.getElementById('drawerTitle').textContent = 'Edit Variant';
+            document.getElementById('variantForm').action =
+                "{% url 'admin_variant_edit' 0 %}".replace('0', '{{ edit_form_variant_id }}');
+
+            // Restore all field values from the submitted POST data
+            document.getElementById('v_color').value = "{{ edit_form_color|escapejs }}";
+            document.getElementById('v_size').value  = "{{ edit_form_size|escapejs }}";
+            document.getElementById('v_price').value = "{{ edit_form_price|escapejs }}";
+            document.getElementById('v_stock').value = "{{ edit_form_stock|escapejs }}";
+            setStatus({{ edit_form_is_active|yesno:'true,false' }});
+
+            // SKU: hide auto-notice, show readonly input in edit mode
+            document.getElementById('sku-auto-notice').style.display = 'none';
+            document.getElementById('v_sku').style.display = '';
+            document.getElementById('v_sku').value = "{{ edit_form_sku|escapejs }}";
+
+            // Show inline SKU error
+            document.getElementById('v_sku').classList.add('invalid');
+            document.getElementById('err_v_sku').textContent = "{{ edit_form_error|escapejs }}";
+            document.getElementById('err_v_sku').classList.add('show');
+
+            // Open the drawer
+            openDrawer('variantDrawer');
         })();
         {% endif %}
 

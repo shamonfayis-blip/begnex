@@ -46,4 +46,10 @@ urlpatterns = [
         views.admin_variant_set_default_view,
         name="admin_variant_set_default",
     ),
+    path(
+        "variants/generate-sku/",
+        views.generate_sku_api,
+        name="admin_variant_generate_sku",
+    ),
 ]
+

@@ -11,7 +11,7 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 
-DEBUG = os.getenv("DEBUG") == "False"
+DEBUG = os.getenv("DEBUG") == "True"
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -137,7 +137,19 @@ AUTHENTICATION_BACKENDS = [
 
 LOGIN_REDIRECT_URL = "home"
 
+# ── allauth core settings ────────────────────────────────────────────────────
+# Email is the primary identifier; no username required at the allauth level.
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "none"  # OTP is handled manually in signup_view
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_UNIQUE_EMAIL = True
+
+# ── Social-account settings ───────────────────────────────────────────────────
+# Skip the "Social Signup" form for new Google users; create the account
+# automatically using the profile data returned by the adapter.
+SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_EMAIL_REQUIRED = True
 
 AUTH_USER_MODEL = "user_accounts.User"
 
