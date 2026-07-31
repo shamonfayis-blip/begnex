@@ -494,19 +494,33 @@ def download_invoice(request, order_pk):
         ]
     ]
 
+    # Build the invoice item rows using only active (non-cancelled) quantities.
+    # Fully-cancelled items are excluded entirely; partially-cancelled items show
+    # the remaining active quantity and a "Cancelled Qty: N" informational note.
+    invoice_subtotal = 0
     for item in order.items.all():
-        name_p = item.product_name
-        if item.status != "ordered":
-            name_p += f" ({item.get_status_display()})"
+        active_qty = item.quantity - item.cancelled_quantity
+
+        # Skip items where every unit has been cancelled.
+        if active_qty <= 0:
+            continue
+
+        line_subtotal = item.unit_price * active_qty
+        invoice_subtotal += line_subtotal
+
+        # Build product-name cell; add cancellation note when partially cancelled.
+        name_lines = item.product_name
+        if item.cancelled_quantity > 0:
+            name_lines += f"<br/><font size='8' color='#E53E3E'>Cancelled Qty: {item.cancelled_quantity}</font>"
 
         table_data.append(
             [
-                Paragraph(name_p, normal_style),
+                Paragraph(name_lines, normal_style),
                 Paragraph(item.variant_name, normal_style),
                 Paragraph(item.sku or "-", normal_style),
-                Paragraph(str(item.quantity), normal_style),
+                Paragraph(str(active_qty), normal_style),
                 Paragraph(f"INR {item.unit_price}", normal_style),
-                Paragraph(f"INR {item.subtotal}", normal_style),
+                Paragraph(f"INR {line_subtotal:.2f}", normal_style),
             ]
         )
 
@@ -529,7 +543,7 @@ def download_invoice(request, order_pk):
         [
             Paragraph("", normal_style),
             Paragraph("<b>Items Subtotal:</b>", normal_style),
-            Paragraph(f"INR {order.subtotal}", normal_style),
+            Paragraph(f"INR {invoice_subtotal:.2f}", normal_style),
         ],
         [
             Paragraph("", normal_style),
