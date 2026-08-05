@@ -31,11 +31,7 @@ def generate_product_id():
 
 
 def generate_sku():
-    """Return a globally unique SKU of the form SKU-XXXXXXXX.
-
-    Uses uuid4 hex to guarantee randomness, then double-checks against the
-    database so the unique=True constraint is never violated.
-    """
+   
     while True:
         candidate = "SKU-" + uuid.uuid4().hex[:8].upper()
         if not ProductVariant.objects.filter(sku=candidate).exists():
@@ -45,11 +41,7 @@ def generate_sku():
 @never_cache
 @staff_member_required(login_url="admin_login")
 def generate_sku_api(request):
-    """JSON endpoint: returns a freshly generated unique SKU.
-
-    Called by the Add Variant drawer on open so the admin can see the SKU
-    before saving.  GET-only; no state is changed on the server.
-    """
+   
     from django.http import JsonResponse
     return JsonResponse({"sku": generate_sku()})
 
@@ -455,9 +447,7 @@ def admin_variant_add_view(request, product_id):
             error = "Stock must be a whole number."
 
     if not error:
-        # Use the SKU that was pre-generated on modal open and sent via the
-        # readonly form field.  If it is missing or has been taken by a
-        # concurrent save (race condition), silently generate a fresh one.
+       
         sku = request.POST.get("sku", "").strip()
         if not sku or ProductVariant.objects.filter(sku=sku).exists():
             sku = generate_sku()
@@ -513,7 +503,7 @@ def admin_variant_add_view(request, product_id):
             "total_variants": total_variants,
             "active_variants": active_variants,
             "out_of_stock": out_of_stock,
-            # Add-form error state (SKU is auto-generated so not included)
+           
             "add_form_error": error,
             "add_form_color": color,
             "add_form_size": size,
@@ -591,7 +581,7 @@ def admin_variant_edit_view(request, variant_id):
         .exclude(id=variant.id)
         .exists()
     ):
-        # Re-render the variants page with the edit drawer open and error shown
+        
         search_query = request.GET.get("q", "").strip()
         status_filter = request.GET.get("status", "").strip()
         stock_filter = request.GET.get("stock", "").strip()
@@ -612,7 +602,7 @@ def admin_variant_edit_view(request, variant_id):
             "total_variants": total_variants,
             "active_variants": active_variants,
             "out_of_stock": out_of_stock,
-            # Edit-form error state — used by JS to reopen the drawer
+           
             "edit_form_error": "SKU already exists. Please enter a unique SKU.",
             "edit_form_variant_id": variant.id,
             "edit_form_color": color,

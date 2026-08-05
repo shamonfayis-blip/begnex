@@ -473,7 +473,7 @@
                 <script>
                 (function () {
 
-                    /* ---------- helpers ---------- */
+                   
                     function getEl(id) { return document.getElementById(id); }
 
                     function setError(inputEl, errEl, msg) {
@@ -482,7 +482,7 @@
                         errEl.style.display = msg ? 'block' : 'none';
                     }
 
-                    /* ---------- build inline error spans ---------- */
+                    
                     function addErrSpan(inputEl) {
                         var s = document.createElement('span');
                         s.style.cssText = 'display:none;font-size:11px;color:#EF4444;margin-top:4px;';
@@ -505,7 +505,7 @@
                     var refInput = usernameInput.closest('form').querySelector('input[name="referral_code"]');
                     var refErr   = refInput ? addErrSpan(refInput) : null;
 
-                    /* ---------- password strength bar ---------- */
+                    
                     var strengthBar = document.createElement('div');
                     strengthBar.style.cssText = 'height:3px;border-radius:99px;margin-top:6px;background:#1F2937;overflow:hidden;';
                     var strengthFill = document.createElement('div');
@@ -513,7 +513,7 @@
                     strengthBar.appendChild(strengthFill);
                     pwInput.parentNode.appendChild(strengthBar);
 
-                    /* ---------- validators ---------- */
+                   
                     var UN_PAT = /^[a-zA-Z0-9_]+$/;
                     var EM_PAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -532,7 +532,7 @@
                     }
 
                     function getPasswordStrength(val) {
-                        /* returns { score: 0-4, msg, color } */
+                        
                         var score = 0;
                         if (val.length >= 8)             score++;
                         if (/[A-Z]/.test(val))           score++;

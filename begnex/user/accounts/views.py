@@ -447,28 +447,13 @@ def logout_view(request):
 
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
-    """
-    Custom adapter that:
-    - Blocks banned users during the OAuth callback (pre_social_login).
-    - Auto-generates a unique username from the Google profile so the
-      allauth "Social Signup" form is never shown (populate_user +
-      is_auto_signup_allowed).
-    - Creates a wallet and processes referral rewards for new social users
-      (save_user).
-    """
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
+ 
+    
     @staticmethod
     def _unique_username(base):
-        """
-        Given a candidate *base* string, return a username that does not
-        already exist in the database.  Appends a numeric suffix when
-        needed.
-        """
+      
         import re as _re
-        # Sanitise: keep only word chars, collapse spaces, max 28 chars
+        
         base = _re.sub(r"[^\w]", "_", base).strip("_")[:28] or "user"
         User = get_user_model()
         candidate = base
@@ -478,43 +463,34 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             counter += 1
         return candidate
 
-    # ------------------------------------------------------------------
-    # allauth hooks
-    # ------------------------------------------------------------------
+   
     def is_auto_signup_allowed(self, request, sociallogin):
-        """
-        Always allow auto-signup for social accounts so the intermediate
-        "Social Signup" form is never shown.
-        """
+        
         return True
 
     def populate_user(self, request, sociallogin, data):
-        """
-        Fill in the User instance from Google profile data and make sure
-        a unique username is always present so allauth never falls back to
-        the signup form.
-        """
+       
         user = super().populate_user(request, sociallogin, data)
 
-        # Build a sensible username from first+last name or email prefix
+       
         extra = sociallogin.account.extra_data or {}
         first = (extra.get("given_name") or data.get("first_name") or "").strip()
         last = (extra.get("family_name") or data.get("last_name") or "").strip()
         email = (extra.get("email") or data.get("email") or "").strip()
 
-        # Populate name fields if allauth left them blank
+       
         if first and not user.first_name:
             user.first_name = first
         if last and not user.last_name:
             user.last_name = last
 
-        # Derive a base username
+        
         if first or last:
             base = f"{first}_{last}".strip("_") if last else first
         else:
             base = email.split("@")[0] if email else "user"
 
-        # Ensure the username is unique (only assign if blank or a collision exists)
+        
         if not user.username or get_user_model().objects.filter(
             username__iexact=user.username
         ).exists():
@@ -545,7 +521,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 pass
 
     def save_user(self, request, sociallogin, form=None):
-        """Create wallet and apply referral rewards for newly social-signed-up users."""
+        
         user = super().save_user(request, sociallogin, form)
 
         from user.wallet.utils import get_user_wallet, refund_to_wallet

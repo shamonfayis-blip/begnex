@@ -125,8 +125,7 @@ def cancel_order(request, order_pk):
             refund_amount = order.total
             order.status = "cancelled"
             order.cancel_reason = reason or "Cancelled by user"
-            # Preserve subtotal/discount/shipping_charge as a financial snapshot for the invoice.
-            # Only zero out total to indicate nothing further is owed.
+       
             order.total = 0
             order.save()
 
@@ -190,7 +189,7 @@ def cancel_order_item(request, item_pk):
         cancel_qty = int(request.POST.get("cancel_quantity", active_qty))
     except (ValueError, TypeError):
         cancel_qty = active_qty
-    cancel_qty = max(1, min(cancel_qty, active_qty))  # clamp limit
+    cancel_qty = max(1, min(cancel_qty, active_qty))  
 
     actual_refund = 0
     try:
@@ -494,21 +493,19 @@ def download_invoice(request, order_pk):
         ]
     ]
 
-    # Build the invoice item rows using only active (non-cancelled) quantities.
-    # Fully-cancelled items are excluded entirely; partially-cancelled items show
-    # the remaining active quantity and a "Cancelled Qty: N" informational note.
+ 
     invoice_subtotal = 0
     for item in order.items.all():
         active_qty = item.quantity - item.cancelled_quantity
 
-        # Skip items where every unit has been cancelled.
+        
         if active_qty <= 0:
             continue
 
         line_subtotal = item.unit_price * active_qty
         invoice_subtotal += line_subtotal
 
-        # Build product-name cell; add cancellation note when partially cancelled.
+        
         name_lines = item.product_name
         if item.cancelled_quantity > 0:
             name_lines += f"<br/><font size='8' color='#E53E3E'>Cancelled Qty: {item.cancelled_quantity}</font>"
