@@ -70,6 +70,9 @@ class Order(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Set once when the order transitions to "delivered" status; used for the
+    # 7-day return window. Never cleared or overwritten after that.
+    delivered_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]

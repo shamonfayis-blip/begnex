@@ -1,3 +1,4 @@
+import io
 import random
 import re
 import threading
@@ -12,6 +13,53 @@ from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 
 User = get_user_model()
+
+
+_ALLOWED_IMAGE_FORMATS = {"JPEG", "PNG"}
+_MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024  
+
+def _validate_profile_image(file_obj):
+    
+    try:
+        from PIL import Image, UnidentifiedImageError
+    except ImportError:
+        
+        allowed_exts = {".jpg", ".jpeg", ".png"}
+        import os
+        ext = os.path.splitext(file_obj.name)[1].lower()
+        if ext not in allowed_exts:
+            return "Please upload a valid JPG, JPEG, or PNG image."
+        if file_obj.size > _MAX_IMAGE_SIZE_BYTES:
+            return "Image must be smaller than 5 MB."
+        return None
+
+    
+    if file_obj.size > _MAX_IMAGE_SIZE_BYTES:
+        return "Image must be smaller than 5 MB."
+
+    
+    file_obj.seek(0)
+    raw = file_obj.read()
+    file_obj.seek(0)  
+   
+    try:
+        img = Image.open(io.BytesIO(raw))
+        img.verify()  
+    except Exception:
+        return "Please upload a valid JPG, JPEG, or PNG image."
+
+    
+    try:
+        img2 = Image.open(io.BytesIO(raw))
+        fmt = img2.format  # 'JPEG', 'PNG', etc.
+    except Exception:
+        return "Please upload a valid JPG, JPEG, or PNG image."
+
+    if fmt not in _ALLOWED_IMAGE_FORMATS:
+        return "Please upload a valid JPG, JPEG, or PNG image."
+
+    return None
+
 
 
 def _send_mail_async(subject, body, to_email):
@@ -75,8 +123,21 @@ def edit_profile_view(request):
             errors["email"] = "That email is already in use."
 
         
-        if phone and (not phone.isdigit() or len(phone) != 10):
-            errors["phone"] = "Phone number must be exactly 10 digits."
+        if phone:
+            if not re.match(r"^\d{10}$", phone):
+                errors["phone"] = "Enter a valid 10-digit mobile number."
+            elif phone[0] not in "6789":
+                errors["phone"] = "Enter a valid 10-digit mobile number."
+            elif len(set(phone)) == 1:
+                errors["phone"] = "Enter a valid 10-digit mobile number."
+            elif phone in ("1234567890", "9876543210"):
+                errors["phone"] = "Enter a valid 10-digit mobile number."
+
+     
+        if profile_photo:
+            img_error = _validate_profile_image(profile_photo)
+            if img_error:
+                errors["profile_image"] = img_error
 
         if errors:
             return render(request, "edit_profile.html", {

@@ -516,12 +516,16 @@
                    
                     var UN_PAT = /^[a-zA-Z0-9_]+$/;
                     var EM_PAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    var CHECK_USERNAME_URL = "{% url 'check_username_api' %}";
 
                     function validateUsername(val) {
-                        if (!val)            return 'Username is required';
-                        if (val.length < 3)  return 'Too short – minimum 3 characters';
-                        if (val.length > 30) return 'Too long – maximum 30 characters';
-                        if (!UN_PAT.test(val)) return 'Only letters, numbers, and underscores allowed';
+                        if (!val)             return 'Username is required.';
+                        if (val.length < 3)   return 'Too short – minimum 3 characters.';
+                        if (val.length > 30)  return 'Too long – maximum 30 characters.';
+                        if (!UN_PAT.test(val)) return 'Only letters, numbers, and underscores allowed.';
+                        if (!/^[a-zA-Z]/.test(val)) return 'Username must start with a letter.';
+                        if (/^\d+$/.test(val.replace(/_/g, ''))) return 'Username cannot consist of numbers only.';
+                        if (/^_+$/.test(val))  return 'Username cannot consist of underscores only.';
                         return '';
                     }
 
@@ -569,9 +573,32 @@
                         return '';
                     }
 
+                    /* ---------- debounced username availability check ---------- */
+                    var _unTimer = null;
+                    var _unAjaxError = '';   // last error returned by AJAX ('' = ok)
+
+                    function checkUsernameAvailability(val) {
+                        clearTimeout(_unTimer);
+                        _unTimer = setTimeout(function () {
+                            // Only hit the server when the format is already valid
+                            if (validateUsername(val) !== '') return;
+                            fetch(CHECK_USERNAME_URL + '?username=' + encodeURIComponent(val))
+                                .then(function (r) { return r.json(); })
+                                .then(function (d) {
+                                    _unAjaxError = d.error || '';
+                                    setError(usernameInput, usernameErr, _unAjaxError);
+                                })
+                                .catch(function () { _unAjaxError = ''; });
+                        }, 400);
+                    }
+
                     /* ---------- live listeners ---------- */
                     usernameInput.addEventListener('input', function () {
-                        setError(usernameInput, usernameErr, validateUsername(this.value.trim()));
+                        var val = this.value.trim();
+                        var fmtErr = validateUsername(val);
+                        _unAjaxError = '';   // reset AJAX error when user changes input
+                        setError(usernameInput, usernameErr, fmtErr);
+                        if (!fmtErr) checkUsernameAvailability(val);
                     });
 
                     emailInput.addEventListener('input', function () {
@@ -606,7 +633,10 @@
                         function chk(el, errEl, msg) {
                             if (msg) { setError(el, errEl, msg); ok = false; }
                         }
-                        chk(usernameInput, usernameErr, validateUsername(usernameInput.value.trim()));
+                        // Username: check format first, then any pending AJAX error
+                        var unVal = usernameInput.value.trim();
+                        var unErr = validateUsername(unVal) || _unAjaxError;
+                        chk(usernameInput, usernameErr, unErr);
                         chk(emailInput,    emailErr,    validateEmail(emailInput.value.trim()));
                         chk(pwInput,       pwErr,       validatePassword(pwInput.value));
                         chk(cfmInput,      cfmErr,      validateConfirm(cfmInput.value, pwInput.value));

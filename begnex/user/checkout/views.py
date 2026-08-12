@@ -108,6 +108,21 @@ def checkout_page(request):
     return render(request, "checkout/checkout.html", context)
 
 
+
+def _validate_phone_number(phone):
+  
+    msg = "Enter a valid 10-digit mobile number."
+    if not re.fullmatch(r"\d{10}", phone):   
+        return msg
+    if phone[0] not in "6789":             
+        return msg
+    if len(set(phone)) == 1:                
+        return msg
+    if phone in ("1234567890", "9876543210"):  
+        return msg
+    return ""
+
+
 @login_required(login_url="login")
 @require_POST
 def checkout_add_address_api(request):
@@ -131,8 +146,10 @@ def checkout_add_address_api(request):
 
     if not phone_number:
         errors["phone_number"] = "Phone number is required."
-    elif not re.match(r"^\d{10}$", phone_number):
-        errors["phone_number"] = "Enter a valid 10-digit phone number."
+    else:
+        ph_err = _validate_phone_number(phone_number)
+        if ph_err:
+            errors["phone_number"] = ph_err
 
     if not address_line_1:
         errors["address_line_1"] = "Address line 1 is required."
@@ -210,8 +227,10 @@ def checkout_edit_address_api(request, id):
 
     if not phone_number:
         errors["phone_number"] = "Phone number is required."
-    elif not re.match(r"^\d{10}$", phone_number):
-        errors["phone_number"] = "Enter a valid 10-digit phone number."
+    else:
+        ph_err = _validate_phone_number(phone_number)
+        if ph_err:
+            errors["phone_number"] = ph_err
 
     if not address_line_1:
         errors["address_line_1"] = "Address line 1 is required."

@@ -105,71 +105,169 @@
             font-size: 14px;
         }
 
-        /* HERO */
+        /* ═══════════════════════════════════════════════════
+           HERO — premium redesign
+        ═══════════════════════════════════════════════════ */
 
-        .hero{
+        .hero {
             width: 100%;
-            min-height: 650px;
+            min-height: calc(160vh - 72px);
             display: flex;
-        }
-
-        .hero-left{
-            width: 50%;
-            background: linear-gradient(to bottom,#0A111C,#05070D);
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
         }
 
-        .hero-left img{
-            width: 78%;
-            object-fit: contain;
-            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.7));
+        /* ── Image panel ── */
+        .hero-left {
+            position: relative;
+            width: 52%;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: #060C17;
         }
 
-        .hero-right{
-            width: 50%;
+        /* full-bleed editorial fill */
+        .hero-left img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+            transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .hero-left:hover img {
+            transform: scale(1.04);
+        }
+
+        /* right-edge fade so image bleeds into content */
+        .hero-left::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to right,
+                transparent 60%,
+                #05070D 100%
+            );
+            pointer-events: none;
+        }
+
+        /* ── Content panel ── */
+        .hero-right {
+            width: 48%;
             background: #05070D;
             display: flex;
             align-items: center;
-            padding: 0 70px;
+            padding: 80px 72px 80px 52px;
         }
 
-        .hero-content{
-            max-width: 420px;
+        .hero-content {
+            max-width: 460px;
         }
 
-        .hero-content h1{
-            font-size: 58px;
+        /* Eyebrow label */
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #4B6BFB;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+        .hero-eyebrow::before {
+            content: '';
+            display: block;
+            width: 24px;
+            height: 1.5px;
+            background: #4B6BFB;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        /* Headline */
+        .hero-content h1 {
+            font-size: clamp(38px, 4.5vw, 64px);
             font-weight: 900;
-            line-height: 60px;
-            letter-spacing: -2px;
+            line-height: 1.0;
+            letter-spacing: -2.5px;
+            background: linear-gradient(140deg, #ffffff 50%, #6B7280 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0;
         }
 
-        .hero-content p{
-            margin-top: 22px;
-            color: #8D95A5;
-            font-size: 15px;
-            line-height: 30px;
+        /* Thin decorative rule below heading */
+        .hero-rule {
+            width: 48px;
+            height: 1.5px;
+            background: linear-gradient(90deg, #4B6BFB, transparent);
+            margin: 28px 0;
+            border-radius: 2px;
         }
 
-        .hero-btn{
-            margin-top: 34px;
-            width: 170px;
+        /* Body copy */
+        .hero-content p {
+            color: #64748B;
+            font-size: 14px;
+            line-height: 1.85;
+            max-width: 380px;
+            margin-bottom: 40px;
+        }
+
+        /* CTA button — ghost style with fill-on-hover */
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 32px;
             height: 52px;
-            border: none;
-            background: white;
-            color: black;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: white;
+            font-family: 'Inter', sans-serif;
             font-size: 11px;
             font-weight: 700;
-            letter-spacing: 2px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
             cursor: pointer;
-            transition: .3s;
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+            transition: color 0.35s ease, border-color 0.35s ease;
         }
-
-        .hero-btn:hover{
-            background: #E5E7EB;
+        /* sliding fill layer */
+        .hero-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: white;
+            transform: translateX(-101%);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .hero-btn:hover::before {
+            transform: translateX(0);
+        }
+        .hero-btn:hover {
+            color: #05070D;
+            border-color: white;
+        }
+        /* arrow slides right on hover */
+        .hero-btn .btn-arrow {
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+        .hero-btn:hover .btn-arrow {
+            transform: translateX(4px);
+        }
+        .hero-btn span {
+            position: relative;
+            z-index: 1;
         }
 
         /* SECTION */
@@ -193,33 +291,234 @@
             margin-bottom: 60px;
         }
 
-        /* PRODUCT GRID */
+        /* ═══════════════════════════════════════════════════════════════════
+           DESIGNED FOR MOTION — premium product section
+           All classes prefixed .pm- to keep scope contained.
+        ═══════════════════════════════════════════════════════════════════ */
 
+        /* Section chrome */
+        .pm-section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #4B6BFB;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .pm-section-label::before {
+            content: '';
+            display: block;
+            width: 28px;
+            height: 1.5px;
+            background: #4B6BFB;
+            border-radius: 2px;
+        }
+        .pm-section-heading {
+            font-size: 46px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 1.05;
+            margin-bottom: 14px;
+            background: linear-gradient(135deg, #fff 60%, #94A3B8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .pm-section-tagline {
+            color: #475569;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            margin-bottom: 56px;
+        }
+
+        /* Grid */
+        .pm-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* Card */
+        .pm-card {
+            position: relative;
+            background: #0C1220;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.35s cubic-bezier(0.22,1,0.36,1),
+                        border-color 0.35s ease,
+                        box-shadow 0.35s ease;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+        }
+        .pm-card:hover {
+            transform: translateY(-7px);
+            border-color: rgba(75,107,251,0.28);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.55),
+                        0 0 0 1px rgba(75,107,251,0.12);
+        }
+
+        /* Wishlist button */
+        .pm-wl-btn {
+            position: absolute; top: 14px; right: 14px; z-index: 5;
+            width: 38px; height: 38px; border-radius: 50%;
+            background: rgba(7, 12, 26, 0.65);
+            backdrop-filter: blur(12px) saturate(160%);
+            -webkit-backdrop-filter: blur(12px) saturate(160%);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #94A3B8;
+            font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.2s;
+        }
+        .pm-wl-btn:hover {
+            color: #ef4444;
+            border-color: rgba(239,68,68,0.5);
+            background: rgba(239,68,68,0.12);
+            transform: scale(1.1);
+        }
+        .pm-wl-btn.wishlisted {
+            color: #ef4444;
+            border-color: rgba(239,68,68,0.5);
+            background: rgba(239,68,68,0.12);
+        }
+        .pm-wl-btn.wishlisted i { font-weight: 900; }
+
+        /* Image container */
+        .pm-img-wrap {
+            width: 100%;
+            height: 360px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #0A0F1C;
+        }
+        .pm-img-wrap img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.6s cubic-bezier(0.22,1,0.36,1);
+        }
+        .pm-img-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            color: #2A3550; font-size: 36px;
+        }
+        .pm-card:hover .pm-img-wrap img {
+            transform: scale(1.06);
+        }
+
+        /* Inner divider accent */
+        .pm-img-wrap::after {
+            content: '';
+            display: block;
+            position: relative;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(75,107,251,0.18), transparent);
+        }
+
+        /* Content */
+        .pm-content {
+            padding: 24px 26px 28px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .pm-product-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            line-height: 1.3;
+            color: #F1F5F9;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pm-desc {
+            font-size: 13px;
+            line-height: 1.75;
+            color: #64748B;
+            margin-bottom: 22px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        /* View More link */
+        .pm-view-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0px;
+            color: #94A3B8;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            position: relative;
+            padding-bottom: 5px;
+            transition: color 0.25s, gap 0.25s;
+            width: fit-content;
+        }
+        .pm-view-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 0%;
+            height: 1px;
+            background: #4B6BFB;
+            transition: width 0.3s cubic-bezier(0.22,1,0.36,1);
+        }
+        .pm-view-link .pm-arrow {
+            display: inline-block;
+            opacity: 0;
+            transform: translateX(-6px);
+            transition: opacity 0.25s, transform 0.25s;
+            font-style: normal;
+            margin-left: 6px;
+            font-size: 13px;
+        }
+        .pm-card:hover .pm-view-link {
+            color: #fff;
+        }
+        .pm-card:hover .pm-view-link::after {
+            width: 100%;
+        }
+        .pm-card:hover .pm-view-link .pm-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Responsive */
+        @media(max-width: 992px)  { .pm-grid { grid-template-columns: repeat(2,1fr); } }
+        @media(max-width: 600px)  { .pm-grid { grid-template-columns: 1fr; } .pm-section-heading { font-size: 32px; letter-spacing: -1px; } }
+        @media(max-width: 480px)  { .pm-img-wrap { height: 300px; } }
+
+        /* Keep old .product-grid for any other sections that use it */
         .product-grid{
             display: grid;
             grid-template-columns: repeat(3,1fr);
             gap: 28px;
         }
-
-        .product-card{
-            background: #05070D;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* ── WISHLIST CARD BUTTON ── */
-        .wl-card-btn {
-            position: absolute; top: 12px; right: 12px; z-index: 5;
-            width: 36px; height: 36px; border-radius: 50%;
-            background: rgba(5,7,13,0.75); backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #A1A1AA; font-size: 14px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.25s ease;
-        }
-        .wl-card-btn:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.15); }
-        .wl-card-btn.wishlisted { color: #ef4444; border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.15); }
-        .wl-card-btn.wishlisted i { font-weight: 900; }
+        .product-card{ background:#05070D; overflow:hidden; position:relative; }
+        .product-image{ width:100%; height:340px; overflow:hidden; }
+        .product-image img{ width:100%; height:100%; object-fit:cover; transition:.5s; }
+        .product-card:hover img{ transform:scale(1.05); }
+        .product-content{ padding:28px; }
+        .product-content h3{ font-size:22px; font-weight:700; margin-bottom:14px; }
+        .product-content p{ color:#94A3B8; font-size:14px; line-height:26px; margin-bottom:24px; }
+        .view-btn{ color:white; font-size:11px; letter-spacing:2px; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:6px; }
 
         /* ── TOAST ── */
         .shop-toast {
@@ -238,48 +537,6 @@
         .shop-toast.success i { color: #10B981; }
         .shop-toast.error { border-left: 3px solid #ef4444; }
         .shop-toast.error i { color: #ef4444; }
-
-        .product-image{
-            width: 100%;
-            height: 340px;
-            overflow: hidden;
-        }
-
-        .product-image img{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: .5s;
-        }
-
-        .product-card:hover img{
-            transform: scale(1.05);
-        }
-
-        .product-content{
-            padding: 28px;
-        }
-
-        .product-content h3{
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 14px;
-        }
-
-        .product-content p{
-            color: #94A3B8;
-            font-size: 14px;
-            line-height: 26px;
-            margin-bottom: 24px;
-        }
-
-        .view-btn{
-            color: white;
-            font-size: 11px;
-            letter-spacing: 2px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            padding-bottom: 6px;
-        }
 
         /* PREMIUM */
 
@@ -596,12 +853,14 @@
             .nav-links{ display: none; }
             .hamburger{ display: flex; }
 
-            .hero{ flex-direction: column; }
-            .hero-left,
-            .hero-right{ width: 100%; }
-            .hero-left{ min-height: 340px; }
-            .hero-right{ padding: 50px 24px; }
-            .hero-content h1{ font-size: 42px; line-height: 48px; }
+            /* hero — stack vertically */
+            .hero{ flex-direction: column; min-height: auto; }
+            .hero-left{ width: 100%; height: 55vw; min-height: 260px; max-height: 460px; }
+            .hero-left img{ position: absolute; }
+            .hero-left::after{ background: linear-gradient(to bottom, transparent 55%, #05070D 100%); }
+            .hero-right{ width: 100%; padding: 44px 28px 56px; }
+            .hero-content{ max-width: 100%; }
+            .hero-content h1{ letter-spacing: -1.5px; }
 
             .section{ padding: 70px 24px; }
             .section-title{ font-size: 34px; }
@@ -626,12 +885,13 @@
 
         @media(max-width: 600px){
             .product-grid{ grid-template-columns: 1fr; }
-            .hero-content h1{ font-size: 34px; line-height: 40px; }
             .section-title{ font-size: 28px; }
+            .hero-left{ height: 65vw; max-height: 380px; }
         }
 
         @media(max-width: 480px){
-            .hero-right{ padding: 36px 16px; }
+            .hero-right{ padding: 32px 18px 48px; }
+            .hero-content h1{ letter-spacing: -1px; }
             .section{ padding: 50px 16px; }
             .referral-inner{ padding: 36px 20px; }
             .referral-text h2{ font-size: 28px; line-height: 34px; }
@@ -712,60 +972,66 @@
 
     <section class="hero">
 
+        <!-- Image panel -->
         <div class="hero-left">
-
             <img src="https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?q=80&w=1200&auto=format&fit=crop"
-    alt="bag"
-    fetchpriority="high"
-    decoding="async">
+                 alt="bag"
+                 fetchpriority="high"
+                 decoding="async">
         </div>
 
+        <!-- Content panel -->
         <div class="hero-right">
-
             <div class="hero-content">
 
-                <h1>
-                    CARRY STYLE EVERYWHERE
-                </h1>
+                <!-- Eyebrow -->
+                <div class="hero-eyebrow">BEGNEX &mdash; 2026 COLLECTION</div>
 
+                <!-- Heading -->
+                <h1>CARRY STYLE EVERYWHERE</h1>
+
+                <!-- Decorative rule -->
+                <div class="hero-rule"></div>
+
+                <!-- Body -->
                 <p>
                     Architecture precision meets high-fashion utility.
                     Our collections are designed for those who navigate
                     the urban landscape with intent.
                 </p>
 
+                <!-- CTA -->
                 <a href="{% url 'shop' %}" style="text-decoration:none;">
                     <button class="hero-btn">
-                        EXPLORE BAGS →
+                        <span>EXPLORE BAGS</span>
+                        <span class="btn-arrow">&rarr;</span>
                     </button>
                 </a>
 
             </div>
-
         </div>
 
     </section>
 
-    <!-- PRODUCTS -->
+    <!-- PRODUCTS — Designed for Motion -->
 
-    <section class="section">
+    <section class="section" style="background:#05070D;">
 
-        <div class="section-sub">
-            OUR CURATED SELECTION
-        </div>
+        <div class="pm-section-label">OUR CURATED SELECTION</div>
 
-        <h2 class="section-title">
-            Designed for Motion
-        </h2>
+        <h2 class="pm-section-heading">Designed for Motion</h2>
 
-        <div class="product-grid">
+        <p class="pm-section-tagline">Crafted for those who move with purpose.</p>
+
+        <div class="pm-grid">
 
             {% for product in latest_products %}
-            <div class="product-card">
-                <!-- Wishlist toggle -->
+            <div class="pm-card">
+
+                <!-- Wishlist toggle — keeps existing JS id & onclick -->
                 <button
                     type="button"
-                    class="wl-card-btn {% if product.id in wishlist_ids %}wishlisted{% endif %}"
+                    class="pm-wl-btn wl-card-btn {% if product.id in wishlist_ids %}wishlisted{% endif %}"
                     id="wl-btn-{{ product.id }}"
                     onclick="toggleWishlist(event, {{ product.id }})"
                     title="{% if product.id in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
@@ -773,35 +1039,31 @@
                     <i class="{% if product.id in wishlist_ids %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
                 </button>
 
-                <div class="product-image">
+                <!-- Product image -->
+                <div class="pm-img-wrap">
                     {% with img=product.get_primary_image %}
                     {% if img %}
                         <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
                     {% else %}
-                        <div style="width:100%;height:100%;background:#111;display:flex;align-items:center;justify-content:center;color:#444;">
-                            <i class="fa-solid fa-image" style="font-size:32px;"></i>
+                        <div class="pm-img-placeholder">
+                            <i class="fa-solid fa-image"></i>
                         </div>
                     {% endif %}
                     {% endwith %}
                 </div>
 
-                <div class="product-content">
-
-                    <h3 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ product.name }}</h3>
-
-                    <p style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                        {% if product.description %}{{ product.description }}{% else %}No description available.{% endif %}
-                    </p>
-
-                    <a href="{% url 'product_detail' product.id %}" class="view-btn">
-                        VIEW MORE
+                <!-- Content -->
+                <div class="pm-content">
+                    <h3 class="pm-product-name">{{ product.name }}</h3>
+                    <p class="pm-desc">{% if product.description %}{{ product.description }}{% else %}No description available.{% endif %}</p>
+                    <a href="{% url 'product_detail' product.id %}" class="pm-view-link">
+                        VIEW MORE<i class="pm-arrow">→</i>
                     </a>
-
                 </div>
 
             </div>
             {% empty %}
-            <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: #555;">
+            <div style="grid-column: 1 / -1; padding: 60px; text-align: center; color: #334155;">
                 No products available yet.
             </div>
             {% endfor %}

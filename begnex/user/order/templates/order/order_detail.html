@@ -657,6 +657,10 @@
                                             <button class="btn-action-small btn-return" onclick="openReturnItemModal('{% url 'return_order_item' item.pk %}', '{{ item.product_name|escapejs }}', {{ item.return_pending_qty }})">
                                                 <i class="fa-solid fa-arrows-rotate"></i> RETURN
                                             </button>
+                                        {% elif item.status == 'ordered' and order.status in 'delivered,return_requested' and not within_return_window %}
+                                            <span style="color:#6B7280;font-size:11px;">
+                                                <i class="fa-solid fa-clock"></i> Return expired
+                                            </span>
                                         {% elif item.status == 'return_requested' %}
                                             <span style="color: #C084FC; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-clock"></i> Return Pending</span>
                                         {% elif item.status == 'returned' %}
@@ -687,9 +691,19 @@
                         <i class="fa-solid fa-circle-xmark"></i> CANCEL ORDER
                     </button>
                 {% elif order.status == 'delivered' %}
-                    <button class="btn-purple-large" onclick="openReturnModal('{% url 'return_order' order.pk %}', 'Order #{{ order.order_id }}')">
-                        <i class="fa-solid fa-arrows-rotate"></i> RETURN ORDER
-                    </button>
+                    {% if within_return_window %}
+                        <button class="btn-purple-large" onclick="openReturnModal('{% url 'return_order' order.pk %}', 'Order #{{ order.order_id }}')">
+                            <i class="fa-solid fa-arrows-rotate"></i> RETURN ORDER
+                        </button>
+                    {% else %}
+                        <span style="font-size:12px;color:#6B7280;display:flex;align-items:center;gap:6px;">
+                            <i class="fa-solid fa-clock"></i>
+                            Return period expired
+                            {% if return_deadline %}
+                                &nbsp;(was {{ return_deadline|date:"d M Y" }})
+                            {% endif %}
+                        </span>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>

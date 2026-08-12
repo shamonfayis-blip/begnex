@@ -222,6 +222,16 @@ def product_detail_view(request, product_id):
             ).exists()
             user_can_review = has_delivered
 
+    
+    wishlisted_variant_id = None
+    if request.user.is_authenticated:
+        from user.wishlist.models import Wishlist as WishlistModel
+        wl_entry = WishlistModel.objects.filter(
+            user=request.user, product=product
+        ).first()
+        if wl_entry and wl_entry.variant_id:
+            wishlisted_variant_id = wl_entry.variant_id
+
     context = {
         "product": product,
         "variants": variants,
@@ -234,6 +244,7 @@ def product_detail_view(request, product_id):
         "avg_rating_int": avg_rating_int,
         "user_can_review": user_can_review,
         "user_review": user_review,
+        "wishlisted_variant_id": wishlisted_variant_id,
     }
 
     return render(request, "product_detail.html", context)
@@ -271,7 +282,7 @@ def submit_review(request, product_id):
 
     comment = request.POST.get("comment", "").strip()
 
-    # Prevent editing an existing review
+    
     if Review.objects.filter(product=product, user=request.user).exists():
         messages.error(request, "You have already reviewed this product.")
         return redirect("product_detail", product_id=product_id)

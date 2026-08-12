@@ -352,7 +352,12 @@
             </div>
 
             {% if has_out_of_stock %}
-                <button type="button" class="checkout-btn disabled" id="checkoutBtn" disabled>
+                <button type="button"
+                    class="checkout-btn disabled"
+                    id="checkoutBtn"
+                    disabled
+                    data-checkout-url="{% url 'checkout_page' %}"
+                >
                     <i class="fa-solid fa-lock"></i> CHECKOUT UNAVAILABLE
                 </button>
                 <p class="checkout-warning" id="checkoutWarning">
@@ -360,9 +365,18 @@
                     Remove unavailable items to continue.
                 </p>
             {% else %}
-                <button type="button" class="checkout-btn" id="checkoutBtn" onclick="window.location.href='{% url 'checkout_page' %}'">
+                <button type="button"
+                    class="checkout-btn"
+                    id="checkoutBtn"
+                    data-checkout-url="{% url 'checkout_page' %}"
+                    onclick="window.location.href=this.dataset.checkoutUrl"
+                >
                     PROCEED TO CHECKOUT <i class="fa-solid fa-arrow-right"></i>
                 </button>
+                <p class="checkout-warning" id="checkoutWarning" style="display:none;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Remove unavailable items to continue.
+                </p>
             {% endif %}
         </div>
 
@@ -464,17 +478,21 @@
         function checkBlockedItems() {
             // .low-stock means qty > stock — also blocks checkout, same as server-side
             const blocked = document.querySelectorAll('.cart-item.blocked, .cart-item.out-of-stock, .cart-item.low-stock');
-            const btn = document.getElementById('checkoutBtn');
+            const btn  = document.getElementById('checkoutBtn');
             const warn = document.getElementById('checkoutWarning');
             if (!btn) return;
+
             if (blocked.length > 0) {
                 btn.classList.add('disabled');
                 btn.disabled = true;
+                btn.removeAttribute('onclick');
                 btn.innerHTML = '<i class="fa-solid fa-lock"></i> CHECKOUT UNAVAILABLE';
                 if (warn) warn.style.display = 'flex';
             } else {
                 btn.classList.remove('disabled');
                 btn.disabled = false;
+                // Restore the onclick using the URL stored in data-checkout-url
+                btn.setAttribute('onclick', 'window.location.href=this.dataset.checkoutUrl');
                 btn.innerHTML = 'PROCEED TO CHECKOUT <i class="fa-solid fa-arrow-right"></i>';
                 if (warn) warn.style.display = 'none';
             }
@@ -513,17 +531,24 @@
 
                     // Update card class based on new qty vs available stock
                     if (card) {
-                        if (data.max_allowed === 0) {
-                            // Stock is 0 — still out of stock
+                        // Use data-stock (actual stock) for the low-stock check,
+                        // not max_allowed (which is capped at MAX_CART_QUANTITY).
+                        const actualStock = parseInt(card.dataset.stock) || 0;
+                        if (actualStock === 0) {
                             card.classList.add('out-of-stock');
                             card.classList.remove('low-stock');
-                        } else if (data.new_quantity > data.max_allowed) {
-                            // Qty still exceeds available stock
+                        } else if (data.new_quantity > actualStock) {
+                            // Cart qty exceeds live stock
                             card.classList.remove('out-of-stock');
                             card.classList.add('low-stock');
                         } else {
-                            // Quantity is valid and within stock
+                            // Quantity is within stock — clear both error classes
                             card.classList.remove('out-of-stock', 'low-stock');
+                        }
+                        // Keep data-stock in sync (stock itself didn't change here,
+                        // but max_allowed may have been updated by the server).
+                        if (data.max_allowed !== undefined) {
+                            card.dataset.max = data.max_allowed;
                         }
                     }
 

@@ -17,4 +17,5 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout_view"),
     path("referrals/", views.user_referrals_view, name="user_referrals"),
     path("about/", views.about_view, name="about"),
+    path("check-username/", views.check_username_api, name="check_username_api"),
 ]

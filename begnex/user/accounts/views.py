@@ -70,6 +70,29 @@ def validate_password_strength(password):
     return None
 
 
+
+_USERNAME_RE = re.compile(r'^[a-zA-Z0-9_]+$')
+
+
+def _validate_username(username):
+    """Return an error string, or empty string when the username is valid."""
+    if not username:
+        return "Username is required."
+    if len(username) < 3:
+        return "Username must be at least 3 characters."
+    if len(username) > 30:
+        return "Username must be at most 30 characters."
+    if not _USERNAME_RE.match(username):
+        return "Only letters (A–Z), numbers, and underscores are allowed."
+    if not username[0].isalpha():
+        return "Username must start with a letter."
+    if username.replace('_', '').isdigit():
+        return "Username cannot consist of numbers only."
+    if all(c == '_' for c in username):
+        return "Username cannot consist of underscores only."
+    return ""
+
+
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect("home")
@@ -85,14 +108,14 @@ def signup_view(request):
         confirm = request.POST.get("confirm_password", "")
         manual_ref_code = request.POST.get("referral_code", "").strip()
         errors = {}
-        if not username:
-            errors["username"] = "Username is required"
-        elif len(username) < 3:
-            errors["username"] = "Username must be at least 3 characters"
-        elif len(username) > 30:
-            errors["username"] = "Username must be at most 30 characters"
-        elif not re.match(r'^[a-zA-Z0-9_]+$', username):
-            errors["username"] = "Username can only contain letters, numbers, and underscores"
+
+       
+        u_err = _validate_username(username)
+        if u_err:
+            errors["username"] = u_err
+        elif User.objects.filter(username__iexact=username).exists():
+            errors["username"] = "Username already exists."
+        
         if not email:
             errors["email"] = "Email is required"
         if not password:
@@ -104,8 +127,7 @@ def signup_view(request):
         pw_error = validate_password_strength(password) if password else None
         if pw_error:
             errors["password"] = pw_error
-        if username and User.objects.filter(username=username).exists():
-            errors["username"] = "Username already exists"
+        
         if email and User.objects.filter(email=email).exists():
             errors["email"] = "Email already exists"
         if manual_ref_code:
@@ -609,3 +631,20 @@ def user_referrals_view(request):
 
 def about_view(request):
     return render(request, "about.html")
+
+
+from django.http import JsonResponse  
+from django.views.decorators.http import require_GET  # noqa: E402
+
+
+@require_GET
+def check_username_api(request):
+   
+    raw = request.GET.get("username", "").strip()
+    format_err = _validate_username(raw)
+    if format_err:
+        return JsonResponse({"available": False, "error": format_err})
+    taken = User.objects.filter(username__iexact=raw).exists()
+    if taken:
+        return JsonResponse({"available": False, "error": "Username already exists."})
+    return JsonResponse({"available": True, "error": ""})

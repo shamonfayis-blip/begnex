@@ -20,8 +20,18 @@ def _validate_address_data(data):
     phone = data.get("phone_number", "").strip()
     if not phone:
         errors["phone_number"] = "Phone number is required."
-    elif not re.match(r"^\d{10}$", phone):
-        errors["phone_number"] = "Enter a valid 10-digit phone number."
+    elif not re.fullmatch(r"\d{10}", phone):
+        # rejects letters, spaces, +, -, brackets, wrong length
+        errors["phone_number"] = "Enter a valid 10-digit mobile number."
+    elif phone[0] not in "6789":
+        # must start with 6, 7, 8, or 9
+        errors["phone_number"] = "Enter a valid 10-digit mobile number."
+    elif len(set(phone)) == 1:
+        # rejects 0000000000, 1111111111 … 9999999999
+        errors["phone_number"] = "Enter a valid 10-digit mobile number."
+    elif phone in ("1234567890", "9876543210"):
+        # rejects obvious sequential patterns
+        errors["phone_number"] = "Enter a valid 10-digit mobile number."
 
     addr1 = data.get("address_line_1", "").strip()
     if not addr1:

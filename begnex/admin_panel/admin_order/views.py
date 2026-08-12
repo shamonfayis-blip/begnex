@@ -127,6 +127,12 @@ def admin_order_update_status_view(request, order_id):
 
             elif new_status == "delivered":
                 order.payment_status = "paid"
+                # Stamp the delivery time exactly once; this drives the 7-day
+                # return window in the user-facing return views.
+                from django.utils import timezone as _tz
+                if not order.delivered_at:
+                    order.delivered_at = _tz.now()
+
             elif new_status == "returned":
                 reason = request.POST.get("reason", "").strip()
                 if reason:

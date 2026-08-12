@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Min, Q
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from admin_panel.admin_product.models import Product
 
@@ -142,3 +142,25 @@ def toggle_wishlist_api(request):
             "message": "Added to wishlist.",
         }
     )
+
+@login_required(login_url="login")
+@require_GET
+def wishlist_status_api(request):
+  
+    product_id = request.GET.get("product_id")
+    variant_id = request.GET.get("variant_id")
+
+    if not product_id:
+        return JsonResponse({"wishlisted": False})
+
+    qs = Wishlist.objects.filter(user=request.user, product_id=product_id)
+    entry = qs.first()
+    if not entry:
+        return JsonResponse({"wishlisted": False})
+
+    if variant_id:
+        wishlisted = entry.variant_id is not None and str(entry.variant_id) == str(variant_id)
+    else:
+        wishlisted = True
+
+    return JsonResponse({"wishlisted": wishlisted})

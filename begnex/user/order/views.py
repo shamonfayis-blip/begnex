@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -5,6 +7,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -15,6 +18,18 @@ from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer, Table,
 from admin_panel.admin_order.models import Order, OrderItem
 
 from .email_utils import send_item_cancelled_email, send_order_cancelled_email
+
+
+RETURN_WINDOW_DAYS = 7
+
+
+def _within_return_window(order):
+   
+    delivery_ts = order.delivered_at or order.updated_at
+    if delivery_ts is None:
+        return False
+    deadline = delivery_ts + datetime.timedelta(days=RETURN_WINDOW_DAYS)
+    return timezone.now() <= deadline
 
 
 @login_required(login_url="login")
@@ -78,8 +93,15 @@ def order_detail_view(request, order_pk):
                 break
 
     can_cancel = order.status == "pending"
-
     can_return = order.status == "delivered" or order.status == "return_requested"
+
+    within_return_window = _within_return_window(order)
+    delivery_ts = order.delivered_at or order.updated_at
+    return_deadline = (
+        (delivery_ts + datetime.timedelta(days=RETURN_WINDOW_DAYS))
+        if delivery_ts
+        else None
+    )
 
     items = []
     for item in order.items.all():
@@ -89,6 +111,7 @@ def order_detail_view(request, order_pk):
             item.status == "ordered"
             and item.return_pending_qty > 0
             and order.status in ["delivered", "return_requested"]
+            and within_return_window        
         )
         items.append(item)
 
@@ -103,6 +126,8 @@ def order_detail_view(request, order_pk):
         "is_return_rejected": is_return_rejected,
         "can_cancel": can_cancel,
         "can_return": can_return,
+        "within_return_window": within_return_window,
+        "return_deadline": return_deadline,
     }
     return render(request, "order/order_detail.html", context)
 
@@ -288,6 +313,16 @@ def return_order(request, order_pk):
         messages.error(request, "Only delivered orders can be returned.")
         return redirect("user_order_detail", order_pk=order.pk)
 
+    
+    if not _within_return_window(order):
+        messages.error(
+            request,
+            "Return period has expired. Returns are allowed only within "
+            f"{RETURN_WINDOW_DAYS} days of delivery.",
+        )
+        return redirect("user_order_detail", order_pk=order.pk)
+    
+
     reason = request.POST.get("return_reason", "").strip()
     if not reason:
         messages.error(request, "Reason for return is mandatory.")
@@ -331,6 +366,16 @@ def return_order_item(request, item_pk):
     ):
         messages.error(request, "This product cannot be returned.")
         return redirect("user_order_detail", order_pk=order.pk)
+
+    
+    if not _within_return_window(order):
+        messages.error(
+            request,
+            "Return period has expired. Returns are allowed only within "
+            f"{RETURN_WINDOW_DAYS} days of delivery.",
+        )
+        return redirect("user_order_detail", order_pk=order.pk)
+    
 
     reason = request.POST.get("return_reason", "").strip()
     if not reason:
@@ -490,38 +535,105 @@ def download_invoice(request, order_pk):
             Paragraph("<b>Qty</b>", bold_style),
             Paragraph("<b>Unit Price</b>", bold_style),
             Paragraph("<b>Subtotal</b>", bold_style),
+            Paragraph("<b>Status</b>", bold_style),
         ]
     ]
 
- 
-    invoice_subtotal = 0
-    for item in order.items.all():
-        active_qty = item.quantity - item.cancelled_quantity
+  
+    cancelled_style = ParagraphStyle(
+        "InvoiceCancelled",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=11,
+        textColor=colors.HexColor("#E53E3E"),
+    )
+    returned_style = ParagraphStyle(
+        "InvoiceReturned",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=11,
+        textColor=colors.HexColor("#B45309"),
+    )
+   
+    NON_PAYABLE = {"cancelled", "returned", "return_requested"}
 
-        
-        if active_qty <= 0:
-            continue
+    all_items          = list(order.items.all())
+    invoice_subtotal   = 0 
+    returned_amount    = 0  
+    cancelled_row_idxs = []
+    returned_row_idxs  = []
 
-        line_subtotal = item.unit_price * active_qty
-        invoice_subtotal += line_subtotal
+    for i, item in enumerate(all_items):
+        row_idx = i + 1           
+        status  = item.status    
+
+        if status == "cancelled" or item.cancelled_quantity >= item.quantity:
+           
+            display_qty      = item.quantity
+            display_subtotal = item.unit_price * item.quantity
+            status_cell      = Paragraph("CANCELLED", cancelled_style)
+            cancelled_row_idxs.append(row_idx)
+
+        elif status in ("returned", "return_requested"):
+            
+            display_qty      = item.quantity - item.cancelled_quantity
+            display_subtotal = item.unit_price * display_qty
+            returned_amount += display_subtotal
+            label = "RETURNED" if status == "returned" else "RETURN REQUESTED"
+            status_cell      = Paragraph(label, returned_style)
+            returned_row_idxs.append(row_idx)
+
+        elif status == "return_rejected":
+           
+            active_qty       = item.quantity - item.cancelled_quantity
+            display_qty      = active_qty
+            display_subtotal = item.unit_price * active_qty
+            invoice_subtotal += display_subtotal
+            status_cell      = Paragraph("Active (Return Rejected)", normal_style)
+
+        else:
+            
+            active_qty       = item.quantity - item.cancelled_quantity
+            display_qty      = active_qty
+            display_subtotal = item.unit_price * active_qty
+            invoice_subtotal += display_subtotal
+            status_cell      = Paragraph("Active", normal_style)
 
         
         name_lines = item.product_name
-        if item.cancelled_quantity > 0:
-            name_lines += f"<br/><font size='8' color='#E53E3E'>Cancelled Qty: {item.cancelled_quantity}</font>"
+        if status not in NON_PAYABLE and status != "return_rejected":
+            if item.cancelled_quantity > 0:
+                name_lines += (
+                    f"<br/><font size='8' color='#E53E3E'>"
+                    f"Cancelled Qty: {item.cancelled_quantity}</font>"
+                )
 
         table_data.append(
             [
                 Paragraph(name_lines, normal_style),
                 Paragraph(item.variant_name, normal_style),
                 Paragraph(item.sku or "-", normal_style),
-                Paragraph(str(active_qty), normal_style),
+                Paragraph(str(display_qty), normal_style),
                 Paragraph(f"INR {item.unit_price}", normal_style),
-                Paragraph(f"INR {line_subtotal:.2f}", normal_style),
+                Paragraph(f"INR {display_subtotal:.2f}", normal_style),
+                status_cell,
             ]
         )
 
-    items_table = Table(table_data, colWidths=[180, 80, 80, 30, 75, 75])
+   
+    row_bg_styles = []
+    for idx in cancelled_row_idxs:
+        row_bg_styles.append(
+            ("BACKGROUND", (0, idx), (-1, idx), colors.HexColor("#FFF5F5"))
+        )
+    for idx in returned_row_idxs:
+        row_bg_styles.append(
+            ("BACKGROUND", (0, idx), (-1, idx), colors.HexColor("#FFFBF0"))
+        )
+
+    items_table = Table(table_data, colWidths=[150, 75, 70, 30, 70, 70, 55])
     items_table.setStyle(
         TableStyle(
             [
@@ -530,17 +642,20 @@ def download_invoice(request, order_pk):
                 ("TOPPADDING", (0, 0), (-1, -1), 8),
                 ("LINEBELOW", (0, 0), (-1, -1), 0.5, colors.HexColor("#CFD8DC")),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                *row_bg_styles,
             ]
         )
     )
     story.append(items_table)
     story.append(Spacer(1, 20))
 
+   
+    all_lines_subtotal = invoice_subtotal + returned_amount  
     totals_data = [
         [
             Paragraph("", normal_style),
             Paragraph("<b>Items Subtotal:</b>", normal_style),
-            Paragraph(f"INR {invoice_subtotal:.2f}", normal_style),
+            Paragraph(f"INR {all_lines_subtotal:.2f}", normal_style),
         ],
         [
             Paragraph("", normal_style),
@@ -555,12 +670,22 @@ def download_invoice(request, order_pk):
             ),
         ],
     ]
+
     if order.discount > 0:
         totals_data.append(
             [
                 Paragraph("", normal_style),
                 Paragraph("<b>Discount:</b>", normal_style),
                 Paragraph(f"-INR {order.discount}", normal_style),
+            ]
+        )
+
+    if returned_amount > 0:
+        totals_data.append(
+            [
+                Paragraph("", normal_style),
+                Paragraph("<b>Returned Amount:</b>", returned_style),
+                Paragraph(f"-INR {returned_amount:.2f}", returned_style),
             ]
         )
 
@@ -586,3 +711,4 @@ def download_invoice(request, order_pk):
 
     doc.build(story)
     return response
+

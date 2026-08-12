@@ -533,23 +533,96 @@
 
                         </div>
 
+                        {% if errors.profile_image %}
+                        <span class="field-error" id="img-err-span" style="display:block; margin-top:10px;">{{ errors.profile_image }}</span>
+                        {% else %}
+                        <span class="field-error" id="img-err-span" style="display:none; margin-top:10px;"></span>
+                        {% endif %}
+
                         <script>
+                            var _originalPreviewSrc = document.getElementById('profile-preview').src;
+
+                            function _showImgErr(msg) {
+                                var s = document.getElementById('img-err-span');
+                                s.textContent = msg;
+                                s.style.display = 'block';
+                            }
+
+                            function _clearImgErr() {
+                                var s = document.getElementById('img-err-span');
+                                s.textContent = '';
+                                s.style.display = 'none';
+                            }
+
+                            function _resetInput() {
+                                document.getElementById('profile_image_input').value = '';
+                            }
+
                             function previewImage(event) {
-                                var reader = new FileReader();
-                                reader.onload = function () {
-                                    var output = document.getElementById('profile-preview');
-                                    output.src = reader.result;
-                                    document.getElementById('remove_image_input').value = 'false';
-                                    document.getElementById('remove-image-btn').style.display = '';
+                                var file = event.target.files[0];
+                                if (!file) return;
+
+                                var INVALID_MSG = 'Please upload a valid JPG, JPEG, or PNG image.';
+                                var MAX_BYTES   = 5 * 1024 * 1024; // 5 MB
+
+                                // --- Stage 1: extension pre-check (fast reject) ---
+                                var allowed = /\.(jpe?g|png)$/i;
+                                if (!allowed.test(file.name)) {
+                                    _showImgErr(INVALID_MSG);
+                                    _resetInput();
+                                    return;
                                 }
-                                reader.readAsDataURL(event.target.files[0]);
+
+                                // --- Stage 2: size check ---
+                                if (file.size > MAX_BYTES) {
+                                    _showImgErr('Image must be smaller than 5 MB.');
+                                    _resetInput();
+                                    return;
+                                }
+
+                                // --- Stage 3: actual image-load verification via File API ---
+                                // FileReader reads the raw bytes; then we attempt to decode
+                                // them as an image. If the browser cannot decode the data
+                                // (e.g. a renamed PDF/ZIP/HTML), img.onerror fires.
+                                var reader = new FileReader();
+                                reader.onload = function (e) {
+                                    var dataUrl = e.target.result;
+                                    var testImg = new Image();
+
+                                    testImg.onload = function () {
+                                        // Valid image — update the preview
+                                        _clearImgErr();
+                                        document.getElementById('profile-preview').src = dataUrl;
+                                        document.getElementById('remove_image_input').value = 'false';
+                                        document.getElementById('remove-image-btn').style.display = '';
+                                    };
+
+                                    testImg.onerror = function () {
+                                        // Browser could not decode it as an image
+                                        _showImgErr(INVALID_MSG);
+                                        _resetInput();
+                                        // Keep the existing preview unchanged
+                                        document.getElementById('profile-preview').src = _originalPreviewSrc;
+                                    };
+
+                                    testImg.src = dataUrl;
+                                };
+
+                                reader.onerror = function () {
+                                    _showImgErr(INVALID_MSG);
+                                    _resetInput();
+                                };
+
+                                reader.readAsDataURL(file);
                             }
 
                             function removeImage() {
                                 document.getElementById('profile_image_input').value = '';
                                 document.getElementById('profile-preview').src = 'https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=111827&color=fff';
+                                _originalPreviewSrc = document.getElementById('profile-preview').src;
                                 document.getElementById('remove_image_input').value = 'true';
                                 document.getElementById('remove-image-btn').style.display = 'none';
+                                _clearImgErr();
                             }
                         </script>
 
@@ -698,12 +771,9 @@
             else setErr(emailIn, emailErr, '');
         });
 
-        /* ---- live: phone (digit-only filter + error) ---- */
+        /* ---- live: phone (digit-only filter) ---- */
         phoneIn.addEventListener('input', function () {
             this.value = this.value.replace(/\D/g, '').slice(0, 10);
-            var v = this.value;
-            if (v && v.length !== 10) setErr(phoneIn, phoneErr, 'Phone must be exactly 10 digits.');
-            else setErr(phoneIn, phoneErr, '');
         });
 
         /* ---- submit guard ---- */
@@ -721,9 +791,7 @@
             else if (!EM_PAT.test(email)) { setErr(emailIn, emailErr, 'Enter a valid email address.'); ok = false; }
             else setErr(emailIn, emailErr, '');
 
-            var phone = phoneIn.value.trim();
-            if (phone && phone.length !== 10) { setErr(phoneIn, phoneErr, 'Phone must be exactly 10 digits.'); ok = false; }
-            else setErr(phoneIn, phoneErr, '');
+
 
             if (!ok) e.preventDefault();
         });
