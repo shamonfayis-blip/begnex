@@ -503,12 +503,12 @@
                         <i class="fa-solid fa-cart-plus"></i> ADD TO CART
                     </button>
                     <button
-                        class="wishlist-btn {% if wishlisted_variant_id and wishlisted_variant_id == default_variant.id %}wishlisted{% endif %}"
+                        class="wishlist-btn {% if default_variant and default_variant.id in wishlisted_variant_ids %}wishlisted{% endif %}"
                         id="pdWishlistBtn"
                         data-product-id="{{ product.id }}"
-                        title="{% if wishlisted_variant_id and wishlisted_variant_id == default_variant.id %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
+                        title="{% if default_variant and default_variant.id in wishlisted_variant_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"
                     >
-                        <i class="{% if wishlisted_variant_id and wishlisted_variant_id == default_variant.id %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
+                        <i class="{% if default_variant and default_variant.id in wishlisted_variant_ids %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
                     </button>
                 </div>
 
@@ -711,25 +711,25 @@
             if(!currentVariant) return; // No variants available
 
             // ── WISHLIST STATE (variant-level) ──────────────────────────────────────
-            // wishlistedVariantId holds the variant ID that is currently saved in the
-            // wishlist for this product. null means the product is not wishlisted.
-            // We track this client-side so variant switches are instant (no round-trip).
-            let wishlistedVariantId = {{ wishlisted_variant_id|default:'null' }};
+            // wishlistedVariantIds holds a Set of variant IDs currently saved in wishlist for this product
+            let wishlistedVariantIds = new Set({{ wishlisted_variant_ids|default:'[]'|safe }});
 
             function updateWishlistButtonState(variantId) {
                 const btn = document.getElementById('pdWishlistBtn');
                 if (!btn) return;
                 const icon = btn.querySelector('i');
-                // wishlisted only when stored variant matches the selected variant
-                const isWishlisted = (wishlistedVariantId !== null &&
-                                      Number(wishlistedVariantId) === Number(variantId));
+                const isWishlisted = variantId !== null && wishlistedVariantIds.has(Number(variantId));
                 btn.classList.toggle('wishlisted', isWishlisted);
-                icon.className = isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+                if (icon) {
+                    icon.className = isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+                }
                 btn.title = isWishlisted ? 'Remove from wishlist' : 'Add to wishlist';
             }
 
             // Set correct initial state for the default variant on page load
-            updateWishlistButtonState(currentVariant.id);
+            if (currentVariant) {
+                updateWishlistButtonState(currentVariant.id);
+            }
             // ───────────────────────────────────────────────────────────────────────
 
             // DOM Elements
@@ -1005,26 +1005,25 @@
                                 'Content-Type': 'application/json',
                                 'X-CSRFToken': '{{ csrf_token }}'
                             },
-                        body: JSON.stringify({ product_id: productId, variant_id: currentVariant ? currentVariant.id : null })
+                            body: JSON.stringify({ product_id: productId, variant_id: currentVariant ? currentVariant.id : null })
                         });
                         const data = await res.json();
                         
                         if(data.success) {
                             const navHeart = document.querySelector('.nav-icons a[href*="wishlist"] i');
+                            const varId = currentVariant ? Number(currentVariant.id) : null;
 
                             if(data.action === 'added' || data.action === 'updated') {
-                                // Product wishlisted (or variant updated) — mark as wishlisted
-                                wishlistedVariantId = currentVariant ? currentVariant.id : null;
-                                updateWishlistButtonState(currentVariant ? currentVariant.id : null);
+                                if (varId) wishlistedVariantIds.add(varId);
+                                updateWishlistButtonState(varId);
                                 showPdToast(data.action === 'added' ? 'Added to wishlist ❤️' : 'Wishlist updated ❤️');
                                 if(navHeart) {
                                     navHeart.className = 'fa-solid fa-heart';
                                     navHeart.style.color = '#ef4444';
                                 }
                             } else {
-                                // Removed from wishlist
-                                wishlistedVariantId = null;
-                                updateWishlistButtonState(currentVariant ? currentVariant.id : null);
+                                if (varId) wishlistedVariantIds.delete(varId);
+                                updateWishlistButtonState(varId);
                                 showPdToast('Removed from wishlist');
                                 if(data.wishlist_count === 0) {
                                     if(navHeart) {

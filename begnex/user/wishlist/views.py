@@ -42,7 +42,6 @@ def wishlist_view(request):
      
         display_variant = wi.variant 
         if not display_variant:
-            
             active_variants = [
                 v for v in wi.product.variants.all() if v.is_active and not v.is_deleted
             ]
@@ -51,16 +50,17 @@ def wishlist_view(request):
                 active_variants[0] if active_variants else None,
             )
 
-        
         if display_variant:
             wi.display_image = (
                 display_variant.images.filter(is_primary=True).first()
                 or display_variant.images.first()
             )
-            wi.product.default_variant_id = display_variant.id
+            wi.display_price = display_variant.get_discounted_price()
+            wi.cart_variant_id = display_variant.id
         else:
             wi.display_image = None
-            wi.product.default_variant_id = None
+            wi.display_price = wi.product.min_price
+            wi.cart_variant_id = None
 
         items.append(wi)
 
@@ -91,7 +91,6 @@ def toggle_wishlist_api(request):
             {"success": False, "message": "Product not found."}, status=404
         )
 
-  
     variant = None
     if variant_id:
         from admin_panel.admin_product.models import ProductVariant
@@ -102,51 +101,43 @@ def toggle_wishlist_api(request):
         except ProductVariant.DoesNotExist:
             pass
 
-    obj, created = Wishlist.objects.get_or_create(
+    if not variant:
+        active_vars = product.variants.filter(is_active=True, is_deleted=False)
+        variant = active_vars.filter(is_default=True).first() or active_vars.first()
+
+    existing = Wishlist.objects.filter(
         user=request.user,
         product=product,
-        defaults={"variant": variant},
-    )
+        variant=variant,
+    ).first()
 
-    if not created:
-        if variant and obj.variant != variant:
-           
-            obj.variant = variant
-            obj.save(update_fields=["variant"])
-            count = Wishlist.objects.filter(user=request.user).count()
-            return JsonResponse(
-                {
-                    "success": True,
-                    "action": "updated",
-                    "wishlist_count": count,
-                    "message": "Wishlist variant updated.",
-                }
-            )
-        obj.delete()
-        count = Wishlist.objects.filter(user=request.user).count()
-        return JsonResponse(
-            {
-                "success": True,
-                "action": "removed",
-                "wishlist_count": count,
-                "message": "Removed from wishlist.",
-            }
+    if existing:
+        existing.delete()
+        action = "removed"
+        message = "Removed from wishlist."
+    else:
+        Wishlist.objects.create(
+            user=request.user,
+            product=product,
+            variant=variant,
         )
+        action = "added"
+        message = "Added to wishlist."
 
     count = Wishlist.objects.filter(user=request.user).count()
     return JsonResponse(
         {
             "success": True,
-            "action": "added",
+            "action": action,
             "wishlist_count": count,
-            "message": "Added to wishlist.",
+            "message": message,
         }
     )
 
 @login_required(login_url="login")
 @require_GET
 def wishlist_status_api(request):
-  
+
     product_id = request.GET.get("product_id")
     variant_id = request.GET.get("variant_id")
 
@@ -154,13 +145,9 @@ def wishlist_status_api(request):
         return JsonResponse({"wishlisted": False})
 
     qs = Wishlist.objects.filter(user=request.user, product_id=product_id)
-    entry = qs.first()
-    if not entry:
-        return JsonResponse({"wishlisted": False})
-
     if variant_id:
-        wishlisted = entry.variant_id is not None and str(entry.variant_id) == str(variant_id)
+        wishlisted = qs.filter(variant_id=variant_id).exists()
     else:
-        wishlisted = True
+        wishlisted = qs.exists()
 
     return JsonResponse({"wishlisted": wishlisted})

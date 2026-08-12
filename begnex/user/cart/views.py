@@ -164,7 +164,7 @@ def add_to_cart_api(request):
     wishlist_count = 0
     if request.user.is_authenticated:
         deleted_count, _ = Wishlist.objects.filter(
-            user=request.user, product=variant.product
+            user=request.user, variant=variant
         ).delete()
         wishlist_removed = deleted_count > 0
         wishlist_count = Wishlist.objects.filter(user=request.user).count()

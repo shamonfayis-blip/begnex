@@ -25,7 +25,7 @@ class Wishlist(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("user", "product")
+        unique_together = ("user", "product", "variant")
         ordering = ["-added_at"]
 
     def __str__(self):

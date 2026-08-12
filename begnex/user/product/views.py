@@ -223,14 +223,14 @@ def product_detail_view(request, product_id):
             user_can_review = has_delivered
 
     
-    wishlisted_variant_id = None
+    wishlisted_variant_ids = []
     if request.user.is_authenticated:
         from user.wishlist.models import Wishlist as WishlistModel
-        wl_entry = WishlistModel.objects.filter(
-            user=request.user, product=product
-        ).first()
-        if wl_entry and wl_entry.variant_id:
-            wishlisted_variant_id = wl_entry.variant_id
+        wishlisted_variant_ids = list(
+            WishlistModel.objects.filter(
+                user=request.user, product=product, variant__isnull=False
+            ).values_list("variant_id", flat=True)
+        )
 
     context = {
         "product": product,
@@ -244,7 +244,7 @@ def product_detail_view(request, product_id):
         "avg_rating_int": avg_rating_int,
         "user_can_review": user_can_review,
         "user_review": user_review,
-        "wishlisted_variant_id": wishlisted_variant_id,
+        "wishlisted_variant_ids": wishlisted_variant_ids,
     }
 
     return render(request, "product_detail.html", context)
