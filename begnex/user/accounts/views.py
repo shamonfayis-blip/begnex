@@ -22,18 +22,21 @@ User = get_user_model()
 
 
 def _send_mail_async(subject, body, to_email):
-
-
     def _send():
-        send_mail(
-            subject,
-            body,
-            settings.EMAIL_HOST_USER,
-            [to_email],
-            fail_silently=True,
-        )
+        try:
+            send_mail(
+                subject,
+                body,
+                settings.EMAIL_HOST_USER,
+                [to_email],
+                fail_silently=False,
+            )
+            print(f"[EMAIL SUCCESS] Sent '{subject}' to {to_email}")
+        except Exception as e:
+            print(f"[EMAIL ERROR] Failed to send '{subject}' to {to_email}: {e}")
 
     threading.Thread(target=_send, daemon=True).start()
+
 
 
 OTP_EXPIRY_SECONDS = 60  
@@ -154,6 +157,7 @@ def signup_view(request):
         request.session["otp"] = str(otp)
         request.session["otp_created_time"] = time.time()
         body = _build_otp_email(otp, username)
+        print(f"=== OTP GENERATED for {email}: {otp} ===")
         _send_mail_async("Begnex OTP Verification", body, email)
         return redirect("otp_page")
     return render(request, "signup.html", {"referral_code": ref_code})
@@ -272,6 +276,7 @@ def resend_otp(request):
     request.session["otp_created_time"] = time.time()
 
     body = _build_otp_email(otp, signup_data["username"])
+    print(f"=== OTP GENERATED for {signup_data['email']}: {otp} ===")
     _send_mail_async(
         "Begnex OTP Verification",
         body,

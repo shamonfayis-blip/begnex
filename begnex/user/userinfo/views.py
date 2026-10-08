@@ -65,15 +65,20 @@ def _validate_profile_image(file_obj):
 def _send_mail_async(subject, body, to_email):
 
     def _send():
-        send_mail(
-            subject,
-            body,
-            settings.EMAIL_HOST_USER,
-            [to_email],
-            fail_silently=True,
-        )
+        try:
+            send_mail(
+                subject,
+                body,
+                settings.EMAIL_HOST_USER,
+                [to_email],
+                fail_silently=False,
+            )
+            print(f"[EMAIL SUCCESS] Sent '{subject}' to {to_email}")
+        except Exception as e:
+            print(f"[EMAIL ERROR] Failed to send '{subject}' to {to_email}: {e}")
 
     threading.Thread(target=_send, daemon=True).start()
+
 
 
 @never_cache
