@@ -16,7 +16,7 @@ User = get_user_model()
 
 
 _ALLOWED_IMAGE_FORMATS = {"JPEG", "PNG"}
-_MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024  
+_MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB — ensure Nginx client_max_body_size >= 5M
 
 def _validate_profile_image(file_obj):
     

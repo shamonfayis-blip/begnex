@@ -563,7 +563,7 @@
                                 if (!file) return;
 
                                 var INVALID_MSG = 'Please upload a valid JPG, JPEG, or PNG image.';
-                                var MAX_BYTES   = 5 * 1024 * 1024; // 5 MB
+                                var MAX_BYTES   = 800 * 1024; // 800 KB (Nginx limit workaround)
 
                                 // --- Stage 1: extension pre-check (fast reject) ---
                                 var allowed = /\.(jpe?g|png)$/i;
@@ -575,7 +575,7 @@
 
                                 // --- Stage 2: size check ---
                                 if (file.size > MAX_BYTES) {
-                                    _showImgErr('Image must be smaller than 5 MB.');
+                                    _showImgErr('Image must be smaller than 800 KB. Please compress the image and try again.');
                                     _resetInput();
                                     return;
                                 }
