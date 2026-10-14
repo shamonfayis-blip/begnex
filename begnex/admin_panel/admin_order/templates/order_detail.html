@@ -204,6 +204,9 @@
                                                     {% if item.cancelled_quantity > 0 %}
                                                         <span style="color: #DC2626; font-size: 11px; font-weight: 600; margin-left: 6px;">({{ item.cancelled_quantity }} Cancelled)</span>
                                                     {% endif %}
+                                                    {% if item.returned_quantity > 0 %}
+                                                        <span style="color: #059669; font-size: 11px; font-weight: 600; margin-left: 6px;">({{ item.returned_quantity }} Returned &amp; Refunded)</span>
+                                                    {% endif %}
                                                     {% if item.return_requested_quantity > 0 %}
                                                         <span style="color: #7C3AED; font-size: 11px; font-weight: 600; margin-left: 6px;">({{ item.return_requested_quantity }} Return Pending)</span>
                                                     {% endif %}
@@ -315,7 +318,7 @@
                             </div>
                         </div>
                         <!-- Update form -->
-                        {% if order.status == 'return_requested' %}
+                        {% if order.status == 'return_requested' or order.has_pending_return %}
                         <form method="POST" action="{% url 'admin_order_update_status' order.id %}" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="detail">

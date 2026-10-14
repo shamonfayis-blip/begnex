@@ -560,8 +560,35 @@
                             <span class="discount-val">-₹{{ order.discount }}</span>
                         </div>
                     {% endif %}
+
+                    {# Show returned amount for partial/full returns #}
+                    {% for item in items %}
+                        {% if item.returned_quantity > 0 %}
+                            <div class="billing-row" style="color: #34D399;">
+                                <span>
+                                    <i class="fa-solid fa-circle-check" style="font-size:10px; margin-right:4px;"></i>
+                                    Returned &amp; Refunded ({{ item.returned_quantity }} unit{{ item.returned_quantity|pluralize }} of {{ item.product_name }})
+                                </span>
+                                <span style="font-weight: 600;">
+                                    -₹{{ item.unit_price }} × {{ item.returned_quantity }} → Wallet
+                                </span>
+                            </div>
+                        {% endif %}
+                        {% if item.return_requested_quantity > 0 %}
+                            <div class="billing-row" style="color: #C084FC;">
+                                <span>
+                                    <i class="fa-solid fa-arrows-rotate" style="font-size:10px; margin-right:4px;"></i>
+                                    Return Pending ({{ item.return_requested_quantity }} unit{{ item.return_requested_quantity|pluralize }} of {{ item.product_name }})
+                                </span>
+                                <span style="font-weight: 600;">
+                                    ₹{{ item.unit_price }} × {{ item.return_requested_quantity }} (pending)
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
                     <div class="billing-row total">
-                        <span>Grand Total</span>
+                        <span>Grand Total{% for item in items %}{% if item.returned_quantity > 0 or item.return_requested_quantity > 0 %} (after returns){% endif %}{% endfor %}</span>
                         <span>₹{{ order.total }}</span>
                     </div>
 
@@ -571,11 +598,10 @@
                     </div>
                     <div class="meta-item" style="margin-top: 10px;">
                         <span>Payment Status</span>
-                        <span class="method" style="background: {% if order.payment_status == 'paid' %}rgba(16, 185, 129, 0.15){% else %}rgba(239, 68, 68, 0.15){% endif %}; color: {% if order.payment_status == 'paid' %}#34d399{% else %}#f87171{% endif %}; border: 1px solid {% if order.payment_status == 'paid' %}rgba(16,185,129,0.3){% else %}rgba(239,68,68,0.3){% endif %};">
+                        <span class="method" style="background: {% if order.payment_status == 'paid' %}rgba(16, 185, 129, 0.15){% elif order.payment_status == 'refunded' %}rgba(167, 139, 250, 0.15){% else %}rgba(239, 68, 68, 0.15){% endif %}; color: {% if order.payment_status == 'paid' %}#34d399{% elif order.payment_status == 'refunded' %}#C084FC{% else %}#f87171{% endif %}; border: 1px solid {% if order.payment_status == 'paid' %}rgba(16,185,129,0.3){% elif order.payment_status == 'refunded' %}rgba(167,139,250,0.3){% else %}rgba(239,68,68,0.3){% endif %};">
                             {{ order.get_payment_status_display }}
                         </span>
                     </div>
-
 
                 </div>
             </div>
@@ -618,12 +644,27 @@
                                     </td>
                                     <td style="color: #A1A1AA;">{{ item.sku|default:"-" }}</td>
                                     <td style="color: #A1A1AA;">
-                                        {% if item.cancelled_quantity > 0 and item.status != 'cancelled' %}
+                                        {% if item.status == 'cancelled' %}
+                                            <span style="color: #F87171; font-size: 11px; text-decoration: line-through;">{{ item.quantity }}</span>
+                                        {% elif item.returned_quantity > 0 or item.return_requested_quantity > 0 %}
+                                            {% if item.remaining_qty > 0 %}
+                                                <span style="color: white; font-weight: 700;">{{ item.remaining_qty }}</span>
+                                                <span style="color: #6B7280; font-size: 11px;"> active</span><br>
+                                            {% endif %}
+                                            {% if item.returned_quantity > 0 %}
+                                                <span style="color: #34D399; font-size: 11px; font-weight: 600;">{{ item.returned_quantity }} returned</span><br>
+                                            {% endif %}
+                                            {% if item.return_requested_quantity > 0 %}
+                                                <span style="color: #C084FC; font-size: 11px; font-weight: 600;">{{ item.return_requested_quantity }} return pending</span><br>
+                                            {% endif %}
+                                            {% if item.cancelled_quantity > 0 %}
+                                                <span style="color: #F87171; font-size: 11px;">{{ item.cancelled_quantity }} cancelled</span><br>
+                                            {% endif %}
+                                            <span style="color: #6B7280; font-size: 10px;">{{ item.quantity }} ordered</span>
+                                        {% elif item.cancelled_quantity > 0 %}
                                             <span style="color: white; font-weight: 700;">{{ item.active_qty }}</span>
                                             <span style="color: #6B7280; font-size: 11px;"> active</span><br>
                                             <span style="color: #F87171; font-size: 11px;">{{ item.cancelled_quantity }} cancelled / {{ item.quantity }} ordered</span>
-                                        {% elif item.status == 'cancelled' %}
-                                            <span style="color: #F87171; font-size: 11px; text-decoration: line-through;">{{ item.quantity }}</span>
                                         {% else %}
                                             {{ item.quantity }}
                                         {% endif %}
@@ -637,6 +678,9 @@
                                         {% if item.cancelled_quantity > 0 and item.status != 'cancelled' %}
                                             <div style="font-size: 10px; color: #F87171; margin-top: 4px;">{{ item.cancelled_quantity }} unit{{ item.cancelled_quantity|pluralize }} cancelled</div>
                                         {% endif %}
+                                        {% if item.returned_quantity > 0 and item.status != 'returned' %}
+                                            <div style="font-size: 10px; color: #34D399; margin-top: 4px;">{{ item.returned_quantity }} unit{{ item.returned_quantity|pluralize }} returned (refunded)</div>
+                                        {% endif %}
                                         {% if item.return_requested_quantity > 0 and item.status != 'return_requested' %}
                                             <div style="font-size: 10px; color: #C084FC; margin-top: 4px;">{{ item.return_requested_quantity }} unit{{ item.return_requested_quantity|pluralize }} return pending</div>
                                         {% endif %}
@@ -645,7 +689,7 @@
                                         {% elif item.status == 'return_requested' and item.return_reason %}
                                             <div style="font-size: 10px; color: #C084FC; margin-top: 4px; max-width: 150px;">Reason: {{ item.return_reason }}</div>
                                         {% elif item.status == 'returned' and item.return_reason %}
-                                            <div style="font-size: 10px; color: #EF4444; margin-top: 4px; max-width: 150px;">Reason: {{ item.return_reason }}</div>
+                                            <div style="font-size: 10px; color: #34D399; margin-top: 4px; max-width: 150px;">Reason: {{ item.return_reason }}</div>
                                         {% endif %}
                                     </td>
                                     <td style="text-align: right;">

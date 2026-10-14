@@ -63,7 +63,7 @@ def order_list_view(request):
 def order_detail_view(request, order_pk):
 
     order = get_object_or_404(Order, pk=order_pk, user=request.user)
-    # status
+    
     steps = [
         {"code": "pending", "label": "Order Placed", "icon": "fa-receipt"},
         {
@@ -92,9 +92,6 @@ def order_detail_view(request, order_pk):
                 current_step_index = idx
                 break
 
-    can_cancel = order.status == "pending"
-    can_return = order.status == "delivered" or order.status == "return_requested"
-
     within_return_window = _within_return_window(order)
     delivery_ts = order.delivered_at or order.updated_at
     return_deadline = (
@@ -104,16 +101,38 @@ def order_detail_view(request, order_pk):
     )
 
     items = []
+    has_any_returnable_items = False
     for item in order.items.all():
-        item.active_qty = item.quantity - item.cancelled_quantity
-        item.return_pending_qty = item.active_qty - item.return_requested_quantity
-        item.can_return_item = (
-            item.status == "ordered"
-            and item.return_pending_qty > 0
-            and order.status in ["delivered", "return_requested"]
-            and within_return_window        
+        
+        item.remaining_qty = max(
+            0,
+            item.quantity
+            - item.cancelled_quantity
+            - item.returned_quantity
+            - item.return_requested_quantity,
         )
+        
+        item.return_pending_qty = item.remaining_qty
+        
+        item.active_qty = max(
+            0, item.quantity - item.cancelled_quantity - item.returned_quantity
+        )
+        item.can_return_item = (
+            item.status in ["ordered", "delivered"]
+            and item.remaining_qty > 0
+            and order.status in ["delivered", "return_requested"]
+            and within_return_window
+        )
+        if item.remaining_qty > 0:
+            has_any_returnable_items = True
         items.append(item)
+
+    can_cancel = order.status == "pending"
+    can_return = (
+        (order.status == "delivered" or order.status == "return_requested")
+        and has_any_returnable_items
+        and within_return_window
+    )
 
     context = {
         "order": order,
@@ -158,7 +177,7 @@ def cancel_order(request, order_pk):
                 if item.status == "ordered":
 
                     active_qty = item.quantity - item.cancelled_quantity
-                    item.cancelled_quantity = item.quantity  # mark all cancelled
+                    item.cancelled_quantity = item.quantity  
                     item.status = "cancelled"
                     item.cancel_reason = reason or "Cancelled by user"
                     item.save()
@@ -335,12 +354,18 @@ def return_order(request, order_pk):
             order.save()
 
             for item in order.items.all():
-                if item.status == "ordered":
-                    active_qty = item.quantity - item.cancelled_quantity
-                    item.return_requested_quantity = active_qty
-                    item.status = "return_requested"
-                    item.return_reason = reason
-                    item.save()
+                if item.status in ["ordered", "delivered"]:
+                    available_qty = max(
+                        0,
+                        item.quantity
+                        - item.cancelled_quantity
+                        - item.returned_quantity,
+                    )
+                    if available_qty > 0:
+                        item.return_requested_quantity = available_qty
+                        item.status = "return_requested"
+                        item.return_reason = reason
+                        item.save()
 
         messages.success(
             request,
@@ -360,14 +385,22 @@ def return_order_item(request, item_pk):
 
     order = item.order
 
+    available_qty = max(
+        0,
+        item.quantity
+        - item.cancelled_quantity
+        - item.returned_quantity
+        - item.return_requested_quantity,
+    )
+
     if (
         order.status not in ["delivered", "return_requested"]
-        or item.status != "ordered"
+        or item.status not in ["ordered", "delivered"]
+        or available_qty <= 0
     ):
         messages.error(request, "This product cannot be returned.")
         return redirect("user_order_detail", order_pk=order.pk)
 
-    
     if not _within_return_window(order):
         messages.error(
             request,
@@ -375,47 +408,44 @@ def return_order_item(request, item_pk):
             f"{RETURN_WINDOW_DAYS} days of delivery.",
         )
         return redirect("user_order_detail", order_pk=order.pk)
-    
 
     reason = request.POST.get("return_reason", "").strip()
     if not reason:
         messages.error(request, "Reason for return is mandatory.")
         return redirect("user_order_detail", order_pk=order.pk)
 
-    active_qty = item.quantity - item.cancelled_quantity
-
     try:
-        return_qty = int(request.POST.get("return_quantity", active_qty))
+        return_qty = int(request.POST.get("return_quantity", available_qty))
     except (ValueError, TypeError):
-        return_qty = active_qty
-    return_qty = max(1, min(return_qty, active_qty))  
+        return_qty = available_qty
+    return_qty = max(1, min(return_qty, available_qty))
+
     try:
         with transaction.atomic():
             item.return_requested_quantity += return_qty
             item.return_reason = reason
 
-            if item.return_requested_quantity >= active_qty:  
-
+            total_non_cancelled = item.quantity - item.cancelled_quantity
+            if (item.returned_quantity + item.return_requested_quantity) >= total_non_cancelled:
                 item.status = "return_requested"
 
             item.save()
 
-            if order.status == "delivered":
-                order.status = "return_requested"
-                order.return_reason = f"Return requested for: {item.product_name}"
-                order.save()
+            order.status = "return_requested"
+            order.return_reason = f"Return requested for: {item.product_name} ({return_qty} unit{'s' if return_qty > 1 else ''})"
+            order.save()
 
-        if return_qty == active_qty:
+        if return_qty == available_qty:
             messages.success(
                 request,
-                f"Return request for all units of '{item.product_name}' submitted.",
+                f"Return request for {return_qty} unit(s) of '{item.product_name}' submitted.",
             )
         else:
             messages.success(
                 request,
                 f"Return request for {return_qty} unit(s) of "
                 f"'{item.product_name}' submitted. "
-                f"{active_qty - return_qty} unit(s) remain active.",
+                f"{available_qty - return_qty} unit(s) remain active.",
             )
     except Exception as e:
         messages.error(request, f"Error: {str(e)}")
@@ -560,67 +590,146 @@ def download_invoice(request, order_pk):
     NON_PAYABLE = {"cancelled", "returned", "return_requested"}
 
     all_items          = list(order.items.all())
-    invoice_subtotal   = 0 
-    returned_amount    = 0  
+    invoice_subtotal   = 0
+    returned_amount    = 0
     cancelled_row_idxs = []
     returned_row_idxs  = []
+    
+    row_idx = 0
 
-    for i, item in enumerate(all_items):
-        row_idx = i + 1           
-        status  = item.status    
+    for item in all_items:
+        status       = item.status
+        total_qty    = item.quantity
+        cancelled_q  = item.cancelled_quantity
+        returned_q   = item.returned_quantity
+        pending_q    = item.return_requested_quantity
+       
+        if returned_q == 0 and status == "returned":
+            returned_q = pending_q if pending_q > 0 else max(0, total_qty - cancelled_q)
+            pending_q = 0
 
-        if status == "cancelled" or item.cancelled_quantity >= item.quantity:
-           
-            display_qty      = item.quantity
-            display_subtotal = item.unit_price * item.quantity
+        remaining_q = max(0, total_qty - cancelled_q - returned_q - pending_q)
+
+       
+        if status == "cancelled" or cancelled_q >= total_qty:
+            row_idx += 1
+            display_qty      = total_qty
+            display_subtotal = item.unit_price * total_qty
             status_cell      = Paragraph("CANCELLED", cancelled_style)
             cancelled_row_idxs.append(row_idx)
-
-        elif status in ("returned", "return_requested"):
-            
-            display_qty      = item.quantity - item.cancelled_quantity
-            display_subtotal = item.unit_price * display_qty
-            returned_amount += display_subtotal
-            label = "RETURNED" if status == "returned" else "RETURN REQUESTED"
-            status_cell      = Paragraph(label, returned_style)
-            returned_row_idxs.append(row_idx)
-
-        elif status == "return_rejected":
-           
-            active_qty       = item.quantity - item.cancelled_quantity
-            display_qty      = active_qty
-            display_subtotal = item.unit_price * active_qty
-            invoice_subtotal += display_subtotal
-            status_cell      = Paragraph("Active (Return Rejected)", normal_style)
-
-        else:
-            
-            active_qty       = item.quantity - item.cancelled_quantity
-            display_qty      = active_qty
-            display_subtotal = item.unit_price * active_qty
-            invoice_subtotal += display_subtotal
-            status_cell      = Paragraph("Active", normal_style)
-
-        
-        name_lines = item.product_name
-        if status not in NON_PAYABLE and status != "return_rejected":
-            if item.cancelled_quantity > 0:
-                name_lines += (
-                    f"<br/><font size='8' color='#E53E3E'>"
-                    f"Cancelled Qty: {item.cancelled_quantity}</font>"
-                )
-
-        table_data.append(
-            [
-                Paragraph(name_lines, normal_style),
+            table_data.append([
+                Paragraph(item.product_name, normal_style),
                 Paragraph(item.variant_name, normal_style),
                 Paragraph(item.sku or "-", normal_style),
                 Paragraph(str(display_qty), normal_style),
                 Paragraph(f"INR {item.unit_price}", normal_style),
                 Paragraph(f"INR {display_subtotal:.2f}", normal_style),
                 status_cell,
-            ]
-        )
+            ])
+
+      
+        elif returned_q > 0 or pending_q > 0 or status in ("return_requested", "returned"):
+           
+            if remaining_q > 0:
+                row_idx += 1
+                active_subtotal = item.unit_price * remaining_q
+                invoice_subtotal += active_subtotal
+                active_name = (
+                    item.product_name
+                    + f"<br/><font size='8' color='#059669'>Active: {remaining_q} unit(s)</font>"
+                )
+                if cancelled_q > 0:
+                    active_name += f"<br/><font size='8' color='#E53E3E'>({cancelled_q} unit(s) cancelled)</font>"
+                table_data.append([
+                    Paragraph(active_name, normal_style),
+                    Paragraph(item.variant_name, normal_style),
+                    Paragraph(item.sku or "-", normal_style),
+                    Paragraph(str(remaining_q), normal_style),
+                    Paragraph(f"INR {item.unit_price}", normal_style),
+                    Paragraph(f"INR {active_subtotal:.2f}", normal_style),
+                    Paragraph("Active", normal_style),
+                ])
+
+           
+            if returned_q > 0:
+                row_idx += 1
+                ret_subtotal = item.unit_price * returned_q
+                returned_amount += ret_subtotal
+                ret_name = (
+                    item.product_name
+                    + f"<br/><font size='8' color='#B45309'>Returned Qty: {returned_q} unit(s) (Refunded to Wallet)</font>"
+                )
+                table_data.append([
+                    Paragraph(ret_name, normal_style),
+                    Paragraph(item.variant_name, normal_style),
+                    Paragraph(item.sku or "-", normal_style),
+                    Paragraph(str(returned_q), normal_style),
+                    Paragraph(f"INR {item.unit_price}", normal_style),
+                    Paragraph(f"INR {ret_subtotal:.2f}", normal_style),
+                    Paragraph("RETURNED", returned_style),
+                ])
+                returned_row_idxs.append(row_idx)
+
+            
+            if pending_q > 0:
+                row_idx += 1
+                pen_subtotal = item.unit_price * pending_q
+                pen_name = (
+                    item.product_name
+                    + f"<br/><font size='8' color='#7C3AED'>Return Requested: {pending_q} unit(s)</font>"
+                )
+                table_data.append([
+                    Paragraph(pen_name, normal_style),
+                    Paragraph(item.variant_name, normal_style),
+                    Paragraph(item.sku or "-", normal_style),
+                    Paragraph(str(pending_q), normal_style),
+                    Paragraph(f"INR {item.unit_price}", normal_style),
+                    Paragraph(f"INR {pen_subtotal:.2f}", normal_style),
+                    Paragraph("RETURN REQUESTED", returned_style),
+                ])
+                returned_row_idxs.append(row_idx)
+
+        
+        elif status == "return_rejected":
+            row_idx += 1
+            active_qty = total_qty - cancelled_q
+            display_subtotal = item.unit_price * active_qty
+            invoice_subtotal += display_subtotal
+            name_lines = (
+                item.product_name
+                + f"<br/><font size='8' color='#B45309'>Return Rejected</font>"
+            )
+            table_data.append([
+                Paragraph(name_lines, normal_style),
+                Paragraph(item.variant_name, normal_style),
+                Paragraph(item.sku or "-", normal_style),
+                Paragraph(str(active_qty), normal_style),
+                Paragraph(f"INR {item.unit_price}", normal_style),
+                Paragraph(f"INR {display_subtotal:.2f}", normal_style),
+                Paragraph("Active (Return Rejected)", normal_style),
+            ])
+
+        
+        else:
+            row_idx += 1
+            active_qty = total_qty - cancelled_q
+            display_subtotal = item.unit_price * active_qty
+            invoice_subtotal += display_subtotal
+            name_lines = item.product_name
+            if cancelled_q > 0:
+                name_lines += (
+                    f"<br/><font size='8' color='#E53E3E'>"
+                    f"Cancelled Qty: {cancelled_q}</font>"
+                )
+            table_data.append([
+                Paragraph(name_lines, normal_style),
+                Paragraph(item.variant_name, normal_style),
+                Paragraph(item.sku or "-", normal_style),
+                Paragraph(str(active_qty), normal_style),
+                Paragraph(f"INR {item.unit_price}", normal_style),
+                Paragraph(f"INR {display_subtotal:.2f}", normal_style),
+                Paragraph("Active", normal_style),
+            ])
 
    
     row_bg_styles = []

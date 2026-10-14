@@ -70,8 +70,7 @@ class Order(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # Set once when the order transitions to "delivered" status; used for the
-    # 7-day return window. Never cleared or overwritten after that.
+  
     delivered_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -82,6 +81,14 @@ class Order(models.Model):
 
     def get_item_count(self):
         return self.items.count()
+
+    @property
+    def has_pending_return(self):
+        return (
+            self.status == "return_requested"
+            or self.items.filter(return_requested_quantity__gt=0).exists()
+            or self.items.filter(status="return_requested").exists()
+        )
 
 
 class OrderItem(models.Model):
@@ -112,7 +119,16 @@ class OrderItem(models.Model):
 
     # Partial quantity tracking
     cancelled_quantity = models.PositiveIntegerField(default=0)
-    return_requested_quantity = models.PositiveIntegerField(default=0)
+    return_requested_quantity = models.PositiveIntegerField(default=0)  # pending admin approval
+    returned_quantity = models.PositiveIntegerField(default=0)           # approved & refunded
+
+    @property
+    def remaining_active_quantity(self):
+        return max(0, self.quantity - self.cancelled_quantity - self.returned_quantity - self.return_requested_quantity)
+
+    @property
+    def delivered_active_quantity(self):
+        return max(0, self.quantity - self.cancelled_quantity - self.returned_quantity)
 
     def get_image_url(self):
         """Returns the URL of the variant or product image, if available."""
@@ -131,3 +147,4 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity}x {self.product_name} ({self.variant_name})"
+

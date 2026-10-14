@@ -91,10 +91,20 @@ def admin_order_update_status_view(request, order_id):
         }
 
         current = order.status
-        allowed = allowed_transitions.get(current, [])
+        allowed = list(allowed_transitions.get(current, []))
 
-        if new_status == current:
+        
+        has_pending_items = any(
+            (i.return_requested_quantity > 0 or i.status == "return_requested")
+            for i in order.items.all()
+        )
+        if has_pending_items or current == "return_requested":
+            if "returned" not in allowed:
+                allowed.append("returned")
+            if "return_rejected" not in allowed:
+                allowed.append("return_rejected")
 
+        if new_status == current and not has_pending_items:
             pass
         elif new_status in allowed:
             order.status = new_status
@@ -127,8 +137,7 @@ def admin_order_update_status_view(request, order_id):
 
             elif new_status == "delivered":
                 order.payment_status = "paid"
-                # Stamp the delivery time exactly once; this drives the 7-day
-                # return window in the user-facing return views.
+                
                 from django.utils import timezone as _tz
                 if not order.delivered_at:
                     order.delivered_at = _tz.now()
@@ -139,61 +148,77 @@ def admin_order_update_status_view(request, order_id):
                     order.return_reason = reason
 
                 with transaction.atomic():
-                    order.payment_status = "refunded"
-
                     refund_total = 0
                     all_items = list(order.items.all())
-                    active_items = [
-                        i for i in all_items if i.quantity - i.cancelled_quantity > 0
-                    ]
+                    
+                    # Target items that have pending returns
                     returning_items = [
-                        i for i in active_items if i.status == "return_requested"
+                        i for i in all_items
+                        if i.return_requested_quantity > 0 or i.status == "return_requested"
                     ]
-
-                    all_active_returned = all(
-                        i.status in ["return_requested", "returned"]
-                        for i in active_items
-                    )
 
                     discount_ratio = (
                         order.discount / order.subtotal if order.subtotal > 0 else 0
                     )
 
+                    returned_subtotal = 0
+                    total_returned_qty = 0
+
                     for item in returning_items:
-                        item.status = "returned"
+                        qty_to_return = item.return_requested_quantity
+                        if qty_to_return <= 0:
+                            qty_to_return = max(0, item.quantity - item.cancelled_quantity - item.returned_quantity)
+
+                        if qty_to_return <= 0:
+                            continue
+
+                     
+                        item.returned_quantity += qty_to_return
+                        item.return_requested_quantity = 0
+
+                      
+                        total_active = item.quantity - item.cancelled_quantity
+                        if item.returned_quantity >= total_active:
+                            item.status = "returned"
+                        else:
+                            item.status = "ordered"
+
                         if reason:
                             item.return_reason = reason
                         item.save()
+
                         if item.variant:
-                            item.variant.stock += item.return_requested_quantity
+                            item.variant.stock += qty_to_return
                             item.variant.save()
 
                         effective_price = item.unit_price * (1 - discount_ratio)
-                        item_refund = item.return_requested_quantity * effective_price
+                        item_refund = qty_to_return * effective_price
                         refund_total += item_refund
+                        total_returned_qty += qty_to_return
+                        returned_subtotal += item.unit_price * qty_to_return
+
+                    all_active_returned = all(
+                        (i.quantity - i.cancelled_quantity - i.returned_quantity) <= 0
+                        for i in all_items
+                    )
 
                     if all_active_returned and order.shipping_charge > 0:
                         refund_total += order.shipping_charge
 
                     refund_total = round(refund_total, 2)
 
-                    if refund_total > 0:
+                    if refund_total > 0 and order.payment_status in ["paid", "partial_refund"]:
                         from user.wallet.utils import refund_to_wallet
 
                         refund_to_wallet(
                             order.user,
                             refund_total,
-                            f"Refund for returned items in Order #{order.order_id}",
+                            f"Refund for {total_returned_qty} returned item(s) in Order #{order.order_id}",
                         )
 
-                   
-                    returned_subtotal = sum(
-                        item.unit_price * item.return_requested_quantity
-                        for item in returning_items
-                    )
+                    
                     new_subtotal = max(0, order.subtotal - returned_subtotal)
                     new_discount = round(new_subtotal * discount_ratio, 2)
-                   
                     new_shipping = 0 if all_active_returned else order.shipping_charge
                     new_total = max(0, new_subtotal + new_shipping - new_discount)
 
@@ -201,21 +226,19 @@ def admin_order_update_status_view(request, order_id):
                     order.discount = new_discount
                     order.shipping_charge = new_shipping
                     order.total = new_total
-                    
-                    has_active_ordered = any(
-                        i.status == "ordered"
-                        and (i.quantity - i.cancelled_quantity) > 0
+
+                    has_active_items = any(
+                        (i.quantity - i.cancelled_quantity - i.returned_quantity) > 0
                         for i in all_items
                     )
-                    all_non_cancelled_returned = all(
-                        i.status in ["returned", "return_rejected", "cancelled"]
-                        for i in all_items
-                    )
-                    if has_active_ordered:
+                    if has_active_items:
+                        # Partial return — order continues as delivered, payment stays paid
                         order.status = "delivered"
                         order.payment_status = "paid"
-                    elif all_non_cancelled_returned:
+                    else:
                         order.status = "returned"
+                        order.payment_status = "refunded"
+
             elif new_status == "return_rejected":
                 reason = request.POST.get("reason", "").strip()
                 if reason:
@@ -223,24 +246,33 @@ def admin_order_update_status_view(request, order_id):
 
                 with transaction.atomic():
                     for item in order.items.all():
-                        if item.status == "return_requested":
-                            item.status = "return_rejected"
+                        if item.status == "return_requested" or item.return_requested_quantity > 0:
+                            item.return_requested_quantity = 0
+                            total_active = item.quantity - item.cancelled_quantity
+                            if item.returned_quantity >= total_active and total_active > 0:
+                                item.status = "returned"
+                            elif item.returned_quantity > 0:
+                                item.status = "ordered"
+                            else:
+                                item.status = "return_rejected"
                             if reason:
                                 item.return_reason = f"Rejected: {reason}"
                             item.save()
 
                     all_items = list(order.items.all())
-                    has_active_ordered = any(
-                        i.status == "ordered"
-                        and (i.quantity - i.cancelled_quantity) > 0
+                    has_active_items = any(
+                        (i.quantity - i.cancelled_quantity - i.returned_quantity) > 0
                         for i in all_items
                     )
-                    if has_active_ordered:
+                    if has_active_items:
                         order.status = "delivered"
+                    else:
+                        order.status = "return_rejected"
+
             order.save()
             messages.success(
                 request,
-                f"Order #{order.order_id} updated to " f"{order.get_status_display()}.",
+                f"Order #{order.order_id} updated to {order.get_status_display()}.",
             )
         else:
             status_labels = dict(Order.STATUS_CHOICES)
