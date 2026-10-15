@@ -289,3 +289,42 @@ def change_password_view(request):
         return redirect("profile")
 
     return render(request, "change_password.html")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# active product and non deleted product
+
+
+
+# def user(request):
+#     products = Product.objects.filter(is_actice = True , is_deleted = True)
+
+#     return render(request , "user.html" ,  {"products" : products})
+
+
+
+
+
+
+
+
