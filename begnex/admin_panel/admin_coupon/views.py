@@ -379,7 +379,6 @@ def admin_coupon_edit_view(request, coupon_id):
 @never_cache
 @staff_member_required(login_url="admin_login")
 def admin_coupon_usage_history_view(request):
-    """Show all orders where a coupon was applied."""
     orders = (
         Order.objects.exclude(coupon_code__isnull=True)
         .exclude(coupon_code="")

@@ -151,7 +151,7 @@ def admin_order_update_status_view(request, order_id):
                     refund_total = 0
                     all_items = list(order.items.all())
                     
-                    # Target items that have pending returns
+                   
                     returning_items = [
                         i for i in all_items
                         if i.return_requested_quantity > 0 or i.status == "return_requested"

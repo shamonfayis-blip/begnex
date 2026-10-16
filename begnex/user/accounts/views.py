@@ -78,7 +78,6 @@ _USERNAME_RE = re.compile(r'^[a-zA-Z0-9_]+$')
 
 
 def _validate_username(username):
-    """Return an error string, or empty string when the username is valid."""
     if not username:
         return "Username is required."
     if len(username) < 3:
@@ -526,7 +525,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         return user
 
     def pre_social_login(self, request, sociallogin):
-        """Block users whose accounts have been disabled."""
+       
         user = sociallogin.user
         email = None
         if user and user.email:
