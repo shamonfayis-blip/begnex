@@ -218,12 +218,10 @@ def update_cart_api(request):
 
     elif action == "decrement":
         if item.quantity <= 1:
-            item.delete()
 
             return JsonResponse(
                 {
-                    "success": True,
-                    "removeed"
+                    "success": False,
                     "message": "Minimum quantity is 1. Use ✕ to remove.",
                 },
                 status=400,
@@ -271,26 +269,3 @@ def remove_cart_api(request):
             "cart_item_count": cart.items.count(),
         }
     )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def profile(request):
-    total_amount = (
-        Order.objects.filter(
-            user=request.user
-            ).aggregate(
-                total=sum("total_amount")))
